@@ -49,7 +49,7 @@ void decode(char const* binary_filename, char const* collection_filename,
             ++k;
             if (k % 1000 == 0) {
                 std::cout << "decoded " << k << " sequences" << std::endl;
-                break;
+                // break;
             }
         }
         i += n + 1;

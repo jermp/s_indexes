@@ -87,6 +87,18 @@ void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
     block_id += 1;
 }
 
+uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
+                           uint32_t left, uint32_t right) {
+    uint32_t c = 0;
+    while (*begin < right and begin != end) {
+        assert(*begin >= left);
+        assert(*begin - left < constants::chunk_size);
+        ++begin;
+        ++c;
+    }
+    return c;
+}
+
 void encode_sequence(uint32_t const* data, size_t n,
                      std::vector<uint32_t>& block, statistics& stats,
                      std::vector<uint8_t>& out) {
@@ -114,15 +126,7 @@ void encode_sequence(uint32_t const* data, size_t n,
         // std::cout << "[" << left << ", " << right << ")" << std::endl;
 
         if (*begin < right) {
-            // first ride computes the cardinality of the chunk
-            uint32_t base = left;
-            uint32_t integers_in_chunk = 0;
-            while (*begin < right and begin != end) {
-                assert(*begin >= base);
-                assert(*begin - base < constants::chunk_size);
-                ++begin;
-                ++integers_in_chunk;
-            }
+            uint32_t cardinality = chunk_cardinality(begin, end, left, right);
 
             // actual chunk universe
             // uint32_t chunk_universe = *(begin - 1) - base + 1;
@@ -133,21 +137,21 @@ void encode_sequence(uint32_t const* data, size_t n,
             uint32_t chunk_universe = constants::chunk_size;
             uint32_t dense_chunk_bytes = bytes_for(chunk_universe);
             assert(dense_chunk_bytes * 8 <= constants::chunk_size);
-            assert(integers_in_chunk <= constants::chunk_size);
+            assert(cardinality <= constants::chunk_size);
             assert(chunk_universe <= constants::chunk_size);
-            assert(integers_in_chunk <= chunk_universe);
+            assert(cardinality <= chunk_universe);
 
-            // std::cout << "integers_in_chunk " << integers_in_chunk <<
+            // std::cout << "cardinality " << cardinality <<
             // std::endl;
 
             chunks_header.push_back(i);
 
-            if (integers_in_chunk < constants::chunk_sparseness_threshold) {
+            if (cardinality < constants::chunk_sparseness_threshold) {
                 statistics sparse_chunk_stats;
-                begin -= integers_in_chunk;
                 bool write = false;  // first ride computes chunks' bits
                 size_t header_offset = tmp.size();
                 uint32_t block_id = 0;
+                uint32_t base = left;
                 while (*begin < right and begin != end) {
                     uint32_t val = *begin - base;
                     if (val >= constants::block_size) {
@@ -173,14 +177,14 @@ void encode_sequence(uint32_t const* data, size_t n,
                 if (sparse_chunk_bytes >= dense_chunk_bytes) {
                     stats.dense_chunks += 1;
                     stats.dense_chunks_bits += dense_chunk_bytes * 8;
-                    stats.integers_in_dense_chunks += integers_in_chunk;
+                    stats.integers_in_dense_chunks += cardinality;
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-                    write_bits(begin - integers_in_chunk, integers_in_chunk,
+                    write_bits(begin - cardinality, cardinality,
                                constants::chunk_size, left, tmp);
                 } else {
                     stats.sparse_chunks += 1;
-                    stats.integers_in_sparse_chunks += integers_in_chunk;
+                    stats.integers_in_sparse_chunks += cardinality;
 
                     stats.blocks += blocks_in_chunk;
                     assert(sparse_chunk_stats.blocks <= blocks_in_chunk);
@@ -213,7 +217,7 @@ void encode_sequence(uint32_t const* data, size_t n,
                     auto ptr = reinterpret_cast<uint8_t const*>(empty);
                     tmp.insert(tmp.end(), ptr, ptr + 8 * sizeof(uint64_t));
 
-                    begin -= integers_in_chunk;
+                    begin -= cardinality;
                     write = true;
                     uint32_t block_id = 0;
                     base = left;
@@ -235,21 +239,22 @@ void encode_sequence(uint32_t const* data, size_t n,
                 }
 
             } else {
-                if (integers_in_chunk == chunk_universe) {
+                if (cardinality == chunk_universe) {
                     stats.full_chunks += 1;
-                    stats.integers_in_full_chunks += integers_in_chunk;
+                    stats.integers_in_full_chunks += cardinality;
                     chunks_header.push_back(type::full);
                     chunks_header.push_back(0);
                 } else {
                     stats.dense_chunks += 1;
                     stats.dense_chunks_bits += dense_chunk_bytes * 8;
-                    stats.integers_in_dense_chunks += integers_in_chunk;
-                    assert(dense_chunk_bytes * 8.0 / integers_in_chunk <= 2.0);
+                    stats.integers_in_dense_chunks += cardinality;
+                    assert(dense_chunk_bytes * 8.0 / cardinality <= 2.0);
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-                    write_bits(begin - integers_in_chunk, integers_in_chunk,
-                               constants::chunk_size, left, tmp);
+                    write_bits(begin, cardinality, constants::chunk_size, left,
+                               tmp);
                 }
+                begin += cardinality;
             }
 
         } else {

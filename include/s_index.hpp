@@ -43,7 +43,7 @@ struct s_index {
                     if (stats.sequences % 1000 == 0) {
                         std::cout << "processed " << stats.sequences
                                   << " sequences" << std::endl;
-                        break;
+                        // break;
                     }
                 }
                 i += n + 1;
