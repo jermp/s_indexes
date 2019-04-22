@@ -40,47 +40,42 @@ void write_header(uint32_t block_id, size_t offset, std::vector<uint8_t>& out,
     out[offset + b] |= type << (o * 2);
 }
 
-void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
-                  size_t header_offset, statistics& stats,
-                  std::vector<uint8_t>& out, bool write) {
+void block_bitsize(size_t block_size, statistics& stats) {
     stats.blocks += 1;
-    assert(block.size() <= constants::block_size);
-
-    if (block.empty()) {
+    assert(block_size <= constants::block_size);
+    if (block_size == 0) {
         stats.empty_blocks += 1;
+    } else if (block_size == constants::block_size) {
+        stats.full_blocks += 1;
+        stats.integers_in_full_blocks += constants::block_size;
+    } else if (block_size >= constants::block_sparseness_threshold - 1) {
+        stats.dense_blocks += 1;
+        stats.dense_blocks_bits += constants::block_size;
+        stats.integers_in_dense_blocks += block_size;
     } else {
+        assert(block_size <= constants::block_sparseness_threshold - 2);
+        stats.sparse_blocks += 1;
+        stats.integers_in_sparse_blocks += block_size;
+        stats.sparse_blocks_bits += 8 * (block_size + 1);
+    }
+}
+
+void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
+                  size_t header_offset, std::vector<uint8_t>& out) {
+    if (block.size() > 0) {
         if (block.size() == constants::block_size) {
-            stats.full_blocks += 1;
-            stats.integers_in_full_blocks += constants::block_size;
-
-            if (write) {
-                write_header(block_id, header_offset, out, type::full);
-            }
-
+            write_header(block_id, header_offset, out, type::full);
         } else if (block.size() >= constants::block_sparseness_threshold - 1) {
-            stats.dense_blocks += 1;
-            stats.dense_blocks_bits += constants::block_size;
-            stats.integers_in_dense_blocks += block.size();
-            if (write) {
-                write_header(block_id, header_offset, out, type::dense);
-                write_bits(block.data(), block.size(), constants::block_size, 0,
-                           out);
-            }
+            write_header(block_id, header_offset, out, type::dense);
+            write_bits(block.data(), block.size(), constants::block_size, 0,
+                       out);
         } else {
-            assert(block.size() <= constants::block_sparseness_threshold - 2);
-            stats.sparse_blocks += 1;
-            stats.integers_in_sparse_blocks += block.size();
-            stats.sparse_blocks_bits += 8 * (block.size() + 1);
-
-            if (write) {
-                write_header(block_id, header_offset, out, type::sparse);
-                write_uint<uint8_t>(block.size(), out);
-                for (auto pos : block) {
-                    write_uint<uint8_t>(pos, out);
-                }
+            write_header(block_id, header_offset, out, type::sparse);
+            write_uint<uint8_t>(block.size(), out);
+            for (auto pos : block) {
+                write_uint<uint8_t>(pos, out);
             }
         }
-
         block.clear();
     }
 
@@ -148,28 +143,25 @@ void encode_sequence(uint32_t const* data, size_t n,
 
             if (cardinality < constants::chunk_sparseness_threshold) {
                 statistics sparse_chunk_stats;
-                bool write = false;  // first ride computes chunks' bits
-                size_t header_offset = tmp.size();
-                uint32_t block_id = 0;
                 uint32_t base = left;
+                size_t block_size = 0;
                 while (*begin < right and begin != end) {
                     uint32_t val = *begin - base;
                     if (val >= constants::block_size) {
-                        encode_block(block, block_id, header_offset,
-                                     sparse_chunk_stats, tmp, write);
+                        block_bitsize(block_size, sparse_chunk_stats);
                         base += constants::block_size;
+                        block_size = 0;
                     } else {
                         assert(val < constants::block_size);
-                        block.push_back(val);
-                        assert(block.size() <= constants::block_size);
+                        ++block_size;
+                        assert(block_size <= constants::block_size);
                         ++begin;
                     }
                 }
-                encode_block(block, block_id, header_offset, sparse_chunk_stats,
-                             tmp, write);
+                block_bitsize(block_size, sparse_chunk_stats);
 
                 uint64_t sparse_chunk_bytes =
-                    (2 * blocks_in_chunk +  // header bits
+                    (2 * blocks_in_chunk +
                      sparse_chunk_stats.dense_blocks_bits +
                      sparse_chunk_stats.sparse_blocks_bits) /
                     8;
@@ -218,14 +210,12 @@ void encode_sequence(uint32_t const* data, size_t n,
                     tmp.insert(tmp.end(), ptr, ptr + 8 * sizeof(uint64_t));
 
                     begin -= cardinality;
-                    write = true;
                     uint32_t block_id = 0;
                     base = left;
                     while (*begin < right and begin != end) {
                         uint32_t val = *begin - base;
                         if (val >= constants::block_size) {
-                            encode_block(block, block_id, header_offset,
-                                         sparse_chunk_stats, tmp, write);
+                            encode_block(block, block_id, header_offset, tmp);
                             base += constants::block_size;
                         } else {
                             assert(val < constants::block_size);
@@ -234,8 +224,7 @@ void encode_sequence(uint32_t const* data, size_t n,
                             ++begin;
                         }
                     }
-                    encode_block(block, block_id, header_offset,
-                                 sparse_chunk_stats, tmp, write);
+                    encode_block(block, block_id, header_offset, tmp);
                 }
 
             } else {
