@@ -10,9 +10,9 @@ namespace sliced {
 template <typename W>
 void set_bit(size_t position, std::vector<W>& bits) {
     assert(position < bits.size() * sizeof(W) * 8);
-    size_t word = position / (sizeof(W) * 8);
-    size_t offset = position % (sizeof(W) * 8);
-    bits[word] |= W(1) << offset;
+    size_t w = position / (sizeof(W) * 8);
+    size_t o = position % (sizeof(W) * 8);
+    bits[w] |= W(1) << o;
 }
 
 template <typename T>
@@ -32,18 +32,17 @@ void write_bits(uint32_t const* begin, size_t n, size_t bits, uint32_t base,
     out.insert(out.end(), ptr, ptr + bitmap.size() * sizeof(bitmap.front()));
 }
 
-void write_header(uint32_t block_id, size_t header_offset,
-                  std::vector<uint8_t>& out, uint32_t type) {
+void write_header(uint32_t block_id, size_t offset, std::vector<uint8_t>& out,
+                  uint32_t type) {
     assert(block_id < 256);
-    size_t byte = block_id / 4;
-    size_t offset = block_id % 4;
-    out[header_offset + byte] |= type << (offset * 2);
+    size_t b = block_id / 4;
+    size_t o = block_id % 4;
+    out[offset + b] |= type << (o * 2);
 }
 
 void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
                   size_t header_offset, statistics& stats,
                   std::vector<uint8_t>& out, bool write) {
-    // std::cout << "block_id " << block_id << std::endl;
     stats.blocks += 1;
     assert(block.size() <= constants::block_size);
 
@@ -131,8 +130,7 @@ void encode_sequence(uint32_t const* data, size_t n,
             // std::cout << "actual universe " << *(begin - 1) - base + 1
             //           << std::endl;
 
-            uint32_t chunk_universe =
-                constants::chunk_size;  // max possible chunk universe
+            uint32_t chunk_universe = constants::chunk_size;
             uint32_t dense_chunk_bytes = bytes_for(chunk_universe);
             assert(dense_chunk_bytes * 8 <= constants::chunk_size);
             assert(integers_in_chunk <= constants::chunk_size);
@@ -166,8 +164,6 @@ void encode_sequence(uint32_t const* data, size_t n,
                 encode_block(block, block_id, header_offset, sparse_chunk_stats,
                              tmp, write);
 
-                // std::cout << "num_blocks " << block_id << std::endl;
-
                 uint64_t sparse_chunk_bytes =
                     (2 * blocks_in_chunk +  // header bits
                      sparse_chunk_stats.dense_blocks_bits +
@@ -178,14 +174,10 @@ void encode_sequence(uint32_t const* data, size_t n,
                     stats.dense_chunks += 1;
                     stats.dense_chunks_bits += dense_chunk_bytes * 8;
                     stats.integers_in_dense_chunks += integers_in_chunk;
-
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-
-                    begin -= integers_in_chunk;
-                    write_bits(begin, integers_in_chunk, constants::chunk_size,
-                               left, tmp);
-
+                    write_bits(begin - integers_in_chunk, integers_in_chunk,
+                               constants::chunk_size, left, tmp);
                 } else {
                     stats.sparse_chunks += 1;
                     stats.integers_in_sparse_chunks += integers_in_chunk;
@@ -217,13 +209,9 @@ void encode_sequence(uint32_t const* data, size_t n,
 
                     // write space for headers
                     size_t header_offset = tmp.size();
-                    // std::cout << "tmp.size() " << tmp.size() << std::endl;
-                    // std::cout << "header_offset " << header_offset <<
-                    // std::endl;
                     uint64_t empty[8] = {0};
                     auto ptr = reinterpret_cast<uint8_t const*>(empty);
                     tmp.insert(tmp.end(), ptr, ptr + 8 * sizeof(uint64_t));
-                    // std::cout << "tmp.size() " << tmp.size() << std::endl;
 
                     begin -= integers_in_chunk;
                     write = true;
@@ -259,8 +247,8 @@ void encode_sequence(uint32_t const* data, size_t n,
                     assert(dense_chunk_bytes * 8.0 / integers_in_chunk <= 2.0);
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-                    write_bits(begin, integers_in_chunk, constants::chunk_size,
-                               left, tmp);
+                    write_bits(begin - integers_in_chunk, integers_in_chunk,
+                               constants::chunk_size, left, tmp);
                 }
             }
 

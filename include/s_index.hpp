@@ -32,22 +32,19 @@ struct s_index {
             std::vector<uint8_t> sequences;
             offsets.push_back(0);
 
-            // uint32_t k = 0;
             for (size_t i = 2;  // first two values reserved for a singleton
                                 // sequence containing the universe size
                  i < input.size();) {
                 uint32_t n = data[i];
                 uint32_t universe = data[i + n];
                 if (double(n) / universe > m_params.density) {
-                    // if (k == 5939) {
                     encode_sequence(data + i + 1, n, block, stats, sequences);
                     offsets.push_back(sequences.size());
                     if (stats.sequences % 1000 == 0) {
                         std::cout << "processed " << stats.sequences
                                   << " sequences" << std::endl;
+                        break;
                     }
-                    // }
-                    // ++k;
                 }
                 i += n + 1;
             }
