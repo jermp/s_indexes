@@ -1,0 +1,6 @@
+[submodule "external/mm_file"]
+	path = external/mm_file
+	url = https://github.com/jermp/mm_file.git
+[submodule "external/essentials"]
+	path = external/essentials
+	url = https://github.com/jermp/essentials.git

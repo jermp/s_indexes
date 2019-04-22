@@ -1,0 +1,258 @@
+#pragma once
+
+#include <iostream>
+#include <cassert>
+
+#include "util.hpp"
+
+namespace sliced {
+
+template <typename W>
+void set_bit(size_t position, std::vector<W>& bits) {
+    assert(position < bits.size() * sizeof(W) * 8);
+    size_t word = position / (sizeof(W) * 8);
+    size_t offset = position % (sizeof(W) * 8);
+    bits[word] |= W(1) << offset;
+}
+
+template <typename T>
+void write_uint(T val, std::vector<uint8_t>& out) {
+    auto ptr = reinterpret_cast<uint8_t const*>(&val);
+    out.insert(out.end(), ptr, ptr + sizeof(T));
+}
+
+void write_bits(uint32_t const* begin, size_t n, size_t bits, uint32_t base,
+                std::vector<uint8_t>& out) {
+    std::vector<uint64_t> bitmap(bits / 64, 0);
+    for (uint32_t i = 0; i != n; ++i, ++begin) {
+        uint32_t val = *begin - base;
+        set_bit(val, bitmap);
+    }
+    auto ptr = reinterpret_cast<uint8_t const*>(bitmap.data());
+    out.insert(out.end(), ptr, ptr + bitmap.size() * sizeof(bitmap.front()));
+}
+
+void write_header(uint32_t block_id, size_t header_offset,
+                  std::vector<uint8_t>& out, uint32_t type) {
+    size_t byte = block_id / 4;
+    size_t offset = block_id % 4;
+    out[header_offset + byte] |= type << (offset * 2);
+}
+
+void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
+                  size_t header_offset, statistics& stats,
+                  std::vector<uint8_t>& out, bool write) {
+    stats.blocks += 1;
+    block_id += 1;
+    assert(block.size() <= constants::block_size);
+
+    if (block.empty()) {
+        stats.empty_blocks += 1;
+    } else {
+        if (block.size() == constants::block_size) {
+            stats.full_blocks += 1;
+            stats.integers_in_full_blocks += constants::block_size;
+
+            if (write) {
+                write_header(block_id, header_offset, out, type::full);
+            }
+
+        } else if (block.size() >= constants::block_sparseness_threshold - 1) {
+            stats.dense_blocks += 1;
+            stats.dense_blocks_bits += constants::block_size;
+            stats.integers_in_dense_blocks += block.size();
+            if (write) {
+                write_header(block_id, header_offset, out, type::dense);
+                write_bits(block.data(), block.size(), constants::block_size, 0,
+                           out);
+            }
+        } else {
+            assert(block.size() <= constants::block_sparseness_threshold - 2);
+            stats.sparse_blocks += 1;
+            stats.integers_in_sparse_blocks += block.size();
+            stats.sparse_blocks_bits += 8 * (block.size() + 1);
+
+            if (write) {
+                write_header(block_id, header_offset, out, type::sparse);
+                write_uint<uint8_t>(block.size(), out);
+                for (auto pos : block) {
+                    write_uint<uint8_t>(pos, out);
+                }
+            }
+        }
+
+        block.clear();
+    }
+}
+
+void encode_sequence(uint32_t const* data, size_t n,
+                     std::vector<uint32_t>& block, statistics& stats,
+                     std::vector<uint8_t>& out) {
+    assert(block.empty());
+    auto begin = data;
+    auto end = data + n;
+    uint32_t universe = *(data + n - 1);
+    uint32_t chunks =
+        (universe + constants::chunk_size - 1) / constants::chunk_size;
+    assert(chunks < constants::chunk_size);
+    uint32_t blocks_in_chunk = constants::chunk_size / constants::block_size;
+
+    stats.sequences += 1;
+    stats.integers += n;
+    stats.chunks += chunks;
+
+    std::vector<uint8_t> tmp;
+    uint32_t left = 0;
+    uint32_t right = constants::chunk_size;
+    for (uint32_t i = 0; i != chunks; ++i) {
+        // std::cout << "[" << left << ", " << right << ")" << std::endl;
+
+        if (*begin < right) {
+            // first ride computes the cardinality of the chunk
+            uint32_t base = left;
+            uint32_t integers_in_chunk = 0;
+            while (*begin < right and begin != end) {
+                assert(*begin >= base);
+                assert(*begin - base < constants::chunk_size);
+                ++begin;
+                ++integers_in_chunk;
+            }
+
+            // actual chunk universe
+            // uint32_t chunk_universe = *(begin - 1) - base + 1;
+            uint32_t chunk_universe =
+                constants::chunk_size;  // max possible chunk universe
+            uint32_t dense_chunk_bytes = bytes_for(chunk_universe);
+            assert(dense_chunk_bytes * 8 <= constants::chunk_size);
+            assert(integers_in_chunk <= constants::chunk_size);
+            assert(chunk_universe <= constants::chunk_size);
+            assert(integers_in_chunk <= chunk_universe);
+
+            uint16_t id = i;
+            write_uint(id, out);
+
+            if (integers_in_chunk < constants::chunk_sparseness_threshold) {
+                statistics sparse_chunk_stats;
+                begin -= integers_in_chunk;
+                bool write = false;  // first ride computes chunks' bits
+                size_t header_offset = tmp.size();
+                uint32_t block_id = 0;
+                while (*begin < right and begin != end) {
+                    uint32_t val = *begin - base;
+                    if (val >= constants::block_size) {
+                        encode_block(block, block_id, header_offset,
+                                     sparse_chunk_stats, tmp, write);
+                        base += constants::block_size;
+                    } else {
+                        assert(val < constants::block_size);
+                        block.push_back(val);
+                        assert(block.size() <= constants::block_size);
+                        ++begin;
+                    }
+                }
+                encode_block(block, block_id, header_offset, sparse_chunk_stats,
+                             tmp, write);
+
+                uint64_t sparse_chunk_bytes =
+                    (2 * blocks_in_chunk +  // header bits
+                     sparse_chunk_stats.dense_blocks_bits +
+                     sparse_chunk_stats.sparse_blocks_bits) /
+                    8;
+
+                if (sparse_chunk_bytes >= dense_chunk_bytes) {
+                    stats.dense_chunks += 1;
+                    stats.dense_chunks_bits += dense_chunk_bytes * 8;
+                    stats.integers_in_dense_chunks += integers_in_chunk;
+
+                    write_uint<uint16_t>(type::dense, out);
+                    write_uint<uint16_t>(constants::chunk_size / 8, out);
+
+                    begin -= integers_in_chunk;
+                    write_bits(begin, integers_in_chunk, constants::chunk_size,
+                               left, tmp);
+
+                } else {
+                    stats.sparse_chunks += 1;
+                    stats.integers_in_sparse_chunks += integers_in_chunk;
+
+                    stats.blocks += blocks_in_chunk;
+                    assert(sparse_chunk_stats.blocks <= blocks_in_chunk);
+                    stats.empty_blocks +=
+                        blocks_in_chunk - sparse_chunk_stats.blocks;
+
+                    stats.full_blocks += sparse_chunk_stats.full_blocks;
+                    stats.dense_blocks += sparse_chunk_stats.dense_blocks;
+                    stats.sparse_blocks += sparse_chunk_stats.sparse_blocks;
+                    stats.empty_blocks += sparse_chunk_stats.empty_blocks;
+
+                    stats.integers_in_full_blocks +=
+                        sparse_chunk_stats.integers_in_full_blocks;
+                    stats.integers_in_dense_blocks +=
+                        sparse_chunk_stats.integers_in_dense_blocks;
+                    stats.integers_in_sparse_blocks +=
+                        sparse_chunk_stats.integers_in_sparse_blocks;
+
+                    stats.dense_blocks_bits +=
+                        sparse_chunk_stats.dense_blocks_bits;
+                    stats.sparse_blocks_bits +=
+                        sparse_chunk_stats.sparse_blocks_bits;
+
+                    write_uint<uint16_t>(type::sparse, out);
+                    write_uint<uint16_t>(sparse_chunk_bytes, out);
+
+                    // write space for headers
+                    size_t header_offset = tmp.size();
+                    uint64_t empty[8] = {0};
+                    auto ptr = reinterpret_cast<uint8_t const*>(empty);
+                    tmp.insert(tmp.end(), ptr, ptr + 8 * sizeof(uint64_t));
+
+                    begin -= integers_in_chunk;
+                    write = true;
+                    uint32_t block_id = 0;
+                    while (*begin < right and begin != end) {
+                        uint32_t val = *begin - base;
+                        if (val >= constants::block_size) {
+                            encode_block(block, block_id, header_offset,
+                                         sparse_chunk_stats, tmp, write);
+                            base += constants::block_size;
+                        } else {
+                            assert(val < constants::block_size);
+                            block.push_back(val);
+                            assert(block.size() <= constants::block_size);
+                            ++begin;
+                        }
+                    }
+                    encode_block(block, block_id, header_offset,
+                                 sparse_chunk_stats, tmp, write);
+                }
+
+            } else {
+                if (integers_in_chunk == chunk_universe) {
+                    stats.full_chunks += 1;
+                    stats.integers_in_full_chunks += integers_in_chunk;
+                    write_uint<uint16_t>(type::full, out);
+                    write_uint<uint16_t>(0, out);
+                } else {
+                    stats.dense_chunks += 1;
+                    stats.dense_chunks_bits += dense_chunk_bytes * 8;
+                    stats.integers_in_dense_chunks += integers_in_chunk;
+                    assert(dense_chunk_bytes * 8.0 / integers_in_chunk <= 2.0);
+                    write_uint<uint16_t>(type::dense, out);
+                    write_uint<uint16_t>(constants::chunk_size / 8, out);
+                    write_bits(begin, integers_in_chunk, constants::chunk_size,
+                               left, tmp);
+                }
+            }
+
+        } else {
+            stats.empty_chunks += 1;
+        }
+
+        left = right;
+        right += constants::chunk_size;
+    }
+
+    out.insert(out.end(), tmp.begin(), tmp.end());
+}
+
+};  // namespace sliced
