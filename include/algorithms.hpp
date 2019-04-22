@@ -51,7 +51,6 @@ uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
 
 uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     uint32_t cardinality = *begin++;
-    // std::cout << "cardinality of sparse block: " << cardinality << std::endl;
     for (uint32_t i = 0; i != cardinality; ++i) {
         out[i] = *begin++;
     }
@@ -77,22 +76,18 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t* out) {
     uint32_t decoded = 0;
     for (uint32_t i = 0; i != 64; ++i) {
         uint8_t header_byte = begin[i];
-        // std::cout << int(header_byte) << std::endl;
         if (header_byte == 0) {
             base += 256 * 4;
         } else {
             for (uint32_t i = 0; i != 4; ++i) {
                 uint8_t header = header_byte & 3;
-                // std::cout << "header " << int(header) << std::endl;
                 uint32_t d = 0;
                 switch (header) {
                     case type::empty:
                         break;
                     case type::sparse:
-                        // std::cout << "*data " << int(*data) << std::endl;
                         d = decode_sparse_block(data, tmp);
                         data += d + 1;
-                        // std::cout << "*data " << int(*data) << std::endl;
                         break;
                     case type::dense:
                         d = decode_dense_block(data, tmp);

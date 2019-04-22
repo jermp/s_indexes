@@ -43,7 +43,6 @@ struct s_index {
                     if (stats.sequences % 1000 == 0) {
                         std::cout << "processed " << stats.sequences
                                   << " sequences" << std::endl;
-                        // break;
                     }
                 }
                 i += n + 1;
@@ -58,11 +57,6 @@ struct s_index {
             stats.bits = stats.chunks_header_bits + stats.blocks_header_bits +
                          stats.dense_chunks_bits + stats.dense_blocks_bits +
                          stats.sparse_blocks_bits;
-
-            std::cout << "offsets " << offsets.size() * sizeof(offsets.front())
-                      << " bytes" << std::endl;
-            std::cout << "sequences " << sequences.size() << " bytes"
-                      << std::endl;
 
             index.m_offsets.swap(offsets);
             index.m_sequences.swap(sequences);
