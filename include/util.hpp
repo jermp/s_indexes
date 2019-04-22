@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 namespace sliced {
 
 size_t bytes_for(size_t bits) {
@@ -15,7 +17,7 @@ struct parameters {
 
 struct statistics {
     statistics() {
-        std::memset(this, 0, 24 * sizeof(uint64_t));
+        memset(this, 0, 24 * sizeof(uint64_t));
     }
 
     uint64_t sequences;
