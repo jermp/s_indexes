@@ -91,16 +91,16 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		decoded 13276 sequences
 		decoded 5066748826 integers
-		Elapsed time: 6.70926 [sec]
-		Mean per sequence: 505.368 [musec]
-		Mean per integer: 1.32417 [ns]
+		Elapsed time: 6.48553 [sec]
+		Mean per sequence: 488.516 [musec]
+		Mean per integer: 1.28002 [ns]
 
-		➜  build git:(master) ✗ ./decode clueweb09.bin
+		➜  build git:(master) ✗ ./decode clueweb09.bin 
 		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
 		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
 		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		decoded 21924 sequences
 		decoded 13864451283 integers
-		Elapsed time: 29.0063 [sec]
-		Mean per sequence: 1323.04 [musec]
-		Mean per integer: 2.09213 [ns]
+		Elapsed time: 28.0271 [sec]
+		Mean per sequence: 1278.37 [musec]
+		Mean per integer: 2.02151 [ns]

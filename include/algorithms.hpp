@@ -13,34 +13,34 @@ uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
     // https://lemire.me/blog/2018/03/08/iterating-over-set-bits-quickly-simd-edition/
     // credits to Daniel Lemire
     uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(begin);
-    __m256i baseVec = _mm256_set1_epi32(-1);
-    __m256i incVec = _mm256_set1_epi32(64);
+    __m256i base_vec = _mm256_set1_epi32(-1);
+    __m256i inc_vec = _mm256_set1_epi32(64);
     __m256i add8 = _mm256_set1_epi32(8);
 
     size_t decoded = 0;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
         uint64_t w = bitmap[i];
         if (w == 0) {
-            baseVec = _mm256_add_epi32(baseVec, incVec);
+            base_vec = _mm256_add_epi32(base_vec, inc_vec);
         } else {
             for (int k = 0; k < 4; ++k) {  // process 2 bytes of data at a time
-                uint8_t byteA = (uint8_t)w;
-                uint8_t byteB = (uint8_t)(w >> 8);
+                uint8_t byte1 = (uint8_t)w;
+                uint8_t byte2 = (uint8_t)(w >> 8);
                 w >>= 16;
-                __m256i vecA = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byteA]);
-                __m256i vecB = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byteB]);
-                uint8_t advanceA = tables::size[byteA];
-                uint8_t advanceB = tables::size[byteB];
-                vecA = _mm256_add_epi32(baseVec, vecA);
-                baseVec = _mm256_add_epi32(baseVec, add8);
-                vecB = _mm256_add_epi32(baseVec, vecB);
-                baseVec = _mm256_add_epi32(baseVec, add8);
-                _mm256_storeu_si256((__m256i*)(out + decoded), vecA);
-                decoded += advanceA;
-                _mm256_storeu_si256((__m256i*)(out + decoded), vecB);
-                decoded += advanceB;
+                __m256i vec1 = _mm256_load_si256(
+                    (const __m256i*)tables::dictionary[byte1]);
+                __m256i vec2 = _mm256_load_si256(
+                    (const __m256i*)tables::dictionary[byte2]);
+                uint8_t advance1 = tables::size[byte1];
+                uint8_t advance2 = tables::size[byte2];
+                vec1 = _mm256_add_epi32(base_vec, vec1);
+                base_vec = _mm256_add_epi32(base_vec, add8);
+                vec2 = _mm256_add_epi32(base_vec, vec2);
+                base_vec = _mm256_add_epi32(base_vec, add8);
+                _mm256_storeu_si256((__m256i*)(out + decoded), vec1);
+                decoded += advance1;
+                _mm256_storeu_si256((__m256i*)(out + decoded), vec2);
+                decoded += advance2;
             }
         }
     }
@@ -56,12 +56,35 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     //     out[i] = *begin++;
     // }
 
-    for (size_t i = 0; i < cardinality; i += 8) {
-        __m128i in_vec = _mm_load_si128((__m128i const*)begin);
-        __m256i converted = _mm256_cvtepu8_epi32(in_vec);
-        _mm256_storeu_si256((__m256i*)(out + i), converted);
-        begin += 8;
+    // for (size_t i = 0; i < cardinality; i += 8) {
+    //     __m128i in_vec = _mm_load_si128((__m128i const*)begin);
+    //     __m256i converted = _mm256_cvtepu8_epi32(in_vec);
+    //     _mm256_storeu_si256((__m256i*)(out + i), converted);
+    //     begin += 8;
+    // }
+
+    __m128i in_vec;
+    __m256i converted;
+
+    in_vec = _mm_load_si128((__m128i const*)(begin + 0));
+    converted = _mm256_cvtepu8_epi32(in_vec);
+    _mm256_storeu_si256((__m256i*)(out + 0), converted);
+
+    if (cardinality <= 8) {  // most likely
+        return cardinality;
     }
+
+    in_vec = _mm_load_si128((__m128i const*)(begin + 8));
+    converted = _mm256_cvtepu8_epi32(in_vec);
+    _mm256_storeu_si256((__m256i*)(out + 8), converted);
+
+    in_vec = _mm_load_si128((__m128i const*)(begin + 16));
+    converted = _mm256_cvtepu8_epi32(in_vec);
+    _mm256_storeu_si256((__m256i*)(out + 16), converted);
+
+    in_vec = _mm_load_si128((__m128i const*)(begin + 24));
+    converted = _mm256_cvtepu8_epi32(in_vec);
+    _mm256_storeu_si256((__m256i*)(out + 24), converted);
 
     return cardinality;
 }
