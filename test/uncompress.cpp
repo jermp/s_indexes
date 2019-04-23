@@ -14,7 +14,7 @@ void uncompress(char const* binary_filename) {
     essentials::print_size(index);
 
     const uint32_t universe = 52000000;
-    std::vector<uint64_t> out(essentials::words_for(universe));
+    std::vector<uint64_t> out(essentials::words_for(universe), 0);
     uint64_t integers = 0;
 
     essentials::timer_type t;

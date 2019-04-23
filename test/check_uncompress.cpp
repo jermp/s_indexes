@@ -64,8 +64,7 @@ void check_uncompress(char const* binary_filename,
     uint32_t universe = data[1];
     std::cout << "universe size: " << universe << std::endl;
 
-    size_t size_in_64bit_words = essentials::words_for(universe);
-    std::cout << "size_in_64bit_words " << size_in_64bit_words << std::endl;
+    size_t size_in_64bit_words = essentials::words_for(52000000);
     std::vector<uint64_t> bitmap(size_in_64bit_words, 0);
     std::vector<uint32_t> out(universe);
     size_t k = 0;
