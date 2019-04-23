@@ -104,3 +104,25 @@ Sliced Indexes
 		Elapsed time: 28.0271 [sec]
 		Mean per sequence: 1278.37 [musec]
 		Mean per integer: 2.02151 [ns]
+		
+- Uncompressing
+
+		➜  build git:(master) ✗ ./uncompress gov2.bin
+		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
+		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
+		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
+		decoded 13276 sequences
+		decoded 5066748826 integers
+		Elapsed time: 2.99191 [sec]
+		Mean per sequence: 225.362 [musec]
+		Mean per integer: 0.590498 [ns]
+		
+		➜  build git:(master) ✗ ./uncompress clueweb09.bin 
+		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
+		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
+		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
+		decoded 21924 sequences
+		decoded 13864451283 integers
+		Elapsed time: 16.8252 [sec]
+		Mean per sequence: 767.431 [musec]
+		Mean per integer: 1.21355 [ns]
