@@ -9,8 +9,8 @@
 
 using namespace sliced;
 
-void check(char const* binary_filename, char const* collection_filename,
-           double density) {
+void check_decode(char const* binary_filename, char const* collection_filename,
+                  double density) {
     s_index index;
     essentials::load(index, binary_filename);
     essentials::print_size(index);
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     char const* collection_filename = argv[2];
     double density = std::stod(argv[3]);
 
-    check(index_filename, collection_filename, density);
+    check_decode(index_filename, collection_filename, density);
 
     return 0;
 }

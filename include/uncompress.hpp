@@ -13,23 +13,28 @@ inline void set_bit(uint8_t position, uint64_t* out) {
 uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
     uint32_t cardinality = *begin++;
 
-    set_bit(*(begin + 0), out);
-    set_bit(*(begin + 1), out);
-    set_bit(*(begin + 2), out);
-    set_bit(*(begin + 3), out);
-    set_bit(*(begin + 4), out);
-    set_bit(*(begin + 5), out);
-    set_bit(*(begin + 6), out);
-    set_bit(*(begin + 7), out);
-
-    if (cardinality <= 8) {  // most likely
-        return cardinality;
-    }
-
-    begin += 8;
-    for (uint32_t i = 8; i < cardinality; ++i) {
+    for (uint32_t i = 0; i < cardinality; ++i) {
         set_bit(*begin++, out);
     }
+
+    // NOTE: need to reset words to 0
+    // set_bit(*(begin + 0), out);
+    // set_bit(*(begin + 1), out);
+    // set_bit(*(begin + 2), out);
+    // set_bit(*(begin + 3), out);
+    // set_bit(*(begin + 4), out);
+    // set_bit(*(begin + 5), out);
+    // set_bit(*(begin + 6), out);
+    // set_bit(*(begin + 7), out);
+
+    // if (cardinality <= 8) {  // most likely
+    //     return cardinality;
+    // }
+
+    // begin += 8;
+    // for (uint32_t i = 8; i < cardinality; ++i) {
+    //     set_bit(*begin++, out);
+    // }
 
     return cardinality;
 }
@@ -61,6 +66,7 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
         uint8_t header_byte = begin[i];
         if (header_byte == 0) {
             base += 256 * 4;
+            tmp += constants::block_size_in_64bit_words * 4;
         } else {
             for (uint32_t i = 0; i != 4; ++i) {
                 uint8_t header = header_byte & 3;

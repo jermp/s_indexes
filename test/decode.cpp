@@ -13,7 +13,7 @@ void decode(char const* binary_filename) {
     essentials::load(index, binary_filename);
     essentials::print_size(index);
 
-    const uint32_t universe = 25000000;
+    const uint32_t universe = 52000000;
     std::vector<uint32_t> out(universe);
     uint64_t integers = 0;
 
