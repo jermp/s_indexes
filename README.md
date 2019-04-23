@@ -85,22 +85,22 @@ Sliced Indexes
     
 - Decoding
 
-		➜  build git:(master) ./decode gov2.bin                                                               
+		➜  build git:(master) ✗ ./decode gov2.bin
 		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
 		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
 		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		decoded 13276 sequences
 		decoded 5066748826 integers
-		Elapsed time: 7.17525 [sec]
-		Mean per sequence: 540.468 [musec]
-		Mean per integer: 1.41614 [ns]
-		
-		➜  build git:(master) ./decode clueweb09.bin
+		Elapsed time: 6.70926 [sec]
+		Mean per sequence: 505.368 [musec]
+		Mean per integer: 1.32417 [ns]
+
+		➜  build git:(master) ✗ ./decode clueweb09.bin
 		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
 		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
 		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		decoded 21924 sequences
 		decoded 13864451283 integers
-		Elapsed time: 31.6097 [sec]
-		Mean per sequence: 1441.78 [musec]
-		Mean per integer: 2.27991 [ns]
+		Elapsed time: 29.0063 [sec]
+		Mean per sequence: 1323.04 [musec]
+		Mean per integer: 2.09213 [ns]

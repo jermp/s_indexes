@@ -52,14 +52,15 @@ uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
 uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     uint32_t cardinality = *begin++;
 
-    if (cardinality <= 8) {
+    // for (uint32_t i = 0; i != cardinality; ++i) {
+    //     out[i] = *begin++;
+    // }
+
+    for (size_t i = 0; i < cardinality; i += 8) {
         __m128i in_vec = _mm_load_si128((__m128i const*)begin);
         __m256i converted = _mm256_cvtepu8_epi32(in_vec);
-        _mm256_storeu_si256((__m256i*)out, converted);
-    } else {
-        for (uint32_t i = 0; i != cardinality; ++i) {
-            out[i] = *begin++;
-        }
+        _mm256_storeu_si256((__m256i*)(out + i), converted);
+        begin += 8;
     }
 
     return cardinality;
