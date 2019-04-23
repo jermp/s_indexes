@@ -128,6 +128,9 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t* out) {
                     case type::full:
                         d = decode_full_block(data, tmp);
                         break;
+                    default:
+                        assert(false);
+                        __builtin_unreachable();
                 }
 
                 for (size_t i = 0; i != d; ++i) {
@@ -157,55 +160,49 @@ uint32_t decode_full_chunk(uint8_t const* begin, uint32_t* out) {
 }
 
 size_t s_sequence::decode(uint32_t* out) {
-    uint16_t const* header = reinterpret_cast<uint16_t const*>(m_begin);
-    uint32_t num_chunks = *header++;
-    // std::cout << "num_chunks " << num_chunks << std::endl;
-    uint8_t const* data =
-        m_begin + sizeof(uint16_t) + num_chunks * 3 * sizeof(uint16_t);
+    auto h = header();
+    auto d = data();
     size_t decoded = 0;
 
-    for (uint32_t i = 0; i != num_chunks; ++i) {
-        uint16_t chunk_id = *header;
-        uint16_t chunk_type = *(header + 1);
-        uint16_t offset = *(header + 2);
+    for (uint32_t i = 0; i != chunks; ++i) {
+        uint16_t id = *h;
+        uint16_t type = *(h + 1);
+        uint16_t offset = *(h + 2);
 
-        // std::cout << "chunk_id " << chunk_id << std::endl;
-        // std::cout << "chunk_type " << chunk_type << std::endl;
-        // std::cout << "offset " << offset << std::endl;
-
-        uint32_t d = 0;
-        switch (chunk_type) {
+        uint32_t n = 0;
+        switch (type) {
             case type::sparse:
-                d = decode_sparse_chunk(data, out);
+                n = decode_sparse_chunk(d, out);
                 break;
             case type::dense:
-                d = decode_dense_chunk(data, out);
+                n = decode_dense_chunk(d, out);
                 break;
             case type::full:
-                d = decode_full_chunk(data, out);
+                n = decode_full_chunk(d, out);
                 break;
             default:
                 assert(false);
+                __builtin_unreachable();
         }
 
         // same speed as with SIMD (vectorization at compile time)
-        uint32_t base = chunk_id << 16;
-        for (size_t i = 0; i != d; ++i) {
+        uint32_t base = id << 16;
+        for (size_t i = 0; i != n; ++i) {
             out[i] += base;
         }
 
         // __m256i base_vec = _mm256_set1_epi32(base);
-        // size_t k = (d + 7) / 8 * 8;
+        // size_t k = (n + 7) / 8 * 8;
         // for (size_t i = 0; i != k; i += 8) {
         //     __m256i in_vec = _mm256_load_si256((__m256i const*)(out +
         //     i)); in_vec = _mm256_add_epi32(base_vec, in_vec);
         //     _mm256_storeu_si256((__m256i*)(out + i), in_vec);
         // }
 
-        out += d;
-        decoded += d;
-        data += offset;
-        header += 3;
+        out += n;
+        decoded += n;
+        d += offset;
+        h += 3;
     }
 
     assert(decoded > 0);

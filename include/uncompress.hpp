@@ -85,6 +85,9 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
                     case type::full:
                         u = uncompress_full_block(data, tmp);
                         break;
+                    default:
+                        assert(false);
+                        __builtin_unreachable();
                 }
 
                 tmp += constants::block_size_in_64bit_words;
@@ -116,39 +119,38 @@ uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
 }
 
 size_t s_sequence::uncompress(uint64_t* out) {
-    uint16_t const* header = reinterpret_cast<uint16_t const*>(m_begin);
-    uint32_t num_chunks = *header++;
-    uint8_t const* data =
-        m_begin + sizeof(uint16_t) + num_chunks * 3 * sizeof(uint16_t);
+    auto h = header();
+    auto d = data();
     size_t uncompressed = 0;
 
-    uint16_t prev_chunk_id = 0;
-    for (uint32_t i = 0; i != num_chunks; ++i) {
-        uint16_t chunk_id = *header;
-        uint16_t chunk_type = *(header + 1);
-        uint16_t offset = *(header + 2);
-        uint32_t u = 0;
-        out +=
-            (chunk_id - prev_chunk_id) * constants::chunk_size_in_64bit_words;
+    uint16_t prev = 0;
+    for (uint32_t i = 0; i != chunks; ++i) {
+        uint16_t id = *h;
+        uint16_t type = *(h + 1);
+        uint16_t offset = *(h + 2);
 
-        switch (chunk_type) {
+        uint32_t u = 0;
+        out += (id - prev) * constants::chunk_size_in_64bit_words;
+
+        switch (type) {
             case type::sparse:
-                u = uncompress_sparse_chunk(data, out);
+                u = uncompress_sparse_chunk(d, out);
                 break;
             case type::dense:
-                u = uncompress_dense_chunk(data, out);
+                u = uncompress_dense_chunk(d, out);
                 break;
             case type::full:
-                u = uncompress_full_chunk(data, out);
+                u = uncompress_full_chunk(d, out);
                 break;
             default:
                 assert(false);
+                __builtin_unreachable();
         }
 
         uncompressed += u;
-        data += offset;
-        header += 3;
-        prev_chunk_id = chunk_id;
+        d += offset;
+        h += 3;
+        prev = id;
     }
 
     assert(uncompressed > 0);
