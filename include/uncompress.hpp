@@ -1,9 +1,6 @@
 #pragma once
 
-#include "immintrin.h"
-
 #include "configuration.hpp"
-#include "tables.hpp"
 
 namespace sliced {
 
