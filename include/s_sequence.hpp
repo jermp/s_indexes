@@ -39,10 +39,19 @@ struct s_sequence {
                     assert(false);
             }
 
+            // same speed as with SIMD (vectorization at compile time)
             uint32_t base = chunk_id << 16;
             for (size_t i = 0; i != d; ++i) {
                 out[i] += base;
             }
+
+            // __m256i base_vec = _mm256_set1_epi32(base);
+            // size_t k = (d + 7) / 8 * 8;
+            // for (size_t i = 0; i != k; i += 8) {
+            //     __m256i in_vec = _mm256_load_si256((__m256i const*)(out +
+            //     i)); in_vec = _mm256_add_epi32(base_vec, in_vec);
+            //     _mm256_storeu_si256((__m256i*)(out + i), in_vec);
+            // }
 
             out += d;
             decoded += d;
