@@ -1,76 +1,48 @@
 #include <iostream>
 
 #include "../external/essentials/include/essentials.hpp"
-#include "../external/mm_file/include/mm_file/mm_file.hpp"
 
 #include "util.hpp"
 #include "s_index.hpp"
 
 using namespace sliced;
 
-void decode(char const* binary_filename, char const* collection_filename,
-            double density) {
+void decode(char const* binary_filename) {
     s_index index;
     essentials::load(index, binary_filename);
     essentials::print_size(index);
 
-    mm::file_source<uint32_t> input(collection_filename,
-                                    mm::advice::sequential);
-    uint32_t const* data = input.data();
-
-    assert(data[0] == 1);
-    uint32_t universe = data[1];
-    std::cout << "universe size: " << universe << std::endl;
-
+    const uint32_t universe = 25000000;
     std::vector<uint32_t> out(universe);
-    size_t k = 0;
+    uint64_t integers = 0;
 
-    for (size_t i = 2; i < input.size();) {
-        uint32_t n = data[i];
-        uint32_t universe = data[i + n];
-        if (double(n) / universe > density) {
-            auto sequence = index[k];
-            size_t decoded = sequence.decode(out.data());
-
-            if (decoded != n) {
-                std::cout << "decoded " << decoded << " integers: expected "
-                          << n << std::endl;
-            }
-
-            uint32_t const* ptr = data + i + 1;
-            for (size_t j = 0; j != n; ++j) {
-                uint32_t expected = *ptr++;
-                if (expected != out[j]) {
-                    std::cout << "error at " << j << "/" << n << ": expected "
-                              << expected << " but got " << out[j] << std::endl;
-                }
-            }
-
-            ++k;
-            if (k % 1000 == 0) {
-                std::cout << "decoded " << k << " sequences" << std::endl;
-            }
-        }
-        i += n + 1;
+    essentials::timer_type t;
+    t.start();
+    for (size_t i = 0; i != index.size(); ++i) {
+        auto sequence = index[i];
+        size_t decoded = sequence.decode(out.data());
+        integers += decoded;
     }
-    std::cout << "decoded " << k << " sequences" << std::endl;
-    std::cout << "everything good" << std::endl;
+    t.stop();
+
+    std::cout << "decoded " << index.size() << " sequences" << std::endl;
+    std::cout << "decoded " << integers << " integers" << std::endl;
+
+    double elapsed = t.average();
+    std::cout << "Elapsed time: " << elapsed / 1000000 << " [sec]\n";
+    std::cout << "Mean per sequence: " << elapsed / index.size()
+              << " [musec]\n";
+    std::cout << "Mean per integer: " << elapsed / integers * 1000 << " [ns]";
+    std::cout << std::endl;
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 4;
+    int mandatory = 2;
     if (argc < mandatory) {
-        std::cout << argv[0]
-                  << " <index_filename> <collection_filename> <density>"
-                  << std::endl;
+        std::cout << argv[0] << " <index_filename>" << std::endl;
         return 1;
     }
 
-    char const* index_filename = argv[1];
-    char const* collection_filename = argv[2];
-    double density = std::stod(argv[3]);
-
-    decode(index_filename, collection_filename, density);
-
+    decode(argv[1]);
     return 0;
 }

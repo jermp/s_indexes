@@ -58,6 +58,7 @@ struct s_index {
                          stats.dense_chunks_bits + stats.dense_blocks_bits +
                          stats.sparse_blocks_bits;
 
+            offsets.pop_back();
             index.m_offsets.swap(offsets);
             index.m_sequences.swap(sequences);
 
