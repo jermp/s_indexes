@@ -119,40 +119,31 @@ uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
 }
 
 size_t s_sequence::uncompress(uint64_t* out) {
-    auto h = header();
-    auto d = data();
+    iterator it = begin();
     size_t uncompressed = 0;
-
     uint16_t prev = 0;
     for (uint32_t i = 0; i != chunks; ++i) {
-        uint16_t id = *h;
-        uint16_t type = *(h + 1);
-        uint16_t offset = *(h + 2);
-
+        uint16_t id = it.id();
         uint32_t u = 0;
         out += (id - prev) * constants::chunk_size_in_64bit_words;
-
-        switch (type) {
+        switch (it.type()) {
             case type::sparse:
-                u = uncompress_sparse_chunk(d, out);
+                u = uncompress_sparse_chunk(it.data, out);
                 break;
             case type::dense:
-                u = uncompress_dense_chunk(d, out);
+                u = uncompress_dense_chunk(it.data, out);
                 break;
             case type::full:
-                u = uncompress_full_chunk(d, out);
+                u = uncompress_full_chunk(it.data, out);
                 break;
             default:
                 assert(false);
                 __builtin_unreachable();
         }
-
         uncompressed += u;
-        d += offset;
-        h += 3;
         prev = id;
+        it.next();
     }
-
     assert(uncompressed > 0);
     return uncompressed;
 }

@@ -22,9 +22,12 @@ struct s_sequence {
         return m_data;
     }
 
-    struct cursor {
-        cursor(s_sequence const& s, uint32_t begin, uint32_t end)
-            : header(s.header()), data(s.data()), position(begin), end(end) {}
+    struct iterator {
+        iterator(s_sequence const& s, uint32_t begin, uint32_t end)
+            : header(s.header())
+            , data(s.data())
+            , position(begin)
+            , end(end) {}
 
         inline uint16_t id() const {
             return *header;
@@ -60,8 +63,8 @@ struct s_sequence {
         uint32_t end;
     };
 
-    cursor begin() {
-        return cursor(*this, 0, chunks);
+    iterator begin() {
+        return iterator(*this, 0, chunks);
     }
 
     uint32_t chunks;

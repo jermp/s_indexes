@@ -44,25 +44,11 @@ uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
             }
         }
     }
-
-    begin += size_in_64bit_words * sizeof(uint64_t);
     return decoded;
 }
 
 uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     uint32_t cardinality = *begin++;
-
-    // for (uint32_t i = 0; i != cardinality; ++i) {
-    //     out[i] = *begin++;
-    // }
-
-    // for (size_t i = 0; i < cardinality; i += 8) {
-    //     __m128i in_vec = _mm_load_si128((__m128i const*)begin);
-    //     __m256i converted = _mm256_cvtepu8_epi32(in_vec);
-    //     _mm256_storeu_si256((__m256i*)(out + i), converted);
-    //     begin += 8;
-    // }
-
     __m128i in_vec;
     __m256i converted;
 
@@ -90,7 +76,7 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
 }
 
 uint32_t decode_dense_block(uint8_t const* begin, uint32_t* out) {
-    return decode_bitmap(begin, constants::block_size / 64, out);
+    return decode_bitmap(begin, constants::block_size_in_64bit_words, out);
 }
 
 uint32_t decode_full_block(uint8_t const* begin, uint32_t* out) {
@@ -148,7 +134,7 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t* out) {
 }
 
 uint32_t decode_dense_chunk(uint8_t const* begin, uint32_t* out) {
-    return decode_bitmap(begin, constants::chunk_size / 64, out);
+    return decode_bitmap(begin, constants::chunk_size_in_64bit_words, out);
 }
 
 uint32_t decode_full_chunk(uint8_t const* begin, uint32_t* out) {
@@ -160,51 +146,33 @@ uint32_t decode_full_chunk(uint8_t const* begin, uint32_t* out) {
 }
 
 size_t s_sequence::decode(uint32_t* out) {
-    auto h = header();
-    auto d = data();
+    iterator it = begin();
     size_t decoded = 0;
-
     for (uint32_t i = 0; i != chunks; ++i) {
-        uint16_t id = *h;
-        uint16_t type = *(h + 1);
-        uint16_t offset = *(h + 2);
-
+        uint16_t id = it.id();
         uint32_t n = 0;
-        switch (type) {
+        switch (it.type()) {
             case type::sparse:
-                n = decode_sparse_chunk(d, out);
+                n = decode_sparse_chunk(it.data, out);
                 break;
             case type::dense:
-                n = decode_dense_chunk(d, out);
+                n = decode_dense_chunk(it.data, out);
                 break;
             case type::full:
-                n = decode_full_chunk(d, out);
+                n = decode_full_chunk(it.data, out);
                 break;
             default:
                 assert(false);
                 __builtin_unreachable();
         }
-
-        // same speed as with SIMD (vectorization at compile time)
         uint32_t base = id << 16;
         for (size_t i = 0; i != n; ++i) {
             out[i] += base;
         }
-
-        // __m256i base_vec = _mm256_set1_epi32(base);
-        // size_t k = (n + 7) / 8 * 8;
-        // for (size_t i = 0; i != k; i += 8) {
-        //     __m256i in_vec = _mm256_load_si256((__m256i const*)(out +
-        //     i)); in_vec = _mm256_add_epi32(base_vec, in_vec);
-        //     _mm256_storeu_si256((__m256i*)(out + i), in_vec);
-        // }
-
         out += n;
         decoded += n;
-        d += offset;
-        h += 3;
+        it.next();
     }
-
     assert(decoded > 0);
     return decoded;
 }

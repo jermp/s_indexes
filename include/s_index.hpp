@@ -15,7 +15,8 @@ namespace sliced {
 
 struct s_index {
     struct builder {
-        builder(parameters const& params) : m_params(params) {}
+        builder(parameters const& params)
+            : m_params(params) {}
 
         statistics build(s_index& index) {
             mm::file_source<uint32_t> input(m_params.collection_filename,
@@ -68,8 +69,6 @@ struct s_index {
     private:
         parameters const& m_params;
     };
-
-    s_index() {}
 
     size_t size() const {
         return m_offsets.size();
