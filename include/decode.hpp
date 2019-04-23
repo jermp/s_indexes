@@ -156,4 +156,59 @@ uint32_t decode_full_chunk(uint8_t const* begin, uint32_t* out) {
     return constants::chunk_size;
 }
 
+size_t s_sequence::decode(uint32_t* out) {
+    uint16_t const* header = reinterpret_cast<uint16_t const*>(m_begin);
+    uint32_t num_chunks = *header++;
+    // std::cout << "num_chunks " << num_chunks << std::endl;
+    uint8_t const* data =
+        m_begin + sizeof(uint16_t) + num_chunks * 3 * sizeof(uint16_t);
+    size_t decoded = 0;
+
+    for (uint32_t i = 0; i != num_chunks; ++i) {
+        uint16_t chunk_id = *header;
+        uint16_t chunk_type = *(header + 1);
+        uint16_t offset = *(header + 2);
+
+        // std::cout << "chunk_id " << chunk_id << std::endl;
+        // std::cout << "chunk_type " << chunk_type << std::endl;
+        // std::cout << "offset " << offset << std::endl;
+
+        uint32_t d = 0;
+        switch (chunk_type) {
+            case type::sparse:
+                d = decode_sparse_chunk(data, out);
+                break;
+            case type::dense:
+                d = decode_dense_chunk(data, out);
+                break;
+            case type::full:
+                d = decode_full_chunk(data, out);
+                break;
+            default:
+                assert(false);
+        }
+
+        // same speed as with SIMD (vectorization at compile time)
+        uint32_t base = chunk_id << 16;
+        for (size_t i = 0; i != d; ++i) {
+            out[i] += base;
+        }
+
+        // __m256i base_vec = _mm256_set1_epi32(base);
+        // size_t k = (d + 7) / 8 * 8;
+        // for (size_t i = 0; i != k; i += 8) {
+        //     __m256i in_vec = _mm256_load_si256((__m256i const*)(out +
+        //     i)); in_vec = _mm256_add_epi32(base_vec, in_vec);
+        //     _mm256_storeu_si256((__m256i*)(out + i), in_vec);
+        // }
+
+        out += d;
+        decoded += d;
+        data += offset;
+        header += 3;
+    }
+
+    assert(decoded > 0);
+    return decoded;
+}
 }  // namespace sliced

@@ -5,6 +5,7 @@
 
 #include "util.hpp"
 #include "s_index.hpp"
+#include "decode.hpp"
 
 using namespace sliced;
 
