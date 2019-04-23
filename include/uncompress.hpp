@@ -4,17 +4,33 @@
 
 namespace sliced {
 
-void set_bit(uint8_t position, uint64_t* out) {
+inline void set_bit(uint8_t position, uint64_t* out) {
     size_t w = position / 64;
-    size_t o = position % 64;
+    size_t o = position & 63;
     out[w] |= uint64_t(1) << o;
 }
 
 uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
     uint32_t cardinality = *begin++;
-    for (uint32_t i = 0; i != cardinality; ++i) {
+
+    set_bit(*(begin + 0), out);
+    set_bit(*(begin + 1), out);
+    set_bit(*(begin + 2), out);
+    set_bit(*(begin + 3), out);
+    set_bit(*(begin + 4), out);
+    set_bit(*(begin + 5), out);
+    set_bit(*(begin + 6), out);
+    set_bit(*(begin + 7), out);
+
+    if (cardinality <= 8) {  // most likely
+        return cardinality;
+    }
+
+    begin += 8;
+    for (uint32_t i = 8; i < cardinality; ++i) {
         set_bit(*begin++, out);
     }
+
     return cardinality;
 }
 
