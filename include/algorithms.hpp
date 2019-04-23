@@ -51,9 +51,17 @@ uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
 
 uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     uint32_t cardinality = *begin++;
-    for (uint32_t i = 0; i != cardinality; ++i) {
-        out[i] = *begin++;
+
+    if (cardinality <= 8) {
+        __m128i in_vec = _mm_load_si128((__m128i const*)begin);
+        __m256i converted = _mm256_cvtepu8_epi32(in_vec);
+        _mm256_storeu_si256((__m256i*)out, converted);
+    } else {
+        for (uint32_t i = 0; i != cardinality; ++i) {
+            out[i] = *begin++;
+        }
     }
+
     return cardinality;
 }
 
@@ -101,8 +109,8 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t* out) {
                 for (size_t i = 0; i != d; ++i) {
                     tmp[i] += base;
                 }
-                tmp += d;
 
+                tmp += d;
                 base += 256;
                 decoded += d;
                 header_byte >>= 2;
