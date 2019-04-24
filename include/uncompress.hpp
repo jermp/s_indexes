@@ -52,7 +52,7 @@ uint32_t uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
 uint32_t uncompress_full_block(uint8_t const* begin, uint64_t* out) {
     (void)begin;
     for (uint32_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
-        out[i] = uint64_t(-1);
+        out[i] = -1;
     }
     return constants::block_size;
 }
@@ -109,7 +109,7 @@ uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
 uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
     (void)begin;
     for (uint32_t i = 0; i != constants::chunk_size_in_64bit_words; ++i) {
-        out[i] = uint64_t(-1);
+        out[i] = -1;
     }
     return constants::chunk_size;
 }

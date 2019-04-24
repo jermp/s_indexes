@@ -29,42 +29,61 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     return size;
 }
 
+// size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
+//                         size_t size_in_64bit_words, uint32_t* out) {
+//     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
+//     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
+//     __m256i base_vec = _mm256_set1_epi32(-1);
+//     __m256i inc_vec = _mm256_set1_epi32(64);
+//     __m256i add8 = _mm256_set1_epi32(8);
+
+//     size_t decoded = 0;
+//     for (size_t i = 0; i != size_in_64bit_words; ++i) {
+//         uint64_t w = bitmap_l[i] & bitmap_r[i];
+//         if (w == 0) {
+//             base_vec = _mm256_add_epi32(base_vec, inc_vec);
+//         } else {
+//             for (int k = 0; k < 4; ++k) {  // process 2 bytes of data at a
+//             time
+//                 uint8_t byte1 = (uint8_t)w;
+//                 uint8_t byte2 = (uint8_t)(w >> 8);
+//                 w >>= 16;
+//                 __m256i vec1 = _mm256_load_si256(
+//                     (const __m256i*)tables::dictionary[byte1]);
+//                 __m256i vec2 = _mm256_load_si256(
+//                     (const __m256i*)tables::dictionary[byte2]);
+//                 uint8_t advance1 = tables::size[byte1];
+//                 uint8_t advance2 = tables::size[byte2];
+//                 vec1 = _mm256_add_epi32(base_vec, vec1);
+//                 base_vec = _mm256_add_epi32(base_vec, add8);
+//                 vec2 = _mm256_add_epi32(base_vec, vec2);
+//                 base_vec = _mm256_add_epi32(base_vec, add8);
+//                 _mm256_storeu_si256((__m256i*)(out + decoded), vec1);
+//                 decoded += advance1;
+//                 _mm256_storeu_si256((__m256i*)(out + decoded), vec2);
+//                 decoded += advance2;
+//             }
+//         }
+//     }
+//     return decoded;
+// }
+
 size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
                         size_t size_in_64bit_words, uint32_t* out) {
     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
-    __m256i base_vec = _mm256_set1_epi32(-1);
-    __m256i inc_vec = _mm256_set1_epi32(64);
-    __m256i add8 = _mm256_set1_epi32(8);
-
-    size_t decoded = 0;
+    size_t pos = 0;
+    uint64_t bitset;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
-        uint64_t w = bitmap_l[i] & bitmap_r[i];
-        if (w == 0) {
-            base_vec = _mm256_add_epi32(base_vec, inc_vec);
-        } else {
-            for (int k = 0; k < 4; ++k) {  // process 2 bytes of data at a time
-                uint8_t byte1 = (uint8_t)w;
-                uint8_t byte2 = (uint8_t)(w >> 8);
-                w >>= 16;
-                __m256i vec1 = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byte1]);
-                __m256i vec2 = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byte2]);
-                uint8_t advance1 = tables::size[byte1];
-                uint8_t advance2 = tables::size[byte2];
-                vec1 = _mm256_add_epi32(base_vec, vec1);
-                base_vec = _mm256_add_epi32(base_vec, add8);
-                vec2 = _mm256_add_epi32(base_vec, vec2);
-                base_vec = _mm256_add_epi32(base_vec, add8);
-                _mm256_storeu_si256((__m256i*)(out + decoded), vec1);
-                decoded += advance1;
-                _mm256_storeu_si256((__m256i*)(out + decoded), vec2);
-                decoded += advance2;
-            }
+        bitset = bitmap_l[i] & bitmap_r[i];
+        while (bitset != 0) {
+            uint64_t t = bitset & -bitset;
+            int r = __builtin_ctzll(bitset);
+            out[pos++] = i * 64 + r;
+            bitset ^= t;
         }
     }
-    return decoded;
+    return pos;
 }
 
 size_t dd_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
