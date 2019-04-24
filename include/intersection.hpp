@@ -10,13 +10,11 @@
 namespace sliced {
 
 size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
-    uint32_t card_l = *l++;
-    uint32_t card_r = *r++;
-
-    uint8_t const* end_l = l + card_l;
-    uint8_t const* end_r = r + card_r;
+    uint8_t const* end_l = l + *l + 1;
+    uint8_t const* end_r = r + *r + 1;
+    ++l;
+    ++r;
     size_t size = 0;
-
     do {  // avoid testing condition for most-frequent case
         if (*l == *r) {
             out[size++] = *l;
@@ -28,7 +26,6 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
             ++r;
         }
     } while (l < end_l and r < end_r);
-
     return size;
 }
 
@@ -114,14 +111,12 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                 uint8_t header_l = header_byte_l & 3;
                 uint8_t header_r = header_byte_r & 3;
                 uint32_t n = 0;
-                uint32_t d = 0;
 
                 switch (block_pair(header_l, header_r)) {
                     case block_pair(type::empty, type::empty):
                         break;
                     case block_pair(type::empty, type::sparse):
-                        d = *data_r;
-                        data_r += d + 1;
+                        data_r += *data_r + 1;
                         break;
                     case block_pair(type::empty, type::dense):
                         data_r += 32;
@@ -130,21 +125,17 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                         break;
 
                     case block_pair(type::sparse, type::empty):
-                        d = *data_l;
-                        data_l += d + 1;
+                        data_l += *data_l + 1;
                         break;
                     case block_pair(type::sparse, type::sparse):
                         n = ss_intersect_block(data_l, data_r, tmp);
-                        d = *data_l;
-                        data_l += d + 1;
-                        d = *data_r;
-                        data_r += d + 1;
+                        data_l += *data_l + 1;
+                        data_r += *data_r + 1;
                         break;
                     case block_pair(type::sparse, type::dense):
                         n = ds_intersect_block(data_r, data_l, tmp);
                         data_r += 32;
-                        d = *data_l;
-                        data_l += d + 1;
+                        data_l += *data_l + 1;
                         break;
                     case block_pair(type::sparse, type::full):
                         n = fs_intersect_block(data_r, data_l, tmp);
@@ -157,8 +148,7 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                     case block_pair(type::dense, type::sparse):
                         n = ds_intersect_block(data_l, data_r, tmp);
                         data_l += 32;
-                        d = *data_r;
-                        data_r += d + 1;
+                        data_r += *data_r + 1;
                         break;
                     case block_pair(type::dense, type::dense):
                         n = dd_intersect_block(data_l, data_r, tmp);
