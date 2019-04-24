@@ -1,2 +1,3 @@
 add_executable(test_decode test_decode.cpp)
 add_executable(test_uncompress test_uncompress.cpp)
+add_executable(test_intersect test_intersect.cpp)

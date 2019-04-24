@@ -15,6 +15,11 @@ struct parameters {
     double density;
 };
 
+struct query {
+    uint32_t i;
+    uint32_t j;
+};
+
 struct statistics {
     statistics() {
         memset(this, 0, 24 * sizeof(uint64_t));

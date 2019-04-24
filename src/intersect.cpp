@@ -8,11 +8,6 @@
 
 using namespace sliced;
 
-struct query {
-    uint32_t i;
-    uint32_t j;
-};
-
 void intersection(char const* binary_filename,
                   std::vector<query> const& queries) {
     s_index index;

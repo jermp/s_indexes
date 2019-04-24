@@ -9,10 +9,9 @@
 
 namespace sliced {
 
-size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t& card_l,
-                          uint32_t& card_r, uint32_t* out) {
-    card_l = *l++;
-    card_r = *r++;
+size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
+    uint32_t card_l = *l++;
+    uint32_t card_r = *r++;
 
     uint8_t const* end_l = l + card_l;
     uint8_t const* end_r = r + card_r;
@@ -75,11 +74,10 @@ size_t dd_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     return intersect_bitmap(l, r, constants::block_size_in_64bit_words, out);
 }
 
-size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t& card_r,
-                          uint32_t* out) {
+size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     static uint64_t x[4];
     std::fill(x, x + 4, 0);
-    card_r = uncompress_sparse_block(r, x);
+    uncompress_sparse_block(r, x);
     return dd_intersect_block(l, reinterpret_cast<uint8_t const*>(x), out);
 }
 
@@ -116,31 +114,37 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                 uint8_t header_l = header_byte_l & 3;
                 uint8_t header_r = header_byte_r & 3;
                 uint32_t n = 0;
-                uint32_t card_l = 0;
-                uint32_t card_r = 0;
+                uint32_t d = 0;
 
                 switch (block_pair(header_l, header_r)) {
                     case block_pair(type::empty, type::empty):
                         break;
                     case block_pair(type::empty, type::sparse):
+                        d = *data_r;
+                        data_r += d + 1;
                         break;
                     case block_pair(type::empty, type::dense):
+                        data_r += 32;
                         break;
                     case block_pair(type::empty, type::full):
                         break;
 
                     case block_pair(type::sparse, type::empty):
+                        d = *data_l;
+                        data_l += d + 1;
                         break;
                     case block_pair(type::sparse, type::sparse):
-                        n = ss_intersect_block(data_l, data_r, card_l, card_r,
-                                               tmp);
-                        data_l += card_l + 1;
-                        data_r += card_r + 1;
+                        n = ss_intersect_block(data_l, data_r, tmp);
+                        d = *data_l;
+                        data_l += d + 1;
+                        d = *data_r;
+                        data_r += d + 1;
                         break;
                     case block_pair(type::sparse, type::dense):
-                        n = ds_intersect_block(data_r, data_l, card_l, tmp);
+                        n = ds_intersect_block(data_r, data_l, tmp);
                         data_r += 32;
-                        data_l += card_l + 1;
+                        d = *data_l;
+                        data_l += d + 1;
                         break;
                     case block_pair(type::sparse, type::full):
                         n = fs_intersect_block(data_r, data_l, tmp);
@@ -148,11 +152,13 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                         break;
 
                     case block_pair(type::dense, type::empty):
+                        data_l += 32;
                         break;
                     case block_pair(type::dense, type::sparse):
-                        n = ds_intersect_block(data_l, data_r, card_r, tmp);
+                        n = ds_intersect_block(data_l, data_r, tmp);
                         data_l += 32;
-                        data_r += card_r + 1;
+                        d = *data_r;
+                        data_r += d + 1;
                         break;
                     case block_pair(type::dense, type::dense):
                         n = dd_intersect_block(data_l, data_r, tmp);
