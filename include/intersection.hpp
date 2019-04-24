@@ -73,14 +73,13 @@ size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
     size_t pos = 0;
-    uint64_t bitset;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
-        bitset = bitmap_l[i] & bitmap_r[i];
-        while (bitset != 0) {
-            uint64_t t = bitset & -bitset;
-            int r = __builtin_ctzll(bitset);
+        uint64_t w = bitmap_l[i] & bitmap_r[i];
+        while (w != 0) {
+            uint64_t t = w & -w;
+            int r = __builtin_ctzll(w);
             out[pos++] = i * 64 + r;
-            bitset ^= t;
+            w ^= t;
         }
     }
     return pos;
@@ -90,11 +89,22 @@ size_t dd_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     return intersect_bitmap(l, r, constants::block_size_in_64bit_words, out);
 }
 
+inline bool bitmap_contains(uint64_t const* bitmap, uint32_t pos) {
+    uint64_t word = bitmap[pos >> 6];
+    word >>= pos & 63;
+    return word & 1;
+}
+
 size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
-    static uint64_t x[4];
-    std::fill(x, x + 4, 0);
-    uncompress_sparse_block(r, x);
-    return dd_intersect_block(l, reinterpret_cast<uint8_t const*>(x), out);
+    uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(l);
+    uint32_t cardinality = *r++;
+    uint32_t k = 0;
+    for (uint32_t i = 0; i != cardinality; ++i) {
+        uint32_t key = r[i];
+        out[k] = key;
+        k += bitmap_contains(bitmap, key);
+    }
+    return k;
 }
 
 size_t fs_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
@@ -159,42 +169,51 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                 } else {
                     switch (block_pair(header_l, header_r)) {
                         case block_pair(type::sparse, type::sparse):
+                            // std::cout << "0\n";
                             n = ss_intersect_block(data_l, data_r, tmp);
                             data_l += *data_l + 1;
                             data_r += *data_r + 1;
                             break;
                         case block_pair(type::sparse, type::dense):
+                            // std::cout << "1\n";
                             n = ds_intersect_block(data_r, data_l, tmp);
                             data_r += 32;
                             data_l += *data_l + 1;
                             break;
-                        case block_pair(type::sparse, type::full):
-                            n = fs_intersect_block(data_r, data_l, tmp);
-                            data_l += n + 1;
-                            break;
                         case block_pair(type::dense, type::sparse):
+                            // std::cout << "2\n";
                             n = ds_intersect_block(data_l, data_r, tmp);
                             data_l += 32;
                             data_r += *data_r + 1;
                             break;
                         case block_pair(type::dense, type::dense):
+                            // std::cout << "3\n";
                             n = dd_intersect_block(data_l, data_r, tmp);
                             data_l += 32;
                             data_r += 32;
                             break;
-                        case block_pair(type::dense, type::full):
-                            n = fd_intersect_block(data_r, data_l, tmp);
-                            data_l += 32;
+                        case block_pair(type::sparse, type::full):
+                            // std::cout << "4\n";
+                            n = fs_intersect_block(data_r, data_l, tmp);
+                            data_l += n + 1;
                             break;
                         case block_pair(type::full, type::sparse):
+                            // std::cout << "5\n";
                             n = fs_intersect_block(data_l, data_r, tmp);
                             data_r += n + 1;
                             break;
+                        case block_pair(type::dense, type::full):
+                            // std::cout << "6\n";
+                            n = fd_intersect_block(data_r, data_l, tmp);
+                            data_l += 32;
+                            break;
                         case block_pair(type::full, type::dense):
+                            // std::cout << "7\n";
                             n = fd_intersect_block(data_l, data_r, tmp);
                             data_r += 32;
                             break;
                         case block_pair(type::full, type::full):
+                            // std::cout << "8\n";
                             n = ff_intersect_block(data_r, data_l, tmp);
                             break;
                         default:
@@ -289,6 +308,7 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     __builtin_unreachable();
             }
 
+            // NOTE: this does not const
             uint32_t base = id_l << 16;
             for (size_t i = 0; i != n; ++i) {
                 out[i] += base;

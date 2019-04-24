@@ -75,9 +75,9 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t* out) {
     converted = _mm256_cvtepu8_epi32(in_vec);
     _mm256_storeu_si256((__m256i*)(out + 0), converted);
 
-    if (cardinality <= 8) {  // most likely
-        return cardinality;
-    }
+    // if (cardinality <= 8) {  // most likely
+    //     return cardinality;
+    // }
 
     in_vec = _mm_load_si128((__m128i const*)(begin + 8));
     converted = _mm256_cvtepu8_epi32(in_vec);
