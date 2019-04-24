@@ -126,3 +126,47 @@ Sliced Indexes
 		Elapsed time: 16.7491 [sec]
 		Mean per sequence: 763.962 [musec]
 		Mean per integer: 1.20806 [ns]
+		
+- Intersection
+
+		➜  build git:(master) ✗ ./intersect gov2.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K          
+		reading queries...
+		DONE
+		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
+		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
+		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
+		performing 1000 pairwise-intersections...
+		148466230
+		Elapsed time: 3.49237 [sec]
+		Mean per run: 349237 [musec]
+		Mean per query: 349.237 [musec]
+		
+		➜  build git:(master) ✗ ./intersect clueweb09.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
+		reading queries...
+		DONE
+		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
+		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
+		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
+		performing 1000 pairwise-intersections...
+		111123830
+		Elapsed time: 9.35506 [sec]
+		Mean per run: 935506 [musec]
+		Mean per query: 935.506 [musec]
+
+- Perf counts
+
+		 Performance counter stats for './intersect gov2.bin 1000':
+		
+		    18,409,131,809      instructions                                                
+		        22,510,747      cache-misses                                                
+		     4,083,259,388      branches                                                    
+		
+		       4.725873477 seconds time elapsed
+		       
+		 Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
+		
+		     7,632,209,239      instructions                                                
+		        13,128,152      cache-misses                                                
+		     1,106,069,417      branches                                                    
+		
+		       1.073611497 seconds time elapsed

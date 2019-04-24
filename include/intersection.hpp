@@ -131,71 +131,76 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                 uint8_t header_r = header_byte_r & 3;
                 uint32_t n = 0;
 
-                switch (block_pair(header_l, header_r)) {
-                    case block_pair(type::empty, type::empty):
-                        break;
-                    case block_pair(type::empty, type::sparse):
-                        data_r += *data_r + 1;
-                        break;
-                    case block_pair(type::empty, type::dense):
-                        data_r += 32;
-                        break;
-                    case block_pair(type::empty, type::full):
-                        break;
+                if (header_l == 0) {
+                    switch (header_r) {
+                        case type::empty:
+                            break;
+                        case type::sparse:
+                            data_r += *data_r + 1;
+                            break;
+                        case type::dense:
+                            data_r += 32;
+                            break;
+                        case type::full:
+                            break;
+                    }
+                } else if (header_r == 0) {
+                    switch (header_l) {
+                        case type::sparse:
+                            data_l += *data_l + 1;
+                            break;
+                        case type::dense:
+                            data_l += 32;
+                            break;
+                        case type::full:
+                            break;
+                    }
 
-                    case block_pair(type::sparse, type::empty):
-                        data_l += *data_l + 1;
-                        break;
-                    case block_pair(type::sparse, type::sparse):
-                        n = ss_intersect_block(data_l, data_r, tmp);
-                        data_l += *data_l + 1;
-                        data_r += *data_r + 1;
-                        break;
-                    case block_pair(type::sparse, type::dense):
-                        n = ds_intersect_block(data_r, data_l, tmp);
-                        data_r += 32;
-                        data_l += *data_l + 1;
-                        break;
-                    case block_pair(type::sparse, type::full):
-                        n = fs_intersect_block(data_r, data_l, tmp);
-                        data_l += n + 1;
-                        break;
-
-                    case block_pair(type::dense, type::empty):
-                        data_l += 32;
-                        break;
-                    case block_pair(type::dense, type::sparse):
-                        n = ds_intersect_block(data_l, data_r, tmp);
-                        data_l += 32;
-                        data_r += *data_r + 1;
-                        break;
-                    case block_pair(type::dense, type::dense):
-                        n = dd_intersect_block(data_l, data_r, tmp);
-                        data_l += 32;
-                        data_r += 32;
-                        break;
-                    case block_pair(type::dense, type::full):
-                        n = fd_intersect_block(data_r, data_l, tmp);
-                        data_l += 32;
-                        break;
-
-                    case block_pair(type::full, type::empty):
-                        break;
-                    case block_pair(type::full, type::sparse):
-                        n = fs_intersect_block(data_l, data_r, tmp);
-                        data_r += n + 1;
-                        break;
-                    case block_pair(type::full, type::dense):
-                        n = fd_intersect_block(data_l, data_r, tmp);
-                        data_r += 32;
-                        break;
-                    case block_pair(type::full, type::full):
-                        n = ff_intersect_block(data_r, data_l, tmp);
-                        break;
-
-                    default:
-                        assert(false);
-                        __builtin_unreachable();
+                } else {
+                    switch (block_pair(header_l, header_r)) {
+                        case block_pair(type::sparse, type::sparse):
+                            n = ss_intersect_block(data_l, data_r, tmp);
+                            data_l += *data_l + 1;
+                            data_r += *data_r + 1;
+                            break;
+                        case block_pair(type::sparse, type::dense):
+                            n = ds_intersect_block(data_r, data_l, tmp);
+                            data_r += 32;
+                            data_l += *data_l + 1;
+                            break;
+                        case block_pair(type::sparse, type::full):
+                            n = fs_intersect_block(data_r, data_l, tmp);
+                            data_l += n + 1;
+                            break;
+                        case block_pair(type::dense, type::sparse):
+                            n = ds_intersect_block(data_l, data_r, tmp);
+                            data_l += 32;
+                            data_r += *data_r + 1;
+                            break;
+                        case block_pair(type::dense, type::dense):
+                            n = dd_intersect_block(data_l, data_r, tmp);
+                            data_l += 32;
+                            data_r += 32;
+                            break;
+                        case block_pair(type::dense, type::full):
+                            n = fd_intersect_block(data_r, data_l, tmp);
+                            data_l += 32;
+                            break;
+                        case block_pair(type::full, type::sparse):
+                            n = fs_intersect_block(data_l, data_r, tmp);
+                            data_r += n + 1;
+                            break;
+                        case block_pair(type::full, type::dense):
+                            n = fd_intersect_block(data_l, data_r, tmp);
+                            data_r += 32;
+                            break;
+                        case block_pair(type::full, type::full):
+                            n = ff_intersect_block(data_r, data_l, tmp);
+                            break;
+                        default:
+                            assert(false);
+                            __builtin_unreachable();
+                    }
                 }
 
                 for (size_t i = 0; i != n; ++i) {
