@@ -36,9 +36,8 @@ void intersection(char const* binary_filename,
     t.discard_min_max();
     double elapsed = t.average();
     std::cout << "Elapsed time: " << elapsed / 1000000 << " [sec]\n";
-    std::cout << "Mean per run: " << elapsed / runs << " [musec]\n";
-    std::cout << "Mean per query: " << elapsed / runs / queries.size()
-              << " [musec]";
+    std::cout << "Mean per run: " << elapsed << " [musec]\n";
+    std::cout << "Mean per query: " << elapsed / queries.size() << " [musec]";
     std::cout << std::endl;
 }
 
