@@ -63,7 +63,7 @@ struct s_sequence {
         uint32_t end;
     };
 
-    iterator begin() {
+    iterator begin() const {
         return iterator(*this, 0, chunks);
     }
 

@@ -50,8 +50,8 @@ uint32_t decode_bitmap_and_reset(uint64_t* bitmap, size_t size_in_64bit_words,
     return decoded;
 }
 
-void check_uncompress(char const* binary_filename,
-                      char const* collection_filename, double density) {
+void test_uncompress(char const* binary_filename,
+                     char const* collection_filename, double density) {
     s_index index;
     essentials::load(index, binary_filename);
     essentials::print_size(index);
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     char const* collection_filename = argv[2];
     double density = std::stod(argv[3]);
 
-    check_uncompress(index_filename, collection_filename, density);
+    test_uncompress(index_filename, collection_filename, density);
 
     return 0;
 }

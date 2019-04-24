@@ -60,12 +60,10 @@ uint32_t uncompress_full_block(uint8_t const* begin, uint64_t* out) {
 uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
     uint8_t const* data = begin + 64;
     uint64_t* tmp = out;
-    uint32_t base = 0;
     uint32_t uncompressed = 0;
     for (uint32_t i = 0; i != 64; ++i) {
         uint8_t header_byte = begin[i];
         if (header_byte == 0) {
-            base += 256 * 4;
             tmp += constants::block_size_in_64bit_words * 4;
         } else {
             for (uint32_t i = 0; i != 4; ++i) {
@@ -89,9 +87,7 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
                         assert(false);
                         __builtin_unreachable();
                 }
-
                 tmp += constants::block_size_in_64bit_words;
-                base += 256;
                 uncompressed += u;
                 header_byte >>= 2;
             }
@@ -119,7 +115,7 @@ uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
 }
 
 size_t s_sequence::uncompress(uint64_t* out) {
-    iterator it = begin();
+    auto it = begin();
     size_t uncompressed = 0;
     uint16_t prev = 0;
     for (uint32_t i = 0; i != chunks; ++i) {

@@ -7,6 +7,24 @@
 
 namespace sliced {
 
+// size_t bitmap_decode_ctz(uint64_t const* bitmap,
+//                          size_t size_in_64bit_words, uint32_t* out)
+// {
+//     size_t pos = 0;
+//     uint64_t bitset;
+//     for (size_t k = 0; k < size_in_64bit_words; ++k) {
+//         bitset = bitmap[k];
+//         while (bitset != 0) {
+//             uint64_t t = bitset & -bitset;
+//             int r = __builtin_ctzll(bitset);
+//             out[pos++] = k * 64 + r;
+//             // do_not_optimize_away(k * 64 + r);
+//             bitset ^= t;
+//         }
+//     }
+//     return pos;
+// }
+
 uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
                        uint32_t* out) {
     // code adapted from:
@@ -119,6 +137,7 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t* out) {
                         __builtin_unreachable();
                 }
 
+                // maybe can try to always execute a fixed-length loop
                 for (size_t i = 0; i != d; ++i) {
                     tmp[i] += base;
                 }
@@ -146,7 +165,7 @@ uint32_t decode_full_chunk(uint8_t const* begin, uint32_t* out) {
 }
 
 size_t s_sequence::decode(uint32_t* out) {
-    iterator it = begin();
+    auto it = begin();
     size_t decoded = 0;
     for (uint32_t i = 0; i != chunks; ++i) {
         uint16_t id = it.id();

@@ -1,1 +1,4 @@
 add_executable(build build.cpp)
+add_executable(decode decode.cpp)
+add_executable(uncompress uncompress.cpp)
+add_executable(intersect intersect.cpp)
