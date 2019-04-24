@@ -10,6 +10,18 @@
 namespace sliced {
 
 size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
+    // NOTE: this slows down the code,
+    // although it is usually the most frequent case
+    // if (*l == 1 and *r == 1) {
+    //     ++l;
+    //     ++r;
+    //     if (*l == *r) {
+    //         *out = *l;
+    //         return 1;
+    //     }
+    //     return 0;
+    // }
+
     uint8_t const* end_l = l + *l + 1;
     uint8_t const* end_r = r + *r + 1;
     ++l;
@@ -28,6 +40,7 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     //     }
     // } while (l < end_l and r < end_r);
 
+    // NOTE: faster than the approach above
     while (true) {
         while (*l < *r) {
             if (++l == end_l) {
@@ -49,45 +62,6 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
 
     return size;
 }
-
-// size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
-//                         size_t size_in_64bit_words, uint32_t* out) {
-//     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
-//     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
-//     __m256i base_vec = _mm256_set1_epi32(-1);
-//     __m256i inc_vec = _mm256_set1_epi32(64);
-//     __m256i add8 = _mm256_set1_epi32(8);
-
-//     size_t decoded = 0;
-//     for (size_t i = 0; i != size_in_64bit_words; ++i) {
-//         uint64_t w = bitmap_l[i] & bitmap_r[i];
-//         if (w == 0) {
-//             base_vec = _mm256_add_epi32(base_vec, inc_vec);
-//         } else {
-//             for (int k = 0; k < 4; ++k) {  // process 2 bytes of data at a
-//             time
-//                 uint8_t byte1 = (uint8_t)w;
-//                 uint8_t byte2 = (uint8_t)(w >> 8);
-//                 w >>= 16;
-//                 __m256i vec1 = _mm256_load_si256(
-//                     (const __m256i*)tables::dictionary[byte1]);
-//                 __m256i vec2 = _mm256_load_si256(
-//                     (const __m256i*)tables::dictionary[byte2]);
-//                 uint8_t advance1 = tables::size[byte1];
-//                 uint8_t advance2 = tables::size[byte2];
-//                 vec1 = _mm256_add_epi32(base_vec, vec1);
-//                 base_vec = _mm256_add_epi32(base_vec, add8);
-//                 vec2 = _mm256_add_epi32(base_vec, vec2);
-//                 base_vec = _mm256_add_epi32(base_vec, add8);
-//                 _mm256_storeu_si256((__m256i*)(out + decoded), vec1);
-//                 decoded += advance1;
-//                 _mm256_storeu_si256((__m256i*)(out + decoded), vec2);
-//                 decoded += advance2;
-//             }
-//         }
-//     }
-//     return decoded;
-// }
 
 size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
                         size_t size_in_64bit_words, uint32_t* out) {
@@ -243,9 +217,25 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t* out) {
                     }
                 }
 
+                // NOTE1: this is a bit costly
+                // NOTE2: this is as fast as SIMD version below
+                // NOTE3: fixed-length loop is much slower because most
+                // values of n are small
+
+                // NOTE4: can try to pass base to the
+                // blocks' decoding functions (also for decoding)
                 for (size_t i = 0; i != n; ++i) {
                     tmp[i] += base;
                 }
+
+                // __m256i base_vec = _mm256_set1_epi32(base);
+                // size_t k = (n + 7) / 8 * 8;
+                // for (size_t i = 0; i != k; i += 8) {
+                //     __m256i in_vec =
+                //         _mm256_load_si256((__m256i const*)(tmp + i));
+                //     in_vec = _mm256_add_epi32(base_vec, in_vec);
+                //     _mm256_storeu_si256((__m256i*)(tmp + i), in_vec);
+                // }
 
                 tmp += n;
                 base += 256;
@@ -329,7 +319,7 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     __builtin_unreachable();
             }
 
-            // NOTE: this does not const
+            // NOTE: this is not costly
             uint32_t base = id_l << 16;
             for (size_t i = 0; i != n; ++i) {
                 out[i] += base;
