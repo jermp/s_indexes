@@ -137,8 +137,8 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		performing 1000 pairwise-intersections...
 		148466230
-		Mean per run: 329184 [musec]
-		Mean per query: 329.184 [musec]
+		Mean per run: 327605 [musec]
+		Mean per query: 327.605 [musec]
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
@@ -148,8 +148,8 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		performing 1000 pairwise-intersections...
 		111123830
-		Mean per run: 917453 [musec]
-		Mean per query: 917.453 [musec]
+		Mean per run: 887328 [musec]
+		Mean per query: 887.328 [musec]
 
 - Perf counts
 

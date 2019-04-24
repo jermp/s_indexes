@@ -15,17 +15,38 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t* out) {
     ++l;
     ++r;
     size_t size = 0;
-    do {  // avoid testing condition for most-frequent case
+
+    // do {  // avoid testing condition for most-frequent case
+    //     if (*l == *r) {
+    //         out[size++] = *l;
+    //         ++l;
+    //         ++r;
+    //     } else if (*l < *r) {
+    //         ++l;
+    //     } else {
+    //         ++r;
+    //     }
+    // } while (l < end_l and r < end_r);
+
+    while (true) {
+        while (*l < *r) {
+            if (++l == end_l) {
+                return size;
+            }
+        }
+        while (*l > *r) {
+            if (++r == end_r) {
+                return size;
+            }
+        }
         if (*l == *r) {
             out[size++] = *l;
-            ++l;
-            ++r;
-        } else if (*l < *r) {
-            ++l;
-        } else {
-            ++r;
+            if (++l == end_l or ++r == end_r) {
+                return size;
+            }
         }
-    } while (l < end_l and r < end_r);
+    }
+
     return size;
 }
 
