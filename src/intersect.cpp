@@ -64,6 +64,7 @@ int main(int argc, char** argv) {
         }
         queries.push_back(q);
     }
+    std::cout << "DONE" << std::endl;
 
     intersection(binary_filename, queries);
 
