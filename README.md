@@ -91,9 +91,9 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		decoded 13276 sequences
 		decoded 5066748826 integers
-		Elapsed time: 6.3622 [sec]
-		Mean per sequence: 479.226 [musec]
-		Mean per integer: 1.25568 [ns]
+		Elapsed time: 3.59512 [sec]
+		Mean per sequence: 270.799 [musec]
+		Mean per integer: 0.709552 [ns]
 
 		➜  build git:(master) ✗ ./decode clueweb09.bin 
 		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
@@ -101,9 +101,9 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		decoded 21924 sequences
 		decoded 13864451283 integers
-		Elapsed time: 27.0713 [sec]
-		Mean per sequence: 1234.78 [musec]
-		Mean per integer: 1.95257 [ns]
+		Elapsed time: 14.7659 [sec]
+		Mean per sequence: 673.503 [musec]
+		Mean per integer: 1.06502 [ns]
 		
 - Uncompressing
 
@@ -137,8 +137,8 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		performing 1000 pairwise-intersections...
 		148466230
-		Mean per run: 327605 [musec]
-		Mean per query: 327.605 [musec]
+		Mean per run: 303990 [musec]
+		Mean per query: 303.99 [musec]
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
@@ -148,8 +148,8 @@ Sliced Indexes
 		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		performing 1000 pairwise-intersections...
 		111123830
-		Mean per run: 887328 [musec]
-		Mean per query: 887.328 [musec]
+		Mean per run: 855742 [musec]
+		Mean per query: 855.741 [musec]
 
 - Perf counts
 
