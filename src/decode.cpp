@@ -10,8 +10,9 @@ using namespace sliced;
 
 void decode(char const* binary_filename) {
     s_index index;
-    essentials::load(index, binary_filename);
-    essentials::print_size(index);
+    // essentials::load(index, binary_filename);
+    // essentials::print_size(index);
+    index.mmap(binary_filename);
 
     const uint32_t universe = 52000000;
     std::vector<uint32_t> out(universe);

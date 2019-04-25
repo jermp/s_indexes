@@ -155,16 +155,14 @@ Sliced Indexes
 
 		 Performance counter stats for './intersect gov2.bin 1000':
 		
-		    18,409,131,809      instructions                                                
-		        22,510,747      cache-misses                                                
-		     4,083,259,388      branches                                                    
-		
-		       4.725873477 seconds time elapsed
+		         4,374,008      cache-misses                                                
+		    13,461,398,604      instructions              #    0.98  insn per cycle         
+		    13,680,127,694      cycles                                                      
+		       487,012,368      branch-misses  
 		       
 		 Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
 		
-		     7,632,209,239      instructions                                                
-		        13,128,152      cache-misses                                                
-		     1,106,069,417      branches                                                    
-		
-		       1.073611497 seconds time elapsed
+		        12,302,166      cache-misses                                                
+		     7,631,824,065      instructions              #    1.54  insn per cycle         
+		     4,941,581,066      cycles                                                      
+		        53,220,853      branch-misses  

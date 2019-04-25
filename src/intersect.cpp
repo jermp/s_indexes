@@ -14,8 +14,9 @@ using namespace sliced;
 void intersection(char const* binary_filename,
                   std::vector<query> const& queries) {
     s_index index;
-    essentials::load(index, binary_filename);
-    essentials::print_size(index);
+    // essentials::load(index, binary_filename);
+    // essentials::print_size(index);
+    index.mmap(binary_filename);
 
     const uint32_t universe = 52000000;
     std::vector<uint32_t> out(universe);
