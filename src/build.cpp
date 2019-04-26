@@ -1,12 +1,13 @@
 #include <iostream>
 
 #include "../external/essentials/include/essentials.hpp"
+#include "builder1.hpp"
 #include "s_index.hpp"
 
 using namespace sliced;
 
 void build(parameters const& params, char const* output_filename) {
-    s_index::builder builder(params);
+    s_index::builder1 builder(params);
     s_index index;
     auto stats = builder.build(index);
     stats.print();

@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "constants.hpp"
 #include "util.hpp"
 
 namespace sliced {

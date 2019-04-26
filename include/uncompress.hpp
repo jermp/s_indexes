@@ -1,6 +1,6 @@
 #pragma once
 
-#include "configuration.hpp"
+#include "constants.hpp"
 
 namespace sliced {
 
@@ -12,7 +12,6 @@ inline void set_bit(uint8_t position, uint64_t* out) {
 
 uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
     uint32_t cardinality = *begin++;
-    // NOTE: can be done with table-lookup and OR
     for (uint32_t i = 0; i != cardinality; ++i) {
         set_bit(*begin++, out);
     }

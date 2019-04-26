@@ -1,7 +1,7 @@
 #pragma once
 
 #include "immintrin.h"
-#include "configuration.hpp"
+#include "constants.hpp"
 
 namespace sliced {
 

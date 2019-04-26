@@ -1,6 +1,6 @@
 #pragma once
 
-#include "configuration.hpp"
+#include "constants.hpp"
 #include "decode.hpp"
 #include "uncompress.hpp"
 
