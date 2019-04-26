@@ -4,33 +4,9 @@
 #include <cassert>
 
 #include "util.hpp"
+#include "building_util.hpp"
 
 namespace sliced {
-
-template <typename W>
-void set_bit(size_t position, std::vector<W>& bits) {
-    assert(position < bits.size() * sizeof(W) * 8);
-    size_t w = position / (sizeof(W) * 8);
-    size_t o = position % (sizeof(W) * 8);
-    bits[w] |= W(1) << o;
-}
-
-template <typename T>
-void write_uint(T val, std::vector<uint8_t>& out) {
-    auto ptr = reinterpret_cast<uint8_t const*>(&val);
-    out.insert(out.end(), ptr, ptr + sizeof(T));
-}
-
-void write_bits(uint32_t const* begin, size_t n, size_t bits, uint32_t base,
-                std::vector<uint8_t>& out) {
-    std::vector<uint64_t> bitmap(bits / 64, 0);
-    for (uint32_t i = 0; i != n; ++i, ++begin) {
-        uint32_t val = *begin - base;
-        set_bit(val, bitmap);
-    }
-    auto ptr = reinterpret_cast<uint8_t const*>(bitmap.data());
-    out.insert(out.end(), ptr, ptr + bitmap.size() * sizeof(bitmap.front()));
-}
 
 void write_header(uint32_t i, size_t offset, std::vector<uint8_t>& out,
                   uint32_t type) {
@@ -88,24 +64,11 @@ void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
     block_id += 1;
 }
 
-uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
-                           uint32_t left, uint32_t right) {
-    uint32_t c = 0;
-    while (*begin < right and begin != end) {
-        assert(*begin >= left);
-        assert(*begin - left < constants::chunk_size);
-        ++begin;
-        ++c;
-    }
-    return c;
-}
-
-statistics chunk_bitsize(uint32_t const* begin, uint32_t const* end,
-                         uint32_t left, uint32_t right) {
+statistics chunk_bitsize(uint32_t const* begin, uint32_t const* end, slice s) {
     statistics stats;
-    uint32_t base = left;
+    uint32_t base = s.left;
     size_t block_size = 0;
-    while (*begin < right and begin != end) {
+    while (*begin < s.right and begin != end) {
         uint32_t val = *begin - base;
         if (val >= constants::block_size) {
             block_bitsize(block_size, stats);
@@ -123,8 +86,7 @@ statistics chunk_bitsize(uint32_t const* begin, uint32_t const* end,
     return stats;
 }
 
-void encode_sparse_chunk(uint32_t const* begin, uint32_t const* end,
-                         uint32_t left, uint32_t right,
+void encode_sparse_chunk(uint32_t const* begin, uint32_t const* end, slice s,
                          std::vector<uint32_t>& block,
                          std::vector<uint8_t>& out) {
     size_t header_offset = out.size();
@@ -133,8 +95,8 @@ void encode_sparse_chunk(uint32_t const* begin, uint32_t const* end,
     out.insert(out.end(), ptr, ptr + 8 * sizeof(uint64_t));
 
     uint32_t block_id = 0;
-    uint32_t base = left;
-    while (*begin < right and begin != end) {
+    uint32_t base = s.left;
+    while (*begin < s.right and begin != end) {
         uint32_t val = *begin - base;
         if (val >= constants::block_size) {
             encode_block(block, block_id, header_offset, out);
@@ -170,12 +132,12 @@ void encode_sequence(uint32_t const* data, size_t n,
     chunks_header.reserve(3 * constants::chunk_size);
     std::vector<uint8_t> tmp;
 
-    uint32_t left = 0;
-    uint32_t right = constants::chunk_size;
+    slice s = {0, constants::chunk_size};
+
     for (uint32_t i = 0; i != chunks; ++i) {
         uint32_t cardinality = 0;
-        if (*begin < right) {
-            cardinality = chunk_cardinality(begin, end, left, right);
+        if (*begin < s.right) {
+            cardinality = chunk_cardinality(begin, end, s);
 
             // actual chunk universe
             // uint32_t chunk_universe = *(begin - 1) - base + 1;
@@ -190,8 +152,7 @@ void encode_sequence(uint32_t const* data, size_t n,
             chunks_header.push_back(i);
 
             if (cardinality < constants::chunk_sparseness_threshold) {
-                auto sparse_chunk_stats =
-                    chunk_bitsize(begin, end, left, right);
+                auto sparse_chunk_stats = chunk_bitsize(begin, end, s);
 
                 uint64_t sparse_chunk_bytes =
                     (2 * blocks_in_chunk +
@@ -205,8 +166,8 @@ void encode_sequence(uint32_t const* data, size_t n,
                     stats.integers_in_dense_chunks += cardinality;
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-                    write_bits(begin, cardinality, constants::chunk_size, left,
-                               tmp);
+                    write_bits(begin, cardinality, constants::chunk_size,
+                               s.left, tmp);
                 } else {
                     stats.sparse_chunks += 1;
                     stats.integers_in_sparse_chunks += cardinality;
@@ -231,7 +192,7 @@ void encode_sequence(uint32_t const* data, size_t n,
                     //     stats.integers_in_sparse_chunks += cardinality;
                     // }
 
-                    encode_sparse_chunk(begin, end, left, right, block, tmp);
+                    encode_sparse_chunk(begin, end, s, block, tmp);
                 }
 
             } else {
@@ -247,8 +208,8 @@ void encode_sequence(uint32_t const* data, size_t n,
                     assert(dense_chunk_bytes * 8.0 / cardinality <= 2.0);
                     chunks_header.push_back(type::dense);
                     chunks_header.push_back(constants::chunk_size / 8);
-                    write_bits(begin, cardinality, constants::chunk_size, left,
-                               tmp);
+                    write_bits(begin, cardinality, constants::chunk_size,
+                               s.left, tmp);
                 }
             }
 
@@ -256,8 +217,8 @@ void encode_sequence(uint32_t const* data, size_t n,
             stats.empty_chunks += 1;
         }
 
-        left = right;
-        right += constants::chunk_size;
+        s.left = s.right;
+        s.right += constants::chunk_size;
         begin += cardinality;
     }
 
