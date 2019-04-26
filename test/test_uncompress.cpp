@@ -53,8 +53,6 @@ uint32_t decode_bitmap_and_reset(uint64_t* bitmap, size_t size_in_64bit_words,
 void test_uncompress(char const* binary_filename,
                      char const* collection_filename, double density) {
     s_index index;
-    // essentials::load(index, binary_filename);
-    // essentials::print_size(index);
     index.mmap(binary_filename);
 
     mm::file_source<uint32_t> input(collection_filename,

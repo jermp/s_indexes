@@ -1,8 +1,6 @@
 #include <iostream>
 #include <algorithm>
 
-#include "../external/essentials/include/essentials.hpp"
-
 #include "util.hpp"
 #include "s_index.hpp"
 #include "intersection.hpp"
@@ -12,8 +10,6 @@ using namespace sliced;
 void test_intersection(char const* binary_filename,
                        std::vector<query> const& queries) {
     s_index index;
-    // essentials::load(index, binary_filename);
-    // essentials::print_size(index);
     index.mmap(binary_filename);
 
     std::vector<uint32_t> out(52000000);

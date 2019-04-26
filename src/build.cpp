@@ -7,14 +7,14 @@
 using namespace sliced;
 
 void build(parameters const& params, char const* output_filename) {
-    s_index::builder1 builder(params);
-    s_index index;
-    auto stats = builder.build(index);
+    typedef s_index::builder1 builder_type;
+    builder_type builder(params);
+    auto stats = builder.build();
     stats.print();
     if (output_filename) {
-        essentials::print_size(index);
+        essentials::print_size(builder);
         std::cout << "saving data structure to disk..." << std::endl;
-        essentials::save<s_index>(index, output_filename);
+        essentials::save<builder_type>(builder, output_filename);
     }
 }
 
