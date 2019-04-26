@@ -22,13 +22,14 @@ struct query {
 
 struct statistics {
     statistics() {
-        memset(this, 0, 24 * sizeof(uint64_t));
+        memset(this, 0, 26 * sizeof(uint64_t));
     }
 
     uint64_t sequences;
 
     uint64_t integers;
     uint64_t integers_in_sparse_chunks;
+    uint64_t integers_in_very_sparse_chunks;
     uint64_t integers_in_dense_chunks;
     uint64_t integers_in_full_chunks;
     uint64_t integers_in_sparse_blocks;
@@ -38,6 +39,7 @@ struct statistics {
     uint64_t chunks;
     uint64_t empty_chunks;
     uint64_t sparse_chunks;
+    uint64_t very_sparse_chunks;
     uint64_t dense_chunks;
     uint64_t full_chunks;
 
@@ -84,6 +86,9 @@ struct statistics {
                   << std::endl;
         std::cout << "sparse chunks: " << sparse_chunks << " ("
                   << integers_in_sparse_chunks * 100.0 / integers
+                  << "% of ints)" << std::endl;
+        std::cout << "very sparse chunks: " << very_sparse_chunks << " ("
+                  << integers_in_very_sparse_chunks * 100.0 / integers
                   << "% of ints)" << std::endl;
 
         std::cout << "blocks: " << blocks << std::endl;

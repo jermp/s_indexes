@@ -45,9 +45,12 @@ void block_bitsize(size_t block_size, statistics& stats) {
     assert(block_size <= constants::block_size);
     if (block_size == 0) {
         stats.empty_blocks += 1;
-    } else if (block_size == constants::block_size) {
-        stats.full_blocks += 1;
-        stats.integers_in_full_blocks += constants::block_size;
+
+        // NOTE: uncomment this if we want also full blocks
+        // } else if (block_size == constants::block_size) {
+        //     stats.full_blocks += 1;
+        //     stats.integers_in_full_blocks += constants::block_size;
+
     } else if (block_size >= constants::block_sparseness_threshold - 1) {
         stats.dense_blocks += 1;
         stats.dense_blocks_bits += constants::block_size;
@@ -63,9 +66,12 @@ void block_bitsize(size_t block_size, statistics& stats) {
 void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
                   size_t header_offset, std::vector<uint8_t>& out) {
     if (block.size() > 0) {
-        if (block.size() == constants::block_size) {
-            write_header(block_id, header_offset, out, type::full);
-        } else if (block.size() >= constants::block_sparseness_threshold - 1) {
+        // NOTE: uncomment this if we want also full blocks
+        // if (block.size() == constants::block_size) {
+        //     write_header(block_id, header_offset, out, type::full);
+        // } else
+
+        if (block.size() >= constants::block_sparseness_threshold - 1) {
             write_header(block_id, header_offset, out, type::dense);
             write_bits(block.data(), block.size(), constants::block_size, 0,
                        out);
@@ -214,6 +220,16 @@ void encode_sequence(uint32_t const* data, size_t n,
 
                     chunks_header.push_back(type::sparse);
                     chunks_header.push_back(sparse_chunk_bytes);
+
+                    // std::cout << sparse_chunk_bytes * 8.0 / cardinality
+                    //           << " [bpi] in sparse chunk\n";
+                    // if (sparse_chunk_bytes * 8.0 / cardinality > 8.0) {
+                    //     stats.very_sparse_chunks += 1;
+                    //     stats.integers_in_very_sparse_chunks += cardinality;
+                    // } else {
+                    //     stats.sparse_chunks += 1;
+                    //     stats.integers_in_sparse_chunks += cardinality;
+                    // }
 
                     encode_sparse_chunk(begin, end, left, right, block, tmp);
                 }

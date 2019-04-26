@@ -14,6 +14,8 @@ struct s_sequence {
 
     size_t uncompress(uint64_t* out);
 
+    void uncompress_no_cardinality(uint64_t* out);
+
     uint16_t const* header() const {
         return m_header;
     }

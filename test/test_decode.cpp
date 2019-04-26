@@ -12,8 +12,9 @@ using namespace sliced;
 void test_decode(char const* binary_filename, char const* collection_filename,
                  double density) {
     s_index index;
-    essentials::load(index, binary_filename);
-    essentials::print_size(index);
+    // essentials::load(index, binary_filename);
+    // essentials::print_size(index);
+    index.mmap(binary_filename);
 
     mm::file_source<uint32_t> input(collection_filename,
                                     mm::advice::sequential);

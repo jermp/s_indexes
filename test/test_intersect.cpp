@@ -12,8 +12,9 @@ using namespace sliced;
 void test_intersection(char const* binary_filename,
                        std::vector<query> const& queries) {
     s_index index;
-    essentials::load(index, binary_filename);
-    essentials::print_size(index);
+    // essentials::load(index, binary_filename);
+    // essentials::print_size(index);
+    index.mmap(binary_filename);
 
     std::vector<uint32_t> out(52000000);
     std::vector<uint32_t> i(52000000);

@@ -28,6 +28,12 @@ uint32_t uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
     return c;
 }
 
+void uncompress_dense_block_no_cardinality(uint8_t const* begin,
+                                           uint64_t* out) {
+    auto ptr = reinterpret_cast<uint64_t const*>(begin);
+    memcpy(out, ptr, constants::block_size / 8);
+}
+
 uint32_t uncompress_full_block(uint8_t const* begin, uint64_t* out) {
     (void)begin;
     for (uint32_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
@@ -75,6 +81,42 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
     return uncompressed;
 }
 
+void uncompress_sparse_chunk_no_cardinality(uint8_t const* begin,
+                                            uint64_t* out) {
+    uint8_t const* data = begin + 64;
+    uint64_t* tmp = out;
+    for (uint32_t i = 0; i != 64; ++i) {
+        uint8_t header_byte = begin[i];
+        if (header_byte == 0) {
+            tmp += constants::block_size_in_64bit_words * 4;
+        } else {
+            for (uint32_t i = 0; i != 4; ++i) {
+                uint8_t header = header_byte & 3;
+                switch (header) {
+                    case type::empty:
+                        break;
+                    case type::sparse:
+                        uncompress_sparse_block(data, tmp);
+                        data += *data + 1;
+                        break;
+                    case type::dense:
+                        uncompress_dense_block_no_cardinality(data, tmp);
+                        data += 32;
+                        break;
+                    case type::full:
+                        uncompress_full_block(data, tmp);
+                        break;
+                    default:
+                        assert(false);
+                        __builtin_unreachable();
+                }
+                tmp += constants::block_size_in_64bit_words;
+                header_byte >>= 2;
+            }
+        }
+    }
+}
+
 uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
     auto ptr = reinterpret_cast<uint64_t const*>(begin);
     memcpy(out, ptr, constants::chunk_size / 8);
@@ -83,6 +125,12 @@ uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
         c += __builtin_popcountll(out[i]);
     }
     return c;
+}
+
+void uncompress_dense_chunk_no_cardinality(uint8_t const* begin,
+                                           uint64_t* out) {
+    auto ptr = reinterpret_cast<uint64_t const*>(begin);
+    memcpy(out, ptr, constants::chunk_size / 8);
 }
 
 uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
@@ -122,4 +170,30 @@ size_t s_sequence::uncompress(uint64_t* out) {
     assert(uncompressed > 0);
     return uncompressed;
 }
+
+void s_sequence::uncompress_no_cardinality(uint64_t* out) {
+    auto it = begin();
+    uint16_t prev = 0;
+    for (uint32_t i = 0; i != chunks; ++i) {
+        uint16_t id = it.id();
+        out += (id - prev) * constants::chunk_size_in_64bit_words;
+        switch (it.type()) {
+            case type::sparse:
+                uncompress_sparse_chunk_no_cardinality(it.data, out);
+                break;
+            case type::dense:
+                uncompress_dense_chunk_no_cardinality(it.data, out);
+                break;
+            case type::full:
+                uncompress_full_chunk(it.data, out);
+                break;
+            default:
+                assert(false);
+                __builtin_unreachable();
+        }
+        prev = id;
+        it.next();
+    }
+}
+
 }  // namespace sliced
