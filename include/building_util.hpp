@@ -47,7 +47,53 @@ uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
         ++begin;
         ++c;
     }
+    assert(c <= constants::chunk_size);
     return c;
+}
+
+void block_bitsize(size_t block_size, statistics& stats) {
+    stats.blocks += 1;
+    assert(block_size <= constants::block_size);
+    if (block_size == 0) {
+        stats.empty_blocks += 1;
+
+        // NOTE: uncomment this if we want also full blocks
+        // } else if (block_size == constants::block_size) {
+        //     stats.full_blocks += 1;
+        //     stats.integers_in_full_blocks += constants::block_size;
+
+    } else if (block_size >= constants::block_sparseness_threshold - 1) {
+        stats.dense_blocks += 1;
+        stats.dense_blocks_bits += constants::block_size;
+        stats.integers_in_dense_blocks += block_size;
+    } else {
+        assert(block_size <= constants::block_sparseness_threshold - 2);
+        stats.sparse_blocks += 1;
+        stats.integers_in_sparse_blocks += block_size;
+        stats.sparse_blocks_bits += 8 * (block_size + 1);
+    }
+}
+
+statistics chunk_bitsize(uint32_t const* begin, uint32_t const* end, slice s) {
+    statistics stats;
+    uint32_t base = s.left;
+    size_t block_size = 0;
+    while (*begin < s.right and begin != end) {
+        uint32_t val = *begin - base;
+        if (val >= constants::block_size) {
+            block_bitsize(block_size, stats);
+            base += constants::block_size;
+            block_size = 0;
+        } else {
+            assert(val < constants::block_size);
+            ++block_size;
+            assert(block_size <= constants::block_size);
+            ++begin;
+        }
+    }
+    block_bitsize(block_size, stats);
+
+    return stats;
 }
 
 }  // namespace sliced
