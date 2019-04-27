@@ -390,13 +390,13 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     n = ss_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
-                    n = ds_intersect_chunk(it_r.data, it_l.data, base, out);
+                    // n = ds_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::sparse, type::full):
-                    n = fs_intersect_chunk(it_r.data, it_l.data, base, out);
+                    // n = fs_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::sparse):
-                    n = ds_intersect_chunk(it_l.data, it_r.data, base, out);
+                    // n = ds_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::dense):
                     n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
@@ -405,7 +405,7 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
-                    n = fs_intersect_chunk(it_l.data, it_r.data, base, out);
+                    // n = fs_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::full, type::dense):
                     n = fd_intersect_chunk(it_l.data, it_r.data, base, out);

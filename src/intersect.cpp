@@ -8,6 +8,7 @@
 #include "util.hpp"
 #include "s_index.hpp"
 #include "intersection.hpp"
+#include "intersection2.hpp"
 
 using namespace sliced;
 
@@ -23,12 +24,21 @@ void intersection(char const* binary_filename,
     std::cout << "performing " << queries.size() << " pairwise-intersections..."
               << std::endl;
 
+    std::vector<uint16_t> b1(constants::chunk_size);
+    std::vector<uint16_t> b2(constants::chunk_size);
+    std::vector<uint16_t> b3(constants::chunk_size);
+    std::vector<uint64_t> bitmap(constants::chunk_size_in_64bit_words, 0);
+
     essentials::timer_type t;
     static const int runs = 10;
     for (int run = 0; run != runs; ++run) {
         t.start();
         for (auto const& q : queries) {
-            total += pairwise_intersection(index[q.i], index[q.j], out.data());
+            // total += pairwise_intersection(index[q.i], index[q.j],
+            // out.data());
+            total += pairwise_intersection2(index[q.i], index[q.j], b1.data(),
+                                            b2.data(), b3.data(), bitmap.data(),
+                                            out.data());
         }
         t.stop();
     }
