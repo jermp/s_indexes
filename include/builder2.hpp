@@ -12,6 +12,11 @@
 
 namespace sliced {
 
+/*
+Write sparse chunks in two segments.
+First segment is formed by all dense blocks.
+Second segment is formed by all sparse blocks.
+*/
 struct s_index::builder2 {
     builder2(parameters const& params)
         : m_params(params) {}

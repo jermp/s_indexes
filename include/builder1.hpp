@@ -12,6 +12,10 @@
 
 namespace sliced {
 
+/*
+Write sparse chunks by interleaving dense and sparse blocks.
+Dense and sparse blocks are written in order.
+*/
 struct s_index::builder1 {
     builder1(parameters const& params)
         : m_params(params) {}
