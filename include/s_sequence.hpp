@@ -32,9 +32,19 @@ struct s_sequence {
             return *header;
         }
 
+        // inline uint16_t type() const {
+        //     return *(header + 1);
+        // }
+
+        /* these two to be used when storing non-empty blocks only */
         inline uint16_t type() const {
-            return *(header + 1);
+            return *(header + 1) & 255;
         }
+
+        inline uint16_t blocks() const {
+            return (*(header + 1) >> 8) + 1;
+        }
+        /******/
 
         inline uint16_t offset() const {
             return *(header + 2);

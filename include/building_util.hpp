@@ -74,7 +74,8 @@ void block_bitsize(size_t block_size, statistics& stats) {
     }
 }
 
-statistics chunk_bitsize(uint32_t const* begin, uint32_t const* end, slice s) {
+statistics sparse_chunk_bitsize(uint32_t const* begin, uint32_t const* end,
+                                slice s) {
     statistics stats;
     uint32_t base = s.left;
     size_t block_size = 0;

@@ -9,6 +9,8 @@ size_t bytes_for(size_t bits) {
 }
 
 // enum type { empty = 0, sparse = 1, dense = 2, full = 3 };
+
+// NOTE: allows intersecting blocks' headers
 enum type { empty = 0, sparse = 1, dense = 3, full = 2 };
 
 struct parameters {

@@ -9,6 +9,7 @@
 #include "s_index.hpp"
 #include "intersection.hpp"
 #include "intersection2.hpp"
+#include "intersection3.hpp"
 
 using namespace sliced;
 
@@ -32,7 +33,7 @@ void intersection(char const* binary_filename,
     for (int run = 0; run != runs; ++run) {
         t.start();
         for (auto const& q : queries) {
-            total += pairwise_intersection(index[q.i], index[q.j], out.data());
+            total += pairwise_intersection3(index[q.i], index[q.j], out.data());
 
             // total +=
             //     pairwise_intersection1(index[q.i], index[q.j],

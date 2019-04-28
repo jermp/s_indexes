@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "s_index.hpp"
 #include "intersection.hpp"
+#include "intersection3.hpp"
 
 using namespace sliced;
 
@@ -24,7 +25,11 @@ void test_intersection(char const* binary_filename,
             std::set_intersection(i.begin(), i.begin() + i_size, j.begin(),
                                   j.begin() + j_size, expected.begin());
         size_t expected_size = it - expected.begin();
-        size_t size = pairwise_intersection(index[q.i], index[q.j], out.data());
+
+        // size_t size = pairwise_intersection(index[q.i], index[q.j],
+        // out.data());
+        size_t size =
+            pairwise_intersection3(index[q.i], index[q.j], out.data());
 
         if (expected_size != size) {
             std::cout << "intersection has size " << size << " but expected "

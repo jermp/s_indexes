@@ -167,7 +167,8 @@ private:
                 chunks_header.push_back(i);
 
                 if (cardinality < constants::chunk_sparseness_threshold) {
-                    auto sparse_chunk_stats = chunk_bitsize(begin, end, s);
+                    auto sparse_chunk_stats =
+                        sparse_chunk_bitsize(begin, end, s);
 
                     uint64_t sparse_chunk_bytes =
                         (sparse_chunk_stats.dense_blocks * 8 + 8 +

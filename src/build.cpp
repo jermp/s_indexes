@@ -3,13 +3,15 @@
 #include "../external/essentials/include/essentials.hpp"
 #include "builder1.hpp"
 #include "builder2.hpp"
+#include "builder3.hpp"
 #include "s_index.hpp"
 
 using namespace sliced;
 
 void build(parameters const& params, char const* output_filename) {
-    typedef s_index::builder1 builder_type;
+    // typedef s_index::builder1 builder_type;
     // typedef s_index::builder2 builder_type;
+    typedef s_index::builder3 builder_type;
     builder_type builder(params);
     auto stats = builder.build();
     stats.print();

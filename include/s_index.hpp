@@ -12,6 +12,7 @@ namespace sliced {
 struct s_index {
     struct builder1;
     struct builder2;
+    struct builder3;
 
     inline size_t size() const {
         return m_size;

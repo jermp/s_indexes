@@ -3,86 +3,60 @@ Sliced Indexes
 
 - Building
 	
-		➜  build git:(master) ./build /data2/inverted_indexes/gov2/gov2.sorted-text.bin.docs 0.001 -o gov2.bin                                                                            
-		universe size: 24622347                                                                                                                                                           
-		processed 1000 sequences
-		processed 2000 sequences
-		processed 3000 sequences
-		processed 4000 sequences
-		processed 5000 sequences
-		processed 6000 sequences
-		processed 7000 sequences
-		processed 8000 sequences
-		processed 9000 sequences
-		processed 10000 sequences
-		processed 11000 sequences
-		processed 12000 sequences
-		processed 13000 sequences
+		GOV2
 		processed 13276 sequences, 5066748826 integers
 		chunks: 4611821
 		full chunks: 16850 (21.7947% of ints)
 		empty chunks: 1557705 (33.7764% of chunks)
-		dense chunks: 19434 (15.9206% of ints)
-		sparse chunks: 3017832 (62.2847% of ints)
-		blocks: 772564992
-		full blocks: 1326334 (6.70137% of ints)
-		empty blocks: 560911707 (72.6038% of blocks)
-		dense blocks: 23468998 (34.3412% of ints)
-		sparse blocks: 186857953 (21.2421% of ints)
+		dense chunks: 19686 (16.0473% of ints)
+		sparse chunks: 3017580 (62.158% of ints)
+		blocks: 772500480
+		empty blocks: 560911704 (72.6099% of blocks)
+		dense blocks: 24731408 (40.9162% of ints)
+		sparse blocks: 186857368 (21.2418% of ints)
 		0.0289752 [bpi] for chunks' headers
-		0.304955 [bpi] for blocks' headers
-		0.25137 [bpi] for dense chunks
-		1.18578 [bpi] for dense blocks
-		1.9944 [bpi] for sparse blocks
-		total bpi: 3.76548
-		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
-		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
-		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
+		0.304929 [bpi] for blocks' headers
+		0.254629 [bpi] for dense chunks
+		1.24957 [bpi] for dense blocks
+		1.99438 [bpi] for sparse blocks
+		total bpi: 3.83248
 
-		➜  build git:(master) ./build /data2/inverted_indexes/clueweb09/clueweb.sorted-text.bin.docs 0.001 -o clueweb09.bin 
-		universe size: 50131015
-		processed 1000 sequences
-		processed 2000 sequences
-		processed 3000 sequences
-		processed 4000 sequences
-		processed 5000 sequences
-		processed 6000 sequences
-		processed 7000 sequences
-		processed 8000 sequences
-		processed 9000 sequences
-		processed 10000 sequences
-		processed 11000 sequences
-		processed 12000 sequences
-		processed 13000 sequences
-		processed 14000 sequences
-		processed 15000 sequences
-		processed 16000 sequences
-		processed 17000 sequences
-		processed 18000 sequences
-		processed 19000 sequences
-		processed 20000 sequences
-		processed 21000 sequences
-		processed 21924 sequences, 13864451283 integers
+		CLUEWEB09
+		processed 21924 sequences, 13864451283 integers                                                                                                
 		chunks: 14220978
 		full chunks: 712 (0.336556% of ints)
 		empty chunks: 118978 (0.836637% of chunks)
-		dense chunks: 43925 (13.4839% of ints)
-		sparse chunks: 14057363 (86.1795% of ints)
-		blocks: 3598684928
-		full blocks: 1752750 (3.23636% of ints)
-		empty blocks: 2389304696 (66.3938% of blocks)
-		dense blocks: 86751160 (44.3064% of ints)
-		sparse blocks: 1120876322 (38.6368% of ints)
+		dense chunks: 45352 (13.7609% of ints)
+		sparse chunks: 14055936 (85.9026% of ints)
+		blocks: 3598319616
+		empty blocks: 2389304628 (66.4006% of blocks)
+		dense blocks: 88144466 (47.2667% of ints)
+		sparse blocks: 1120870522 (38.6359% of ints)
 		0.0488477 [bpi] for chunks' headers
-		0.519124 [bpi] for blocks' headers
-		0.207629 [bpi] for dense chunks
-		1.60182 [bpi] for dense blocks
-		3.73771 [bpi] for sparse blocks
-		total bpi: 6.11512
-		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
-		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
-		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
+		0.519071 [bpi] for blocks' headers
+		0.214375 [bpi] for dense chunks
+		1.62754 [bpi] for dense blocks
+		3.73763 [bpi] for sparse blocks
+		total bpi: 6.14746
     
+    	CCNEWS
+		processed 23085 sequences, 18969946075 integers
+		chunks: 15010868
+		empty chunks: 4580 (0.0305112% of chunks)
+		dense chunks: 146406 (22.6026% of ints)
+		sparse chunks: 14859882 (77.3974% of ints)
+		very sparse chunks: 0 (0% of ints)
+		blocks: 3804129792
+		empty blocks: 1820584913 (47.8581% of blocks)
+		dense blocks: 106213467 (33.2166% of ints)
+		sparse blocks: 1877331412 (44.1808% of ints)
+		0.0379902 [bpi] for chunks' headers
+		0.401069 [bpi] for blocks' headers
+		0.505793 [bpi] for dense chunks
+		1.43335 [bpi] for dense blocks
+		4.32617 [bpi] for sparse blocks
+		total bpi: 6.70438
+		
 - Decoding
 
 		➜  build git:(master) ✗ ./decode gov2.bin

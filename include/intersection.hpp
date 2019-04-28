@@ -239,74 +239,78 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
     uint32_t* tmp = out;
     uint32_t size = 0;
 
-    for (uint32_t i = 0; i != 64; ++i) {
+    for (int i = 0; i != 64; ++i) {
         uint8_t header_byte_l = l[i];
         uint8_t header_byte_r = r[i];
 
         if (header_byte_l == 0 and header_byte_r == 0) {
             base += 256 * 4;
             // std::cout << "0\n";
+            // } else if (header_byte_l == 0) {
+            //     for (int i = 0; i != 4; ++i) {
+            //         uint8_t header_r = header_byte_r & 3;
+            //         if (header_r == type::sparse) {
+            //             data_r += *data_r + 1;
+            //         } else if (header_r == type::dense) {
+            //             data_r += 32;
+            //         }
+            //         header_byte_r >>= 2;
+            //     }
+            //     base += 256 * 4;
+            // } else if (header_byte_r == 0) {
+            //     for (int i = 0; i != 4; ++i) {
+            //         uint8_t header_l = header_byte_l & 3;
+            //         if (header_l == type::sparse) {
+            //             data_l += *data_l + 1;
+            //         } else if (header_l == type::dense) {
+            //             data_l += 32;
+            //         }
+            //         header_byte_l >>= 2;
+            //     }
+            //     base += 256 * 4;
         } else if ((header_byte_l & header_byte_r) == 0) {
             // std::cout << "1\n";
-            for (uint32_t i = 0; i != 4; ++i) {
+            for (int i = 0; i != 4; ++i) {
                 uint8_t header_l = header_byte_l & 3;
                 uint8_t header_r = header_byte_r & 3;
-                switch (header_l) {
-                    case type::empty:
-                        break;
-                    case type::sparse:
-                        data_l += *data_l + 1;
-                        break;
-                    case type::dense:
-                        data_l += 32;
-                        break;
+                if (header_l == type::sparse) {
+                    data_l += *data_l + 1;
+                } else if (header_l == type::dense) {
+                    data_l += 32;
                 }
-                switch (header_r) {
-                    case type::empty:
-                        break;
-                    case type::sparse:
-                        data_r += *data_r + 1;
-                        break;
-                    case type::dense:
-                        data_r += 32;
-                        break;
+
+                if (header_r == type::sparse) {
+                    data_r += *data_r + 1;
+                } else if (header_r == type::dense) {
+                    data_r += 32;
                 }
+
                 header_byte_l >>= 2;
                 header_byte_r >>= 2;
-                base += 256;
             }
+            base += 256 * 4;
         } else {
             // std::cout << "2\n";
-            for (uint32_t i = 0; i != 4; ++i) {
+            for (int i = 0; i != 4; ++i) {
+                // std::cout << "2\n";
                 uint8_t header_l = header_byte_l & 3;
                 uint8_t header_r = header_byte_r & 3;
                 uint32_t n = 0;
 
                 if (header_l == 0) {
-                    switch (header_r) {
-                        case type::empty:
-                            break;
-                        case type::sparse:
-                            data_r += *data_r + 1;
-                            break;
-                        case type::dense:
-                            data_r += 32;
-                            break;
-                            // case type::full:
-                            //     break;
+                    if (header_r == type::sparse) {
+                        data_r += *data_r + 1;
+                    } else if (header_r == type::dense) {
+                        data_r += 32;
                     }
                 } else if (header_r == 0) {
-                    switch (header_l) {
-                        case type::sparse:
-                            data_l += *data_l + 1;
-                            break;
-                        case type::dense:
-                            data_l += 32;
-                            break;
-                            // case type::full:
-                            //     break;
+                    if (header_l == type::sparse) {
+                        data_l += *data_l + 1;
+                    } else if (header_l == type::dense) {
+                        data_l += 32;
                     }
                 } else {
+                    // std::cout << "2\n";
                     switch (block_pair(header_l, header_r)) {
                         case block_pair(type::sparse, type::sparse):
                             // std::cout << "0\n";
@@ -370,7 +374,8 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
     return size;
 }
 
-// size_t ss_intersect_chunk1(uint8_t const* l, uint8_t const* r, uint32_t base,
+// size_t ss_intersect_chunk1(uint8_t const* l, uint8_t const* r, uint32_t
+// base,
 //                            uint64_t* bitmap1, uint64_t* bitmap2,
 //                            uint32_t* out) {
 //     uncompress_sparse_chunk(l, bitmap1);
@@ -455,21 +460,21 @@ size_t ff_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
 //                     // out);
 //                     break;
 //                 case chunk_pair(type::dense, type::dense):
-//                     n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
-//                     break;
+//                     n = dd_intersect_chunk(it_l.data, it_r.data, base,
+//                     out); break;
 //                 case chunk_pair(type::dense, type::full):
-//                     n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
-//                     break;
+//                     n = fd_intersect_chunk(it_r.data, it_l.data, base,
+//                     out); break;
 //                 case chunk_pair(type::full, type::sparse):
 //                     // n = fs_intersect_chunk(it_l.data, it_r.data, base,
 //                     // out);
 //                     break;
 //                 case chunk_pair(type::full, type::dense):
-//                     n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
-//                     break;
+//                     n = fd_intersect_chunk(it_l.data, it_r.data, base,
+//                     out); break;
 //                 case chunk_pair(type::full, type::full):
-//                     n = ff_intersect_chunk(it_l.data, it_r.data, base, out);
-//                     break;
+//                     n = ff_intersect_chunk(it_l.data, it_r.data, base,
+//                     out); break;
 //                 default:
 //                     assert(false);
 //                     __builtin_unreachable();
@@ -506,13 +511,16 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     n = ss_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
-                    // n = ds_intersect_chunk(it_r.data, it_l.data, base, out);
+                    // n = ds_intersect_chunk(it_r.data, it_l.data, base,
+                    // out);
                     break;
                 case chunk_pair(type::sparse, type::full):
-                    // n = fs_intersect_chunk(it_r.data, it_l.data, base, out);
+                    // n = fs_intersect_chunk(it_r.data, it_l.data, base,
+                    // out);
                     break;
                 case chunk_pair(type::dense, type::sparse):
-                    // n = ds_intersect_chunk(it_l.data, it_r.data, base, out);
+                    // n = ds_intersect_chunk(it_l.data, it_r.data, base,
+                    // out);
                     break;
                 case chunk_pair(type::dense, type::dense):
                     n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
@@ -521,7 +529,8 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                     n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
-                    // n = fs_intersect_chunk(it_l.data, it_r.data, base, out);
+                    // n = fs_intersect_chunk(it_l.data, it_r.data, base,
+                    // out);
                     break;
                 case chunk_pair(type::full, type::dense):
                     n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
