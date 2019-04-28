@@ -151,6 +151,14 @@ Sliced Indexes
 		Mean per run: 855742 [musec]
 		Mean per query: 855.741 [musec]
 
+		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K
+		reading queries...
+		DONE
+		performing 1000 pairwise-intersections...
+		377693570
+		Mean per run: 1.61105e+06 [musec]
+		Mean per query: 1611.05 [musec]
+
 - Perf counts
 
 		 Performance counter stats for './intersect gov2.bin 1000':

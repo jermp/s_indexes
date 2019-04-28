@@ -8,7 +8,8 @@ size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;
 }
 
-enum type { empty = 0, sparse = 1, dense = 2, full = 3 };
+// enum type { empty = 0, sparse = 1, dense = 2, full = 3 };
+enum type { empty = 0, sparse = 1, dense = 3, full = 2 };
 
 struct parameters {
     std::string collection_filename;

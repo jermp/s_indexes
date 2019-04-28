@@ -8,8 +8,8 @@
 using namespace sliced;
 
 void build(parameters const& params, char const* output_filename) {
-    // typedef s_index::builder1 builder_type;
-    typedef s_index::builder2 builder_type;
+    typedef s_index::builder1 builder_type;
+    // typedef s_index::builder2 builder_type;
     builder_type builder(params);
     auto stats = builder.build();
     stats.print();

@@ -4,7 +4,7 @@
 
 namespace sliced {
 
-inline void set_bit(uint8_t position, uint64_t* out) {
+inline void set_bit(uint32_t position, uint64_t* out) {
     size_t w = position / 64;
     size_t o = position & 63;
     out[w] |= uint64_t(1) << o;

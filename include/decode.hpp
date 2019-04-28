@@ -34,6 +34,8 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t base,
     __m256i converted;
     __m256i base_vec = _mm256_set1_epi32(base);
 
+    // replace _mm_load_si128 with _mm_lddqu_si128 ?
+
     in_vec = _mm_load_si128((__m128i const*)(begin + 0));
     converted = _mm256_cvtepu8_epi32(in_vec);
     converted = _mm256_add_epi32(base_vec, converted);
