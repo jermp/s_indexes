@@ -11,7 +11,9 @@ struct s_sequence {
     }
 
     size_t decode(uint32_t* out);
+    size_t decode3(uint32_t* out);
     size_t uncompress(uint64_t* out);
+    size_t uncompress3(uint64_t* out);
 
     uint16_t const* header() const {
         return m_header;

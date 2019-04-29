@@ -6,6 +6,7 @@
 #include "util.hpp"
 #include "s_index.hpp"
 #include "decode.hpp"
+#include "decode3.hpp"
 
 using namespace sliced;
 
@@ -30,7 +31,7 @@ void test_decode(char const* binary_filename, char const* collection_filename,
         uint32_t universe = data[i + n];
         if (double(n) / universe > density) {
             auto sequence = index[k];
-            size_t decoded = sequence.decode(out.data());
+            size_t decoded = sequence.decode3(out.data());
 
             if (decoded != n) {
                 std::cout << "decoded " << decoded << " integers: expected "

@@ -8,6 +8,7 @@
 #include "util.hpp"
 #include "s_index.hpp"
 #include "uncompress.hpp"
+#include "uncompress3.hpp"
 #include "tables.hpp"
 
 using namespace sliced;
@@ -73,7 +74,7 @@ void test_uncompress(char const* binary_filename,
         uint32_t universe = data[i + n];
         if (double(n) / universe > density) {
             auto sequence = index[k];
-            size_t decoded = sequence.uncompress(bitmap.data());
+            size_t decoded = sequence.uncompress3(bitmap.data());
             decoded = decode_bitmap_and_reset(bitmap.data(),
                                               size_in_64bit_words, out.data());
 

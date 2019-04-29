@@ -1,13 +1,11 @@
 #pragma once
 
 #include "constants.hpp"
-#include "decode.hpp"
-#include "uncompress.hpp"
+#include "decode3.hpp"
+#include "uncompress3.hpp"
 
 #define chunk_pair(l, r) (3 * (l) + (r))
 #define block_pair(l, r) (2 * (l) + (r))
-
-#define TYPE_BY_CARDINALITY(c) c != 32 ? type::sparse : type::dense;
 
 namespace sliced {
 
@@ -66,19 +64,6 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
                            int blocks_r, uint32_t base, uint32_t* out) {
     assert(blocks_l >= 1 and blocks_l <= 256);
     assert(blocks_r >= 1 and blocks_r <= 256);
-
-    // std::cout << "blocks_l " << blocks_l << std::endl;
-    // for (int i = 0; i != blocks_l; ++i) {
-    //     std::cout << int(*(l + i * 2)) << " " << int(*(l + i * 2 + 1))
-    //               << std::endl;
-    // }
-
-    // std::cout << "blocks_r " << blocks_r << std::endl;
-    // for (int i = 0; i != blocks_r; ++i) {
-    //     std::cout << int(*(r + i * 2)) << " " << int(*(r + i * 2 + 1))
-    //               << std::endl;
-    // }
-
     uint8_t const* data_l = l + blocks_l * 2;
     uint8_t const* data_r = r + blocks_r * 2;
     uint32_t* tmp = out;
@@ -149,37 +134,19 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
     return size_t(tmp - out);
 }
 
-size_t dd_intersect_chunk3(uint8_t const* l, uint8_t const* r, uint32_t base,
-                           uint32_t* out) {
-    return intersect_bitmap(l, r, constants::chunk_size_in_64bit_words, base,
-                            out);
-}
-
-size_t ds_intersect_chunk3(uint8_t const* l, uint8_t const* r, uint32_t base,
-                           uint32_t* out) {
+size_t ds_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_r,
+                           uint32_t base, uint32_t* out) {
     static uint64_t x[1024];
     std::fill(x, x + 1024, 0);
-    uncompress_sparse_chunk(r, x);
+    uncompress_sparse_chunk3(r, blocks_r, x);
     return dd_intersect_chunk(l, reinterpret_cast<uint8_t const*>(x), base,
                               out);
 }
 
-size_t fs_intersect_chunk3(uint8_t const* l, uint8_t const* r, uint32_t base,
-                           uint32_t* out) {
+size_t fs_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_r,
+                           uint32_t base, uint32_t* out) {
     (void)l;
-    return decode_sparse_chunk(r, base, out);
-}
-
-size_t fd_intersect_chunk3(uint8_t const* l, uint8_t const* r, uint32_t base,
-                           uint32_t* out) {
-    (void)l;
-    return decode_dense_chunk(r, base, out);
-}
-
-size_t ff_intersect_chunk3(uint8_t const* l, uint8_t const* r, uint32_t base,
-                           uint32_t* out) {
-    (void)r;
-    return decode_full_chunk(l, base, out);
+    return decode_sparse_chunk3(r, blocks_r, base, out);
 }
 
 size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
@@ -200,32 +167,32 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
                                             it_r.blocks(), base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
-                    // n = ds_intersect_chunk(it_r.data, it_l.data, base,
-                    // out);
+                    n = ds_intersect_chunk3(it_r.data, it_l.data, it_l.blocks(),
+                                            base, out);
                     break;
                 case chunk_pair(type::sparse, type::full):
-                    // n = fs_intersect_chunk(it_r.data, it_l.data, base,
-                    // out);
+                    n = fs_intersect_chunk3(it_r.data, it_l.data, it_l.blocks(),
+                                            base, out);
                     break;
                 case chunk_pair(type::dense, type::sparse):
-                    // n = ds_intersect_chunk(it_l.data, it_r.data, base,
-                    // out);
+                    n = ds_intersect_chunk3(it_l.data, it_r.data, it_r.blocks(),
+                                            base, out);
                     break;
                 case chunk_pair(type::dense, type::dense):
-                    n = dd_intersect_chunk3(it_l.data, it_r.data, base, out);
+                    n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::full):
-                    n = fd_intersect_chunk3(it_r.data, it_l.data, base, out);
+                    n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
-                    // n = fs_intersect_chunk(it_l.data, it_r.data, base,
-                    // out);
+                    n = fs_intersect_chunk3(it_l.data, it_r.data, it_r.blocks(),
+                                            base, out);
                     break;
                 case chunk_pair(type::full, type::dense):
-                    n = fd_intersect_chunk3(it_l.data, it_r.data, base, out);
+                    n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::full, type::full):
-                    n = ff_intersect_chunk3(it_l.data, it_r.data, base, out);
+                    n = ff_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 default:
                     assert(false);

@@ -5,6 +5,7 @@
 #include "util.hpp"
 #include "s_index.hpp"
 #include "decode.hpp"
+#include "decode3.hpp"
 
 using namespace sliced;
 
@@ -20,7 +21,7 @@ void decode(char const* binary_filename) {
     t.start();
     for (size_t i = 0; i != index.size(); ++i) {
         auto sequence = index[i];
-        size_t decoded = sequence.decode(out.data());
+        size_t decoded = sequence.decode3(out.data());
         integers += decoded;
     }
     t.stop();
