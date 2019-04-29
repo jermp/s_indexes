@@ -11,6 +11,7 @@ inline void set_bit(uint32_t position, uint64_t* out) {
     out[w] |= uint64_t(1) << o;
 }
 
+// NOTE: can be optimized as in uncompress_sparse_block3 in uncompress3.hpp
 uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
     uint32_t cardinality = *begin++;
     for (uint32_t i = 0; i != cardinality; ++i) {
