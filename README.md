@@ -59,92 +59,103 @@ Sliced Indexes
 		
 - Decoding
 
-		➜  build git:(master) ✗ ./decode gov2.bin
-		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
-		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
-		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
-		decoded 13276 sequences
-		decoded 5066748826 integers
-		Elapsed time: 3.59512 [sec]
-		Mean per sequence: 270.799 [musec]
-		Mean per integer: 0.709552 [ns]
+		➜  build git:(master) ✗ ./decode gov2.no_full_blocks.bin2                                                                                                                         
+		decoded 13276 sequences                                                                                                                                                           
+		decoded 5066748826 integers                                                                                                                                                       
+		Elapsed time: 2.90988 [sec]                                                                                                                                                       
+		Mean per sequence: 219.183 [musec]                                                                                                                                                
+		Mean per integer: 0.574309 [ns] 
 
-		➜  build git:(master) ✗ ./decode clueweb09.bin 
-		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
-		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
-		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
+		➜  build git:(master) ✗ ./decode clueweb09.no_full_blocks.bin2
 		decoded 21924 sequences
 		decoded 13864451283 integers
-		Elapsed time: 14.7659 [sec]
-		Mean per sequence: 673.503 [musec]
-		Mean per integer: 1.06502 [ns]
+		Elapsed time: 9.3739 [sec]
+		Mean per sequence: 427.563 [musec]
+		Mean per integer: 0.67611 [ns]
+		
+		➜  build git:(master) ✗ ./decode ccnews.no_full_blocks.bin2
+		decoded 23085 sequences
+		decoded 18969946075 integers
+		Elapsed time: 12.5827 [sec]
+		Mean per sequence: 545.06 [musec]
+		Mean per integer: 0.663297 [ns]
 		
 - Uncompressing
 
-		➜  build git:(master) ✗ ./uncompress gov2.bin
-		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
-		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
-		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
-		decoded 13276 sequences
-		decoded 5066748826 integers
-		Elapsed time: 2.98373 [sec]
-		Mean per sequence: 224.746 [musec]
-		Mean per integer: 0.588885 [ns]
+		➜  build git:(master) ✗ ./uncompress gov2.no_full_blocks.bin2                                                                                                                     
+		decoded 13276 sequences                                                                                                                                                           
+		decoded 5066748826 integers                                                                                                                                                       
+		Elapsed time: 2.09263 [sec]                                                                                                                                                       
+		Mean per sequence: 157.625 [musec]                                                                                                                                                
+		Mean per integer: 0.413012 [ns] 
 		
-		➜  build git:(master) ✗ ./uncompress clueweb09.bin 
-		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
-		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
-		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
-		decoded 21924 sequences
-		decoded 13864451283 integers
-		Elapsed time: 16.7491 [sec]
-		Mean per sequence: 763.962 [musec]
-		Mean per integer: 1.20806 [ns]
-		
+		➜  build git:(master) ✗ ./uncompress clueweb09.no_full_blocks.bin2                                                                                                                
+		decoded 21924 sequences                                                                                                                                                           
+		decoded 13864451283 integers                                                                                                                                                      
+		Elapsed time: 11.4784 [sec]                                                                                                                                                       
+		Mean per sequence: 523.553 [musec]                                                                                                                                                
+		Mean per integer: 0.8279 [ns]
+
+
+		➜  build git:(master) ✗ ./uncompress ccnews.no_full_blocks.bin2
+		decoded 23085 sequences
+		decoded 18969946075 integers
+		Elapsed time: 19.1121 [sec]
+		Mean per sequence: 827.901 [musec]
+		Mean per integer: 1.00749 [ns]
+
 - Intersection
 
-		➜  build git:(master) ✗ ./intersect gov2.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K          
-		reading queries...
+		➜  build git:(master) ✗ ./intersect gov2.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K                                     
+		reading queries...                                                                                                                                                                
 		DONE
-		'N6sliced7s_indexE' - bytes = 2384950631 (100%)
-		    'St6vectorImSaImEE' - bytes = 106216 (0.00445359%)
-		    'St6vectorIhSaIhEE' - bytes = 2384844415 (99.9955%)
 		performing 1000 pairwise-intersections...
-		148466230
-		Mean per run: 303990 [musec]
-		Mean per query: 303.99 [musec]
+		163312853
+		Mean per run: 209903 [musec]
+		Mean per query: 209.903 [musec]
 		
-		➜  build git:(master) ✗ ./intersect clueweb09.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
+		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
 		DONE
-		'N6sliced7s_indexE' - bytes = 10598030953 (100%)
-		    'St6vectorImSaImEE' - bytes = 175400 (0.00165502%)
-		    'St6vectorIhSaIhEE' - bytes = 10597855553 (99.9983%)
 		performing 1000 pairwise-intersections...
-		111123830
-		Mean per run: 855742 [musec]
-		Mean per query: 855.741 [musec]
+		122236213
+		Mean per run: 548128 [musec]
+		Mean per query: 548.128 [musec]
 
-		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K
-		reading queries...
-		DONE
-		performing 1000 pairwise-intersections...
-		377693570
-		Mean per run: 1.61105e+06 [musec]
-		Mean per query: 1611.05 [musec]
+		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
+		reading queries...                                                                                                                                                                
+		DONE                                                                                                                                                                              
+		performing 1000 pairwise-intersections...                                                                                                                                         
+		415462927                                                                                                                                                                         
+		Mean per run: 1.33303e+06 [musec]                                                                                                                                                 
+		Mean per query: 1333.03 [musec] 
 
 - Perf counts
 
-		 Performance counter stats for './intersect gov2.bin 1000':
-		
-		         4,374,008      cache-misses                                                
-		    13,461,398,604      instructions              #    0.98  insn per cycle         
-		    13,680,127,694      cycles                                                      
-		       487,012,368      branch-misses  
+		 Performance counter stats for './intersect gov2.no_full_blocks.bin2 1000':
+
+	       2418.997283      task-clock (msec)         #    1.000 CPUs utilized          
+	                 6      context-switches          #    0.002 K/sec                  
+	                 0      cpu-migrations            #    0.000 K/sec                  
+	            57,384      page-faults               #    0.024 M/sec                  
+	    10,451,372,048      cycles                    #    4.321 GHz                    
+	    10,152,808,190      instructions              #    0.97  insn per cycle         
+	     2,391,319,695      branches                  #  988.558 M/sec                  
+	       354,306,037      branch-misses             #   14.82% of all branches        
+	
+	       2.419265647 seconds time elapsed
+
+
 		       
 		 Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
-		
-		        12,302,166      cache-misses                                                
-		     7,631,824,065      instructions              #    1.54  insn per cycle         
-		     4,941,581,066      cycles                                                      
-		        53,220,853      branch-misses  
+	
+	       1168.235343      task-clock (msec)         #    1.000 CPUs utilized          
+	                 0      context-switches          #    0.000 K/sec                  
+	                 0      cpu-migrations            #    0.000 K/sec                  
+	            38,624      page-faults               #    0.033 M/sec                  
+	     5,088,787,837      cycles                    #    4.356 GHz                    
+	     8,392,528,078      instructions              #    1.65  insn per cycle         
+	     1,214,822,936      branches                  # 1039.879 M/sec                  
+	        58,543,845      branch-misses             #    4.82% of all branches        
+	
+	       1.168439193 seconds time elapsed
