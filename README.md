@@ -85,24 +85,24 @@ Sliced Indexes
 		➜  build git:(master) ✗ ./uncompress gov2.no_full_blocks.bin2                                                                                                                     
 		decoded 13276 sequences                                                                                                                                                           
 		decoded 5066748826 integers                                                                                                                                                       
-		Elapsed time: 2.09263 [sec]                                                                                                                                                       
-		Mean per sequence: 157.625 [musec]                                                                                                                                                
-		Mean per integer: 0.413012 [ns] 
+		Elapsed time: 1.79108 [sec]
+		Mean per sequence: 134.911 [musec]
+		Mean per integer: 0.353496 [ns]
 		
 		➜  build git:(master) ✗ ./uncompress clueweb09.no_full_blocks.bin2                                                                                                                
 		decoded 21924 sequences                                                                                                                                                           
 		decoded 13864451283 integers                                                                                                                                                      
-		Elapsed time: 11.4784 [sec]                                                                                                                                                       
-		Mean per sequence: 523.553 [musec]                                                                                                                                                
-		Mean per integer: 0.8279 [ns]
+		Elapsed time: 9.87102 [sec]
+		Mean per sequence: 450.238 [musec]
+		Mean per integer: 0.711966 [ns]
 
 
 		➜  build git:(master) ✗ ./uncompress ccnews.no_full_blocks.bin2
 		decoded 23085 sequences
 		decoded 18969946075 integers
-		Elapsed time: 19.1121 [sec]
-		Mean per sequence: 827.901 [musec]
-		Mean per integer: 1.00749 [ns]
+		Elapsed time: 14.3469 [sec]
+		Mean per sequence: 621.48 [musec]
+		Mean per integer: 0.756295 [ns]
 
 - Intersection
 
