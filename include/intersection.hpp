@@ -83,8 +83,8 @@ size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
     return pos;
 }
 
-size_t dd_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t base,
-                          uint32_t* out) {
+inline size_t dd_intersect_block(uint8_t const* l, uint8_t const* r,
+                                 uint32_t base, uint32_t* out) {
     return intersect_bitmap(l, r, constants::block_size_in_64bit_words, base,
                             out);
 }

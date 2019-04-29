@@ -39,20 +39,11 @@ size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
     return size;
 }
 
-size_t dd_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
-                           int card_r, uint32_t base, uint32_t* out) {
-    (void)card_l;
-    (void)card_r;
-    return intersect_bitmap(l, r, constants::block_size_in_64bit_words, base,
-                            out);
-}
-
-size_t ds_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
-                           int card_r, uint32_t base, uint32_t* out) {
-    (void)card_l;
+size_t ds_intersect_block3(uint8_t const* l, uint8_t const* r, int card,
+                           uint32_t base, uint32_t* out) {
     uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(l);
     uint32_t k = 0;
-    for (int i = 0; i != card_r; ++i) {
+    for (int i = 0; i != card; ++i) {
         uint32_t key = r[i];
         out[k] = key + base;
         k += bitmap_contains(bitmap, key);
@@ -102,16 +93,13 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
                                             tmp);
                     break;
                 case block_pair(type::sparse, type::dense):
-                    n = ds_intersect_block3(data_r, data_l, card_r, card_l, b,
-                                            tmp);
+                    n = ds_intersect_block3(data_r, data_l, card_l, b, tmp);
                     break;
                 case block_pair(type::dense, type::sparse):
-                    n = ds_intersect_block3(data_l, data_r, card_l, card_r, b,
-                                            tmp);
+                    n = ds_intersect_block3(data_l, data_r, card_r, b, tmp);
                     break;
                 case block_pair(type::dense, type::dense):
-                    n = dd_intersect_block3(data_l, data_r, card_l, card_r, b,
-                                            tmp);
+                    n = dd_intersect_block(data_l, data_r, b, tmp);
                     break;
                 default:
                     assert(false);
@@ -161,10 +149,24 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
         if (id_l == id_r) {
             uint32_t n = 0;
             uint32_t base = id_l << 16;
+            int blocks_l = 0;
+            int blocks_r = 0;
             switch (chunk_pair(it_l.type(), it_r.type())) {
                 case chunk_pair(type::sparse, type::sparse):
-                    n = ss_intersect_chunk3(it_l.data, it_r.data, it_l.blocks(),
-                                            it_r.blocks(), base, out);
+
+                    blocks_l = it_l.blocks();
+                    blocks_r = it_r.blocks();
+                    if (blocks_l < blocks_r) {
+                        n = ss_intersect_chunk3(it_l.data, it_r.data, blocks_l,
+                                                blocks_r, base, out);
+                    } else {
+                        n = ss_intersect_chunk3(it_r.data, it_l.data, blocks_r,
+                                                blocks_l, base, out);
+                    }
+
+                    // n = ss_intersect_chunk3(it_l.data, it_r.data,
+                    // it_l.blocks(),
+                    //                         it_r.blocks(), base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
                     n = ds_intersect_chunk3(it_r.data, it_l.data, it_l.blocks(),
