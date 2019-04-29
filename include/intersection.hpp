@@ -90,10 +90,19 @@ inline size_t dd_intersect_block(uint8_t const* l, uint8_t const* r,
                             out);
 }
 
-inline bool bitmap_contains(uint64_t const* bitmap, uint32_t pos) {
-    uint64_t word = bitmap[pos >> 6];
-    word >>= pos & 63;
-    return word & 1;
+inline bool bitmap_contains(uint64_t const* bitmap, uint64_t pos) {
+    // uint64_t w = bitmap[pos >> 6];
+    // w >>= pos & 63;
+    // return w & 1;
+
+    uint64_t r;
+    uint64_t w = bitmap[pos >> 6];
+    __asm volatile(
+        "bt %2,%1\n"
+        "sbb %0,%0"
+        : "=r"(r)
+        : "r"(w), "r"(pos));
+    return r;
 }
 
 size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, uint32_t base,
