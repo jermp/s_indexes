@@ -4,13 +4,16 @@
 #include "decode3.hpp"
 #include "uncompress3.hpp"
 
+#include "table.hpp"
+#include "intersect_vector16.hpp"
+
 #define chunk_pair(l, r) (3 * (l) + (r))
 #define block_pair(l, r) (2 * (l) + (r))
 
 namespace sliced {
 
-size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
-                           int card_r, uint32_t base, uint32_t* out) {
+size_t intersect_vectors(uint8_t const* l, uint8_t const* r, int card_l,
+                         int card_r, uint32_t base, uint32_t* out) {
     assert(uint32_t(card_l) > 0 and
            uint32_t(card_l) <= constants::block_sparseness_threshold - 2);
     assert(uint32_t(card_r) > 0 and
@@ -37,6 +40,43 @@ size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
         }
     }
     return size;
+}
+
+size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
+                           int card_r, uint32_t base, uint32_t* out) {
+    // most likely
+    if (card_l <= 16 and card_r <= 16) {
+        __m256i base_v = _mm256_set1_epi32(base);
+        __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
+        __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
+        __m256i converted_v;
+        __m128i sm16;
+        __m128i p;
+
+        __m128i res = _mm_cmpestrm(
+            v_l, card_l, v_r, card_r,
+            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+        const int mask = _mm_extract_epi32(res, 0);
+        size_t size = _mm_popcnt_u32(mask);
+        assert(size <= 16);
+
+        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
+        p = _mm_shuffle_epi8(v_r, sm16);
+
+        converted_v = _mm256_cvtepu8_epi32(p);
+        converted_v = _mm256_add_epi32(base_v, converted_v);
+        _mm256_storeu_si256((__m256i*)out, converted_v);
+
+        p = _mm_bsrli_si128(p, 8);
+
+        converted_v = _mm256_cvtepu8_epi32(p);
+        converted_v = _mm256_add_epi32(base_v, converted_v);
+        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
+
+        return size;
+    }
+
+    return intersect_vectors(l, r, card_l, card_r, base, out);
 }
 
 size_t ds_intersect_block3(uint8_t const* l, uint8_t const* r, int card,

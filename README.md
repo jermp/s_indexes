@@ -109,26 +109,26 @@ Sliced Indexes
 		➜  build git:(master) ✗ ./intersect gov2.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K                                     
 		reading queries...                                                                                                                                                                
 		DONE
-		performing 1000 pairwise-intersections...
-		163312853
-		Mean per run: 209903 [musec]
-		Mean per query: 209.903 [musec]
+		performing 1000 pairwise-intersections...                                                                                                                                         
+		163312853                                                                                                                                                                         
+		Mean per run: 157543 [musec]                                                                                                                                                      
+		Mean per query: 157.543 [musec]  
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
 		DONE
-		performing 1000 pairwise-intersections...
-		122236213
-		Mean per run: 548128 [musec]
-		Mean per query: 548.128 [musec]
+		performing 1000 pairwise-intersections...                                                                                                                                         
+		122236213                                                                                                                                                                         
+		Mean per run: 400902 [musec]                                                                                                                                                      
+		Mean per query: 400.901 [musec]
 
 		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
 		reading queries...                                                                                                                                                                
 		DONE                                                                                                                                                                              
-		performing 1000 pairwise-intersections...                                                                                                                                         
-		415462927                                                                                                                                                                         
-		Mean per run: 1.33303e+06 [musec]                                                                                                                                                 
-		Mean per query: 1333.03 [musec] 
+		performing 1000 pairwise-intersections...
+		415462927
+		Mean per run: 906449 [musec]
+		Mean per query: 906.449 [musec]
 
 - Perf counts
 
