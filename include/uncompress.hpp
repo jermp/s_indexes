@@ -1,5 +1,6 @@
 #pragma once
 
+#include "immintrin.h"
 #include "constants.hpp"
 
 namespace sliced {
@@ -19,8 +20,8 @@ uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
 }
 
 uint32_t uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
-    auto ptr = reinterpret_cast<uint64_t const*>(begin);
-    memcpy(out, ptr, constants::block_size / 8);
+    memcpy(out, reinterpret_cast<uint64_t const*>(begin),
+           constants::block_size / 8);
     uint32_t c = 0;
     for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
         c += __builtin_popcountll(out[i]);

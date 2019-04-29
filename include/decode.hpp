@@ -10,13 +10,14 @@ inline uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
     uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(begin);
     uint32_t size = 0;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
-        uint64_t bitset = bitmap[i];
-        while (bitset != 0) {
-            uint64_t t = bitset & -bitset;
-            int r = __builtin_ctzll(bitset);
-            out[size++] = i * 64 + r + base;
-            bitset ^= t;
+        uint64_t w = bitmap[i];
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = __builtin_ctzll(w);
+            out[size++] = r + base;
+            w ^= t;
         }
+        base += 64;
     }
     return size;
 }
@@ -34,9 +35,7 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t base,
     __m256i converted;
     __m256i base_vec = _mm256_set1_epi32(base);
 
-    // replace _mm_load_si128 with _mm_lddqu_si128 ?
-
-    in_vec = _mm_load_si128((__m128i const*)(begin + 0));
+    in_vec = _mm_lddqu_si128((__m128i const*)(begin + 0));
     converted = _mm256_cvtepu8_epi32(in_vec);
     converted = _mm256_add_epi32(base_vec, converted);
     _mm256_storeu_si256((__m256i*)(out + 0), converted);
@@ -46,17 +45,17 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t base,
         return cardinality;
     }
 
-    in_vec = _mm_load_si128((__m128i const*)(begin + 8));
+    in_vec = _mm_lddqu_si128((__m128i const*)(begin + 8));
     converted = _mm256_cvtepu8_epi32(in_vec);
     converted = _mm256_add_epi32(base_vec, converted);
     _mm256_storeu_si256((__m256i*)(out + 8), converted);
 
-    in_vec = _mm_load_si128((__m128i const*)(begin + 16));
+    in_vec = _mm_lddqu_si128((__m128i const*)(begin + 16));
     converted = _mm256_cvtepu8_epi32(in_vec);
     converted = _mm256_add_epi32(base_vec, converted);
     _mm256_storeu_si256((__m256i*)(out + 16), converted);
 
-    in_vec = _mm_load_si128((__m128i const*)(begin + 24));
+    in_vec = _mm_lddqu_si128((__m128i const*)(begin + 24));
     converted = _mm256_cvtepu8_epi32(in_vec);
     converted = _mm256_add_epi32(base_vec, converted);
     _mm256_storeu_si256((__m256i*)(out + 24), converted);

@@ -7,9 +7,27 @@ namespace sliced {
 
 uint32_t uncompress_sparse_block3(uint8_t const* begin, int cardinality,
                                   uint64_t* out) {
-    for (int i = 0; i != cardinality; ++i) {
-        set_bit(*begin++, out);
-    }
+    // for (int i = 0; i != cardinality; ++i) {
+    //     set_bit(*begin++, out);
+    // }
+    // return cardinality;
+
+    uint64_t offset, load, pos;
+    const uint64_t shift = 6;
+    uint8_t const* end = begin + cardinality;
+    __asm volatile(
+        "1:\n"
+        "movzbq (%[begin]), %[pos]\n"
+        "shrx %[shift], %[pos], %[offset]\n"
+        "mov (%[out],%[offset],8), %[load]\n"
+        "bts %[pos], %[load]\n"
+        "mov %[load], (%[out],%[offset],8)\n"
+        "add $1, %[begin]\n"
+        "cmp %[begin], %[end]\n"
+        "jnz 1b"
+        : [ begin ] "+&r"(begin), [ load ] "=&r"(load), [ pos ] "=&r"(pos),
+          [ offset ] "=&r"(offset)
+        : [ end ] "r"(end), [ out ] "r"(out), [ shift ] "r"(shift));
     return cardinality;
 }
 

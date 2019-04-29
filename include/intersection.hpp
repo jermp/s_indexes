@@ -74,11 +74,12 @@ size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
         uint64_t w = bitmap_l[i] & bitmap_r[i];
         while (w != 0) {
-            uint64_t t = w & -w;
+            uint64_t t = w & (~w + 1);
             int r = __builtin_ctzll(w);
-            out[pos++] = i * 64 + r + base;
+            out[pos++] = r + base;
             w ^= t;
         }
+        base += 64;
     }
     return pos;
 }
@@ -320,22 +321,19 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
                             break;
                         case block_pair(type::sparse, type::dense):
                             // std::cout << "1\n";
-                            // n = ds_intersect_block(data_r, data_l, base,
-                            // tmp);
+                            n = ds_intersect_block(data_r, data_l, base, tmp);
                             data_r += 32;
                             data_l += *data_l + 1;
                             break;
                         case block_pair(type::dense, type::sparse):
                             // std::cout << "2\n";
-                            // n = ds_intersect_block(data_l, data_r, base,
-                            // tmp);
+                            n = ds_intersect_block(data_l, data_r, base, tmp);
                             data_l += 32;
                             data_r += *data_r + 1;
                             break;
                         case block_pair(type::dense, type::dense):
                             // std::cout << "3\n";
-                            // n = dd_intersect_block(data_l, data_r, base,
-                            // tmp);
+                            n = dd_intersect_block(data_l, data_r, base, tmp);
                             data_l += 32;
                             data_r += 32;
                             break;
@@ -511,36 +509,31 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
             uint32_t base = id_l << 16;
             switch (chunk_pair(it_l.type(), it_r.type())) {
                 case chunk_pair(type::sparse, type::sparse):
-                    std::cout << id_l << std::endl;
                     n = ss_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
-                    // n = ds_intersect_chunk(it_r.data, it_l.data, base,
-                    // out);
+                    n = ds_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::sparse, type::full):
-                    // n = fs_intersect_chunk(it_r.data, it_l.data, base,
-                    // out);
+                    n = fs_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::sparse):
-                    // n = ds_intersect_chunk(it_l.data, it_r.data, base,
-                    // out);
+                    n = ds_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::dense):
-                    // n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::dense, type::full):
-                    // n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
+                    n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
-                    // n = fs_intersect_chunk(it_l.data, it_r.data, base,
-                    // out);
+                    n = fs_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::full, type::dense):
-                    // n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 case chunk_pair(type::full, type::full):
-                    // n = ff_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = ff_intersect_chunk(it_l.data, it_r.data, base, out);
                     break;
                 default:
                     assert(false);
