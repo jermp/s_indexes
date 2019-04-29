@@ -14,10 +14,6 @@ namespace sliced {
 
 size_t intersect_vectors(uint8_t const* l, uint8_t const* r, int card_l,
                          int card_r, uint32_t base, uint32_t* out) {
-    assert(uint32_t(card_l) > 0 and
-           uint32_t(card_l) <= constants::block_sparseness_threshold - 2);
-    assert(uint32_t(card_r) > 0 and
-           uint32_t(card_r) <= constants::block_sparseness_threshold - 2);
     uint8_t const* end_l = l + card_l;
     uint8_t const* end_r = r + card_r;
     size_t size = 0;
@@ -44,20 +40,28 @@ size_t intersect_vectors(uint8_t const* l, uint8_t const* r, int card_l,
 
 size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
                            int card_r, uint32_t base, uint32_t* out) {
+    assert(card_l > 0 and
+           card_l <= int(constants::block_sparseness_threshold - 2));
+    assert(card_r > 0 and
+           card_r <= int(constants::block_sparseness_threshold - 2));
+
     // most likely
     if (card_l <= 16 and card_r <= 16) {
         __m256i base_v = _mm256_set1_epi32(base);
         __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
         __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
         __m256i converted_v;
+        __m128i res;
         __m128i sm16;
         __m128i p;
+        int mask;
+        size_t size = 0;
 
-        __m128i res = _mm_cmpestrm(
+        res = _mm_cmpestrm(
             v_l, card_l, v_r, card_r,
             _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        const int mask = _mm_extract_epi32(res, 0);
-        size_t size = _mm_popcnt_u32(mask);
+        mask = _mm_extract_epi32(res, 0);
+        size += _mm_popcnt_u32(mask);
         assert(size <= 16);
 
         sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
@@ -73,8 +77,56 @@ size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
         converted_v = _mm256_add_epi32(base_v, converted_v);
         _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
 
+        // if (card_l <= 16 and card_r <= 16) {
+        //     return size;
+        // }
+
+        // int advance_l = card_l > 16 ? 16 : card_l;
+        // int advance_r = card_r > 16 ? 16 : card_r;
+
+        // const uint8_t max_l = l[advance_l - 1];
+        // const uint8_t max_r = r[advance_r - 1];
+        // if (max_l <= max_r) {
+        //     if (card_l <= 16) {
+        //         return size;
+        //     }
+        //     advance_l = card_l - 16;
+        //     l += 16;
+        //     v_l = _mm_lddqu_si128((__m128i const*)l);
+        // }
+        // if (max_r <= max_l) {
+        //     if (card_r <= 16) {
+        //         return size;
+        //     }
+        //     advance_r = card_r - 16;
+        //     r += 16;
+        //     v_r = _mm_lddqu_si128((__m128i const*)r);
+        // }
+
+        // res = _mm_cmpestrm(v_l, advance_l, v_r, advance_r,
+        //                    _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY |
+        //                    _SIDD_BIT_MASK);
+        // mask = _mm_extract_epi32(res, 0);
+        // size += _mm_popcnt_u32(mask);
+        // assert(size <= 30);
+
+        // sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
+        // p = _mm_shuffle_epi8(v_r, sm16);
+
+        // converted_v = _mm256_cvtepu8_epi32(p);
+        // converted_v = _mm256_add_epi32(base_v, converted_v);
+        // _mm256_storeu_si256((__m256i*)(out + 16), converted_v);
+
+        // p = _mm_bsrli_si128(p, 8);
+
+        // converted_v = _mm256_cvtepu8_epi32(p);
+        // converted_v = _mm256_add_epi32(base_v, converted_v);
+        // _mm256_storeu_si256((__m256i*)(out + 24), converted_v);
+
         return size;
     }
+
+    // return size + intersect_vectors(l, r, advance_l, advance_r, base, out);
 
     return intersect_vectors(l, r, card_l, card_r, base, out);
 }

@@ -132,18 +132,18 @@ Sliced Indexes
 
 - Perf counts
 
-		 Performance counter stats for './intersect gov2.no_full_blocks.bin2 1000':
+ 		Performance counter stats for './intersect gov2.no_full_blocks.bin2 1000':
 
-	       2418.997283      task-clock (msec)         #    1.000 CPUs utilized          
-	                 6      context-switches          #    0.002 K/sec                  
+	       1812.033656      task-clock (msec)         #    1.000 CPUs utilized          
+	                 2      context-switches          #    0.001 K/sec                  
 	                 0      cpu-migrations            #    0.000 K/sec                  
-	            57,384      page-faults               #    0.024 M/sec                  
-	    10,451,372,048      cycles                    #    4.321 GHz                    
-	    10,152,808,190      instructions              #    0.97  insn per cycle         
-	     2,391,319,695      branches                  #  988.558 M/sec                  
-	       354,306,037      branch-misses             #   14.82% of all branches        
+	            57,402      page-faults               #    0.032 M/sec                  
+	     7,917,550,518      cycles                    #    4.369 GHz                    
+	     9,760,591,649      instructions              #    1.23  insn per cycle         
+	     1,899,406,865      branches                  # 1048.218 M/sec                  
+	       212,773,894      branch-misses             #   11.20% of all branches        
 	
-	       2.419265647 seconds time elapsed
+	       1.812206973 seconds time elapsed
 
 
 		       
