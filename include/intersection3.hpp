@@ -12,11 +12,47 @@
 
 namespace sliced {
 
-size_t intersect_vectors(uint8_t const* l, uint8_t const* r, int card_l,
-                         int card_r, uint32_t base, uint32_t* out) {
+size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
+                           int card_r, uint32_t base, uint32_t* out) {
+    assert(card_l > 0 and
+           card_l <= int(constants::block_sparseness_threshold - 2));
+    assert(card_r > 0 and
+           card_r <= int(constants::block_sparseness_threshold - 2));
+    size_t size = 0;
+
+    if (LIKELY(card_l <= 16 and card_r <= 16)) {
+        __m256i base_v = _mm256_set1_epi32(base);
+        __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
+        __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
+        __m256i converted_v;
+        __m128i sm16;
+        __m128i p;
+
+        __m128i res = _mm_cmpestrm(
+            v_l, card_l, v_r, card_r,
+            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+        int mask = _mm_extract_epi32(res, 0);
+        size = _mm_popcnt_u32(mask);
+        assert(size <= 16);
+
+        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
+        p = _mm_shuffle_epi8(v_r, sm16);
+
+        converted_v = _mm256_cvtepu8_epi32(p);
+        converted_v = _mm256_add_epi32(base_v, converted_v);
+        _mm256_storeu_si256((__m256i*)out, converted_v);
+
+        p = _mm_bsrli_si128(p, 8);
+
+        converted_v = _mm256_cvtepu8_epi32(p);
+        converted_v = _mm256_add_epi32(base_v, converted_v);
+        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
+
+        return size;
+    }
+
     uint8_t const* end_l = l + card_l;
     uint8_t const* end_r = r + card_r;
-    size_t size = 0;
     while (true) {
         while (*l < *r) {
             if (++l == end_l) {
@@ -35,113 +71,8 @@ size_t intersect_vectors(uint8_t const* l, uint8_t const* r, int card_l,
             }
         }
     }
+
     return size;
-}
-
-size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
-                           int card_r, uint32_t base, uint32_t* out) {
-    assert(card_l > 0 and
-           card_l <= int(constants::block_sparseness_threshold - 2));
-    assert(card_r > 0 and
-           card_r <= int(constants::block_sparseness_threshold - 2));
-
-    // most likely
-    // if (card_l <= 16 and card_r <= 16) {
-    __m256i base_v = _mm256_set1_epi32(base);
-    __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
-    __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
-    __m256i converted_v;
-    __m128i res;
-    __m128i sm16;
-    __m128i p;
-    int mask;
-    size_t size = 0;
-
-    // std::cout << "card_l " << card_l << std::endl;
-    // std::cout << "card_r " << card_r << std::endl;
-
-    res = _mm_cmpestrm(v_l, card_l, v_r, card_r,
-                       _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-    mask = _mm_extract_epi32(res, 0);
-    size += _mm_popcnt_u32(mask);
-    assert(size <= 16);
-
-    sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-    p = _mm_shuffle_epi8(v_r, sm16);
-
-    converted_v = _mm256_cvtepu8_epi32(p);
-    converted_v = _mm256_add_epi32(base_v, converted_v);
-    _mm256_storeu_si256((__m256i*)out, converted_v);
-
-    p = _mm_bsrli_si128(p, 8);
-
-    converted_v = _mm256_cvtepu8_epi32(p);
-    converted_v = _mm256_add_epi32(base_v, converted_v);
-    _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-    if (card_l <= 16 and card_r <= 16) {
-        return size;
-    }
-
-    int advance_l = card_l > 16 ? 16 : card_l;
-    int advance_r = card_r > 16 ? 16 : card_r;
-    uint8_t max_l = l[advance_l - 1];
-    uint8_t max_r = r[advance_r - 1];
-
-    if (max_l <= max_r) {
-        if (card_l <= 16) {
-            return size;
-        }
-        // advance_l = card_l - 16;
-        card_l -= 16;
-        l += 16;
-        // v_l = _mm_lddqu_si128((__m128i const*)l);
-    }
-    if (max_r <= max_l) {
-        if (card_r <= 16) {
-            return size;
-        }
-        // advance_r = card_r - 16;
-        card_r -= 16;
-        r += 16;
-        // v_r = _mm_lddqu_si128((__m128i const*)r);
-    }
-
-    // std::cout << "advance_l " << advance_l << std::endl;
-    // std::cout << "advance_r " << advance_r << std::endl;
-
-    // res = _mm_cmpestrm(v_l, advance_l, v_r, advance_r,
-    //                    _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY |
-    //                    _SIDD_BIT_MASK);
-    // mask = _mm_extract_epi32(res, 0);
-    // size += _mm_popcnt_u32(mask);
-    // assert(size <= 30);
-
-    // sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-    // p = _mm_shuffle_epi8(v_r, sm16);
-
-    // converted_v = _mm256_cvtepu8_epi32(p);
-    // converted_v = _mm256_add_epi32(base_v, converted_v);
-    // _mm256_storeu_si256((__m256i*)(out + 16), converted_v);
-
-    // p = _mm_bsrli_si128(p, 8);
-
-    // converted_v = _mm256_cvtepu8_epi32(p);
-    // converted_v = _mm256_add_epi32(base_v, converted_v);
-    // _mm256_storeu_si256((__m256i*)(out + 24), converted_v);
-
-    // max_l = l[advance_l - 1];
-    // max_r = r[advance_r - 1];
-
-    // if (max_l <= max_r) {
-    //     return size;
-    // }
-    // if (max_r <= max_l) {
-    //     return size;
-    // }
-
-    out += size;
-    return size + intersect_vectors(l, r, card_l, card_r, base, out);
 }
 
 size_t ds_intersect_block3(uint8_t const* l, uint8_t const* r, int card,
@@ -192,6 +123,7 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
 
             uint32_t b = base + id * 256;
             uint32_t n = 0;
+
             switch (block_pair(type_l, type_r)) {
                 case block_pair(type::sparse, type::sparse):
                     n = ss_intersect_block3(data_l, data_r, card_l, card_r, b,
@@ -256,9 +188,12 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
             uint32_t base = id_l << 16;
             int blocks_l = 0;
             int blocks_r = 0;
-            switch (chunk_pair(it_l.type(), it_r.type())) {
-                case chunk_pair(type::sparse, type::sparse):
 
+            uint16_t type_l = it_l.type();
+            uint16_t type_r = it_r.type();
+
+            switch (chunk_pair(type_l, type_r)) {
+                case chunk_pair(type::sparse, type::sparse):
                     blocks_l = it_l.blocks();
                     blocks_r = it_r.blocks();
                     if (blocks_l < blocks_r) {
@@ -268,10 +203,6 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
                         n = ss_intersect_chunk3(it_r.data, it_l.data, blocks_r,
                                                 blocks_l, base, out);
                     }
-
-                    // n = ss_intersect_chunk3(it_l.data, it_r.data,
-                    // it_l.blocks(),
-                    //                         it_r.blocks(), base, out);
                     break;
                 case chunk_pair(type::sparse, type::dense):
                     n = ds_intersect_chunk3(it_r.data, it_l.data, it_l.blocks(),
