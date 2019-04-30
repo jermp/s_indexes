@@ -110,25 +110,25 @@ Sliced Indexes
 		reading queries...                                                                                                                                                                
 		DONE
 		performing 1000 pairwise-intersections...                                                                                                                                         
-		163312853                                                                                                                                                                         
-		Mean per run: 157543 [musec]                                                                                                                                                      
-		Mean per query: 157.543 [musec]  
+		163312853
+		Mean per run: 134727 [musec]
+		Mean per query: 134.727 [musec]
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
 		DONE
 		performing 1000 pairwise-intersections...                                                                                                                                         
-		122236213                                                                                                                                                                         
-		Mean per run: 400902 [musec]                                                                                                                                                      
-		Mean per query: 400.901 [musec]
+		122236213
+		Mean per run: 376685 [musec]
+		Mean per query: 376.685 [musec]
 
 		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
 		reading queries...                                                                                                                                                                
-		DONE                                                                                                                                                                              
+		DONE                                                                                                                                                                            
 		performing 1000 pairwise-intersections...
 		415462927
-		Mean per run: 906449 [musec]
-		Mean per query: 906.449 [musec]
+		Mean per run: 825396 [musec]
+		Mean per query: 825.396 [musec]
 
 - Perf counts
 

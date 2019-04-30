@@ -40,11 +40,11 @@
     converted_v = _mm256_add_epi32(base_v, converted_v);                      \
     _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
 
-#define ADVANCE(suffix)                                   \
-    out += size;                                          \
-    suffix += 16;                                         \
-    v_##suffix = _mm_lddqu_si128((__m128i const*)suffix); \
-    card_##suffix -= 16;
+#define ADVANCE(ptr)                                \
+    out += size;                                    \
+    ptr += 16;                                      \
+    v_##ptr = _mm_lddqu_si128((__m128i const*)ptr); \
+    card_##ptr -= 16;
 
 namespace sliced {
 
