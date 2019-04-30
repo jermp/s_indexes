@@ -10,6 +10,42 @@
 #define chunk_pair(l, r) (3 * (l) + (r))
 #define block_pair(l, r) (2 * (l) + (r))
 
+#define INIT                                          \
+    __m256i base_v = _mm256_set1_epi32(base);         \
+    __m128i v_l = _mm_lddqu_si128((__m128i const*)l); \
+    __m128i v_r = _mm_lddqu_si128((__m128i const*)r); \
+    __m256i converted_v;                              \
+    __m128i shuf;                                     \
+    __m128i p;                                        \
+    __m128i res;                                      \
+    int mask;
+
+#define INTERSECT                                                             \
+    res =                                                                     \
+        _mm_cmpestrm(v_l, card_l, v_r, card_r,                                \
+                     _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK); \
+    mask = _mm_extract_epi32(res, 0);                                         \
+    size += _mm_popcnt_u32(mask);                                             \
+                                                                              \
+    shuf = _mm_load_si128((__m128i const*)shuffle_mask + mask);               \
+    p = _mm_shuffle_epi8(v_r, shuf);                                          \
+                                                                              \
+    converted_v = _mm256_cvtepu8_epi32(p);                                    \
+    converted_v = _mm256_add_epi32(base_v, converted_v);                      \
+    _mm256_storeu_si256((__m256i*)out, converted_v);                          \
+                                                                              \
+    p = _mm_bsrli_si128(p, 8);                                                \
+                                                                              \
+    converted_v = _mm256_cvtepu8_epi32(p);                                    \
+    converted_v = _mm256_add_epi32(base_v, converted_v);                      \
+    _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
+
+#define ADVANCE(suffix)                                   \
+    out += size;                                          \
+    suffix += 16;                                         \
+    v_##suffix = _mm_lddqu_si128((__m128i const*)suffix); \
+    card_##suffix -= 16;
+
 namespace sliced {
 
 size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
@@ -20,148 +56,16 @@ size_t ss_intersect_block3(uint8_t const* l, uint8_t const* r, int card_l,
            card_r <= int(constants::block_sparseness_threshold - 2));
     size_t size = 0;
 
-    // card_l <= 16 and card_r <= 16 -> 1 cmpestr
     if (LIKELY(card_l <= 16 and card_r <= 16)) {
-        __m256i base_v = _mm256_set1_epi32(base);
-        __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
-        __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
-        __m256i converted_v;
-        __m128i sm16;
-        __m128i p;
-
-        __m128i res = _mm_cmpestrm(
-            v_l, card_l, v_r, card_r,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        int mask = _mm_extract_epi32(res, 0);
-        size = _mm_popcnt_u32(mask);
-        assert(size <= 16);
-
-        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-        p = _mm_shuffle_epi8(v_r, sm16);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)out, converted_v);
-
-        p = _mm_bsrli_si128(p, 8);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-        return size;
+        INIT INTERSECT return size;  // 1 cmpestr
     }
 
-    // card_l <= 16 and card_r  > 16 -> 2 cmpestr
     if (card_l <= 16 and card_r > 16) {
-        __m256i base_v = _mm256_set1_epi32(base);
-        __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
-        __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
-        __m256i converted_v;
-        __m128i sm16;
-        __m128i p;
-        __m128i res;
-
-        res = _mm_cmpestrm(
-            v_l, card_l, v_r, card_r,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        int mask = _mm_extract_epi32(res, 0);
-        size = _mm_popcnt_u32(mask);
-
-        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-        p = _mm_shuffle_epi8(v_r, sm16);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)out, converted_v);
-
-        p = _mm_bsrli_si128(p, 8);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-        out += size;
-        r += 16;
-        v_r = _mm_lddqu_si128((__m128i const*)r);
-        card_r -= 16;
-
-        res = _mm_cmpestrm(
-            v_l, card_l, v_r, card_r,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        mask = _mm_extract_epi32(res, 0);
-        size += _mm_popcnt_u32(mask);
-
-        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-        p = _mm_shuffle_epi8(v_r, sm16);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)out, converted_v);
-
-        p = _mm_bsrli_si128(p, 8);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-        return size;
+        INIT INTERSECT ADVANCE(r) INTERSECT return size;  // 2 cmpestr
     }
 
-    // card_r <= 16 and card_l  > 16 -> 2 cmpestr
     if (card_r <= 16 and card_l > 16) {
-        __m256i base_v = _mm256_set1_epi32(base);
-        __m128i v_l = _mm_lddqu_si128((__m128i const*)l);
-        __m128i v_r = _mm_lddqu_si128((__m128i const*)r);
-        __m256i converted_v;
-        __m128i sm16;
-        __m128i p;
-        __m128i res;
-
-        res = _mm_cmpestrm(
-            v_l, card_l, v_r, card_r,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        int mask = _mm_extract_epi32(res, 0);
-        size = _mm_popcnt_u32(mask);
-
-        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-        p = _mm_shuffle_epi8(v_r, sm16);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)out, converted_v);
-
-        p = _mm_bsrli_si128(p, 8);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-        out += size;
-        l += 16;
-        v_l = _mm_lddqu_si128((__m128i const*)l);
-        card_l -= 16;
-
-        res = _mm_cmpestrm(
-            v_l, card_l, v_r, card_r,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
-        mask = _mm_extract_epi32(res, 0);
-        size += _mm_popcnt_u32(mask);
-
-        sm16 = _mm_load_si128((__m128i const*)shuffle_mask + mask);
-        p = _mm_shuffle_epi8(v_r, sm16);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)out, converted_v);
-
-        p = _mm_bsrli_si128(p, 8);
-
-        converted_v = _mm256_cvtepu8_epi32(p);
-        converted_v = _mm256_add_epi32(base_v, converted_v);
-        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
-
-        return size;
+        INIT INTERSECT ADVANCE(l) INTERSECT return size;  // 2 cmpestr
     }
 
     // card_l  > 16 and card_r  > 16 -> 4 cmpestr, but scalar may be more
