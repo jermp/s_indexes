@@ -15,17 +15,16 @@
     __m128i v_l = _mm_lddqu_si128((__m128i const*)l); \
     __m128i v_r = _mm_lddqu_si128((__m128i const*)r); \
     __m256i converted_v;                              \
-    __m128i shuf;                                     \
-    __m128i p;                                        \
-    __m128i res;                                      \
-    int mask;
+    __m128i shuf, p, res;                             \
+    int mask, matched;
 
 #define INTERSECT                                                             \
     res =                                                                     \
         _mm_cmpestrm(v_l, card_l, v_r, card_r,                                \
                      _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK); \
     mask = _mm_extract_epi32(res, 0);                                         \
-    size += _mm_popcnt_u32(mask);                                             \
+    matched = _mm_popcnt_u32(mask);                                           \
+    size += matched;                                                          \
                                                                               \
     shuf = _mm_load_si128((__m128i const*)shuffle_mask + mask);               \
     p = _mm_shuffle_epi8(v_r, shuf);                                          \
@@ -34,11 +33,12 @@
     converted_v = _mm256_add_epi32(base_v, converted_v);                      \
     _mm256_storeu_si256((__m256i*)out, converted_v);                          \
                                                                               \
-    p = _mm_bsrli_si128(p, 8);                                                \
-                                                                              \
-    converted_v = _mm256_cvtepu8_epi32(p);                                    \
-    converted_v = _mm256_add_epi32(base_v, converted_v);                      \
-    _mm256_storeu_si256((__m256i*)(out + 8), converted_v);
+    if (matched > 8) {                                                        \
+        p = _mm_bsrli_si128(p, 8);                                            \
+        converted_v = _mm256_cvtepu8_epi32(p);                                \
+        converted_v = _mm256_add_epi32(base_v, converted_v);                  \
+        _mm256_storeu_si256((__m256i*)(out + 8), converted_v);                \
+    }
 
 #define ADVANCE(ptr)                                \
     out += size;                                    \

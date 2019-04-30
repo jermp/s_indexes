@@ -111,24 +111,24 @@ Sliced Indexes
 		DONE
 		performing 1000 pairwise-intersections...                                                                                                                                         
 		163312853
-		Mean per run: 134727 [musec]
-		Mean per query: 134.727 [musec]
+		Mean per run: 132907 [musec]
+		Mean per query: 132.907 [musec]
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
 		DONE
 		performing 1000 pairwise-intersections...                                                                                                                                         
 		122236213
-		Mean per run: 376685 [musec]
-		Mean per query: 376.685 [musec]
+		Mean per run: 370569 [musec]
+		Mean per query: 370.569 [musec]
 
 		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
 		reading queries...                                                                                                                                                                
 		DONE                                                                                                                                                                            
 		performing 1000 pairwise-intersections...
 		415462927
-		Mean per run: 825396 [musec]
-		Mean per query: 825.396 [musec]
+		Mean per run: 810147 [musec]
+		Mean per query: 810.147 [musec]
 
 - Perf counts
 
