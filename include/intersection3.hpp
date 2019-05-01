@@ -109,20 +109,20 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
     assert(blocks_r >= 1 and blocks_r <= 256);
     uint8_t const* data_l = l + blocks_l * 2;
     uint8_t const* data_r = r + blocks_r * 2;
+    uint8_t const* end_l = data_l;
+    uint8_t const* end_r = data_r;
     uint32_t* tmp = out;
 
-    int pl = 0;
-    int pr = 0;
     while (true) {
         while (*l < *r) {
-            if (++pl == blocks_l) {
+            if (l + 2 == end_l) {
                 return size_t(tmp - out);
             }
             data_l += *(l + 1);
             l += 2;
         }
         while (*l > *r) {
-            if (++pr == blocks_r) {
+            if (r + 2 == end_r) {
                 return size_t(tmp - out);
             }
             data_r += *(r + 1);
@@ -137,7 +137,7 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
             int type_l = TYPE_BY_CARDINALITY(card_l);
             int type_r = TYPE_BY_CARDINALITY(card_r);
 
-            uint32_t b = base + id * 256;
+            uint32_t b = base + (id << 8);
             uint32_t n = 0;
 
             switch (block_pair(type_l, type_r)) {
@@ -161,7 +161,7 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
 
             tmp += n;
 
-            if (++pl == blocks_l or ++pr == blocks_r) {
+            if (l + 1 == end_l or r + 1 == end_r) {
                 return size_t(tmp - out);
             }
 
