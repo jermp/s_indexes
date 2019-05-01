@@ -4,7 +4,9 @@
 #include "decode3.hpp"
 #include "uncompress3.hpp"
 
-#include "table.hpp"
+// #include "table.hpp"
+// #include "table1.hpp"
+#include "table2.hpp"
 #include "intersect_vector16.hpp"
 
 #define chunk_pair(l, r) (3 * (l) + (r))
@@ -16,7 +18,30 @@
     __m128i v_r = _mm_lddqu_si128((__m128i const*)r); \
     __m256i converted_v;                              \
     __m128i shuf, p, res;                             \
+    uint64_t sh0, sh1;                                \
     int mask, matched;
+
+// #define INTERSECT                                                             \
+//     res =                                                                     \
+//         _mm_cmpestrm(v_l, card_l, v_r, card_r,                                \
+//                      _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK); \
+//     mask = _mm_extract_epi32(res, 0);                                         \
+//     matched = _mm_popcnt_u32(mask);                                           \
+//     size += matched;                                                          \
+//                                                                               \
+//     shuf = _mm_load_si128((__m128i const*)shuffle_mask1 + mask);              \
+//     p = _mm_shuffle_epi8(v_r, shuf);                                          \
+//                                                                               \
+//     converted_v = _mm256_cvtepu8_epi32(p);                                    \
+//     converted_v = _mm256_add_epi32(base_v, converted_v);                      \
+//     _mm256_storeu_si256((__m256i*)out, converted_v);                          \
+//                                                                               \
+//     if (matched > 8) {                                                        \
+//         p = _mm_bsrli_si128(p, 8);                                            \
+//         converted_v = _mm256_cvtepu8_epi32(p);                                \
+//         converted_v = _mm256_add_epi32(base_v, converted_v);                  \
+//         _mm256_storeu_si256((__m256i*)(out + 8), converted_v);                \
+//     }
 
 #define INTERSECT                                                             \
     res =                                                                     \
@@ -26,7 +51,10 @@
     matched = _mm_popcnt_u32(mask);                                           \
     size += matched;                                                          \
                                                                               \
-    shuf = _mm_load_si128((__m128i const*)shuffle_mask + mask);               \
+    sh0 = *((uint64_t const*)shuffle_mask2 + (mask & 255));                   \
+    sh1 = *((uint64_t const*)shuffle_mask2 + (mask >> 8));                    \
+    sh1 += constants::C;                                                      \
+    shuf = _mm_set_epi64((__m64)sh1, (__m64)sh0);                             \
     p = _mm_shuffle_epi8(v_r, shuf);                                          \
                                                                               \
     converted_v = _mm256_cvtepu8_epi32(p);                                    \
