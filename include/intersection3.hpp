@@ -137,7 +137,7 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
             int type_l = TYPE_BY_CARDINALITY(card_l);
             int type_r = TYPE_BY_CARDINALITY(card_r);
 
-            uint32_t b = base + (id << 8);
+            uint32_t b = base + id * 256;
             uint32_t n = 0;
 
             switch (block_pair(type_l, type_r)) {
@@ -177,11 +177,11 @@ size_t ss_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_l,
 
 size_t ds_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_r,
                            uint32_t base, uint32_t* out) {
-    static uint64_t x[1024];
-    std::fill(x, x + 1024, 0);
-    uncompress_sparse_chunk3(r, blocks_r, x);
-    return dd_intersect_chunk(l, reinterpret_cast<uint8_t const*>(x), base,
-                              out);
+    static std::vector<uint64_t> x(1024);
+    std::fill(x.begin(), x.end(), 0);
+    uncompress_sparse_chunk3(r, blocks_r, x.data());
+    return dd_intersect_chunk(l, reinterpret_cast<uint8_t const*>(x.data()),
+                              base, out);
 }
 
 size_t fs_intersect_chunk3(uint8_t const* l, uint8_t const* r, int blocks_r,
@@ -194,7 +194,7 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
                               uint32_t* out) {
     auto it_l = l.begin();
     auto it_r = r.begin();
-    size_t size = 0;
+    uint32_t* in = out;
     while (it_l.has_next() and it_r.has_next()) {
         uint16_t id_l = it_l.id();
         uint16_t id_r = it_r.id();
@@ -254,7 +254,6 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
             }
 
             out += n;
-            size += n;
             it_l.next();
             it_r.next();
 
@@ -264,7 +263,7 @@ size_t pairwise_intersection3(s_sequence const& l, s_sequence const& r,
             it_r.advance(id_l);
         }
     }
-    return size;
+    return size_t(out - in);
 }
 
 }  // namespace sliced

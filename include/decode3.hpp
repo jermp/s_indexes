@@ -50,9 +50,10 @@ uint32_t decode_sparse_chunk3(uint8_t const* begin, int blocks, uint32_t base,
                               uint32_t* out) {
     assert(blocks >= 1 and blocks <= 256);
     uint8_t const* data = begin + blocks * 2;
+    uint8_t const* end = data;
     uint32_t* tmp = out;
 
-    for (int i = 0; i != blocks; ++i) {
+    while (begin != end) {
         uint8_t id = *begin;
         ++begin;
         int card = *begin;
@@ -63,7 +64,7 @@ uint32_t decode_sparse_chunk3(uint8_t const* begin, int blocks, uint32_t base,
 
         if (type == type::sparse) {
             n = decode_sparse_block3(data, card, b, tmp);
-        } else if (type == type::dense) {
+        } else {
             n = decode_dense_block(data, b, tmp);
         }
 
