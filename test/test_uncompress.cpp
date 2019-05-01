@@ -9,46 +9,25 @@
 #include "s_index.hpp"
 #include "uncompress.hpp"
 #include "uncompress3.hpp"
-#include "tables.hpp"
 
 using namespace sliced;
 
 uint32_t decode_bitmap_and_reset(uint64_t* bitmap, size_t size_in_64bit_words,
                                  uint32_t* out) {
-    __m256i base_vec = _mm256_set1_epi32(-1);
-    __m256i inc_vec = _mm256_set1_epi32(64);
-    __m256i add8 = _mm256_set1_epi32(8);
-
-    size_t decoded = 0;
+    uint32_t size = 0;
+    uint32_t base = 0;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
         uint64_t w = bitmap[i];
-        if (w == 0) {
-            base_vec = _mm256_add_epi32(base_vec, inc_vec);
-        } else {
-            for (int k = 0; k < 4; ++k) {  // process 2 bytes of data at a time
-                uint8_t byte1 = (uint8_t)w;
-                uint8_t byte2 = (uint8_t)(w >> 8);
-                w >>= 16;
-                __m256i vec1 = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byte1]);
-                __m256i vec2 = _mm256_load_si256(
-                    (const __m256i*)tables::dictionary[byte2]);
-                uint8_t advance1 = tables::size[byte1];
-                uint8_t advance2 = tables::size[byte2];
-                vec1 = _mm256_add_epi32(base_vec, vec1);
-                base_vec = _mm256_add_epi32(base_vec, add8);
-                vec2 = _mm256_add_epi32(base_vec, vec2);
-                base_vec = _mm256_add_epi32(base_vec, add8);
-                _mm256_storeu_si256((__m256i*)(out + decoded), vec1);
-                decoded += advance1;
-                _mm256_storeu_si256((__m256i*)(out + decoded), vec2);
-                decoded += advance2;
-            }
-            bitmap[i] = 0;
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = __builtin_ctzll(w);
+            out[size++] = r + base;
+            w ^= t;
         }
+        bitmap[i] = 0;
+        base += 64;
     }
-
-    return decoded;
+    return size;
 }
 
 void test_uncompress(char const* binary_filename,
