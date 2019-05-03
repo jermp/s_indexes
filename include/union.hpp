@@ -103,6 +103,9 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
         while (*l < *r) {
             uint8_t id = *l;
             int bytes = *(l + 1);
+
+            // NOTE: could be slow to call here, in that case,
+            // use a macro
             tmp += decode_block(data_l, bytes, base + id * 256, tmp);
             if (l + 2 == end_l) {
                 return size_t(tmp - out);
