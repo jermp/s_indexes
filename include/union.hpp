@@ -97,33 +97,28 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
     uint8_t const* data_r = r + blocks_r * 2;
     uint8_t const* end_l = data_l;
     uint8_t const* end_r = data_r;
-    uint32_t* tmp = out;
+    uint32_t* in = out;
 
     while (true) {
-        while (*l < *r) {
+        if (*l < *r) {
             uint8_t id = *l;
             int bytes = *(l + 1);
-
-            // NOTE: could be slow to call here, in that case,
-            // use a macro
-            tmp += decode_block(data_l, bytes, base + id * 256, tmp);
-            if (l + 2 == end_l) {
-                return size_t(tmp - out);
-            }
+            out += decode_block(data_l, bytes, base + id * 256, out);
             data_l += bytes;
             l += 2;
-        }
-        while (*l > *r) {
+            if (l == end_l) {
+                break;
+            }
+        } else if (*l > *r) {
             uint8_t id = *r;
             int bytes = *(r + 1);
-            tmp += decode_block(data_r, bytes, base + id * 256, tmp);
-            if (r + 2 == end_r) {
-                return size_t(tmp - out);
-            }
+            out += decode_block(data_r, bytes, base + id * 256, out);
             data_r += bytes;
             r += 2;
-        }
-        if (*l == *r) {
+            if (r == end_r) {
+                break;
+            }
+        } else {
             uint8_t id = *l;
             ++l;
             ++r;
@@ -138,41 +133,40 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             switch (block_pair(type_l, type_r)) {
                 case block_pair(type::sparse, type::sparse):
                     n = ss_union_block(data_l, data_r, bytes_l, bytes_r, b,
-                                       tmp);
+                                       out);
                     break;
                 case block_pair(type::sparse, type::dense):
-                    n = ds_union_block(data_r, data_l, bytes_l, b, tmp);
+                    n = ds_union_block(data_r, data_l, bytes_l, b, out);
                     break;
                 case block_pair(type::dense, type::sparse):
-                    n = ds_union_block(data_l, data_r, bytes_r, b, tmp);
+                    n = ds_union_block(data_l, data_r, bytes_r, b, out);
                     break;
                 case block_pair(type::dense, type::dense):
                     n = union_bitmaps(data_l, data_r,
                                       constants::block_size_in_64bit_words, b,
-                                      tmp);
+                                      out);
                     break;
                 default:
                     assert(false);
                     __builtin_unreachable();
             }
 
-            tmp += n;
-
-            if (l + 1 == end_l or r + 1 == end_r) {
-                return size_t(tmp - out);
-            }
-
+            out += n;
             data_l += bytes_l;
             data_r += bytes_r;
             ++l;
             ++r;
+
+            if (l == end_l or r == end_r) {
+                break;
+            }
         }
     }
 
     while (l != end_l) {
         uint8_t id = *l;
         int bytes = *(l + 1);
-        tmp += decode_block(data_l, bytes, base + id * 256, tmp);
+        out += decode_block(data_l, bytes, base + id * 256, out);
         data_l += bytes;
         l += 2;
     }
@@ -180,12 +174,12 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
     while (r != end_r) {
         uint8_t id = *r;
         int bytes = *(r + 1);
-        tmp += decode_block(data_r, bytes, base + id * 256, tmp);
+        out += decode_block(data_r, bytes, base + id * 256, out);
         data_r += bytes;
         r += 2;
     }
 
-    return size_t(tmp - out);
+    return size_t(out - in);
 }
 
 size_t ds_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_r,
@@ -263,12 +257,8 @@ size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out) {
             out += n;
 
             it_l.next();
-            if (!it_l.has_next()) {
-                break;
-            }
-
             it_r.next();
-            if (!it_r.has_next()) {
+            if (!it_l.has_next() or !it_r.has_next()) {
                 break;
             }
 
