@@ -65,13 +65,15 @@ Sliced Indexes
 		Elapsed time: 2.88529 [sec]
 		Mean per sequence: 217.331 [musec]
 		Mean per integer: 0.569456 [ns]
-
+		Roaring: 0.529489 [ns]
+		
 		➜  build git:(master) ✗ ./decode clueweb09.no_full_blocks.bin2
 		decoded 21924 sequences
 		decoded 13864451283 integers
 		Elapsed time: 9.3739 [sec]
 		Mean per sequence: 427.563 [musec]
 		Mean per integer: 0.67611 [ns]
+		Roaring: 0.700808 [ns]
 		
 		➜  build git:(master) ✗ ./decode ccnews.no_full_blocks.bin2
 		decoded 23085 sequences
@@ -79,6 +81,7 @@ Sliced Indexes
 		Elapsed time: 12.5827 [sec]
 		Mean per sequence: 545.06 [musec]
 		Mean per integer: 0.663297 [ns]
+		Roaring: 0.685912 [ns]
 		
 - Uncompressing
 
@@ -113,6 +116,7 @@ Sliced Indexes
 		163312853
 		Mean per run: 130174 [musec]
 		Mean per query: 130.174 [musec]
+		Roaring: 98 [musec]
 		
 		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
 		reading queries...
@@ -121,7 +125,8 @@ Sliced Indexes
 		122236213
 		Mean per run: 360178 [musec]
 		Mean per query: 360.178 [musec]
-
+		Roaring: 231 [musec]
+	   
 		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
 		reading queries...                                                                                                                                                                
 		DONE                                                                                                                                                                            
@@ -129,7 +134,8 @@ Sliced Indexes
 		415462927
 		Mean per run: 792785 [musec]
 		Mean per query: 792.785 [musec]
-
+		Roaring: 350 [musec]
+		
 - Perf counts
 
  		Performance counter stats for './intersect gov2.no_full_blocks.bin2 1000':
@@ -147,7 +153,7 @@ Sliced Indexes
 
 
 		       
-		 Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
+		Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
 	
 	       1168.235343      task-clock (msec)         #    1.000 CPUs utilized          
 	                 0      context-switches          #    0.000 K/sec                  
