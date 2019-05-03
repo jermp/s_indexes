@@ -135,35 +135,5 @@ Sliced Indexes
 		Mean per run: 792785 [musec]
 		Mean per query: 792.785 [musec]
 		Roaring: 350 [musec]
-		
-- Perf counts
-
- 		Performance counter stats for './intersect gov2.no_full_blocks.bin2 1000':
-
-	       1812.033656      task-clock (msec)         #    1.000 CPUs utilized          
-	                 2      context-switches          #    0.001 K/sec                  
-	                 0      cpu-migrations            #    0.000 K/sec                  
-	            57,402      page-faults               #    0.032 M/sec                  
-	     7,917,550,518      cycles                    #    4.369 GHz                    
-	     9,760,591,649      instructions              #    1.23  insn per cycle         
-	     1,899,406,865      branches                  # 1048.218 M/sec                  
-	       212,773,894      branch-misses             #   11.20% of all branches        
-	
-	       1.812206973 seconds time elapsed
-
-
-		       
-		Performance counter stats for './benchmarks/pair_wise_intersect gov2.roaring.0.001.bin 1000':
-	
-	       1168.235343      task-clock (msec)         #    1.000 CPUs utilized          
-	                 0      context-switches          #    0.000 K/sec                  
-	                 0      cpu-migrations            #    0.000 K/sec                  
-	            38,624      page-faults               #    0.033 M/sec                  
-	     5,088,787,837      cycles                    #    4.356 GHz                    
-	     8,392,528,078      instructions              #    1.65  insn per cycle         
-	     1,214,822,936      branches                  # 1039.879 M/sec                  
-	        58,543,845      branch-misses             #    4.82% of all branches        
-	
-	       1.168439193 seconds time elapsed
 		         
 		         
