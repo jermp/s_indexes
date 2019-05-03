@@ -79,6 +79,15 @@ size_t ds_union_block(uint8_t const* l, uint8_t const* r, int cardinality,
                          constants::block_size_in_64bit_words, base, out);
 }
 
+inline uint32_t decode_block(uint8_t const* data, int bytes, uint32_t base,
+                             uint32_t* out) {
+    int type = TYPE_BY_BYTES(bytes);
+    if (type == type::sparse) {
+        return decode_sparse_block(data, bytes, base, out);
+    }
+    return decode_bitmap(data, constants::block_size_in_64bit_words, base, out);
+}
+
 size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                       int blocks_r, uint32_t base, uint32_t* out) {
     assert(blocks_l >= 1 and blocks_l <= 256);

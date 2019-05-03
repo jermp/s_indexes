@@ -62,17 +62,17 @@ Sliced Indexes
 		➜  build git:(master) ✗ ./decode gov2.no_full_blocks.bin2                                                                                                                         
 		decoded 13276 sequences                                                                                                                                                           
 		decoded 5066748826 integers                                                                                                                                                       
-		Elapsed time: 2.88529 [sec]
-		Mean per sequence: 217.331 [musec]
-		Mean per integer: 0.569456 [ns]
+		Elapsed time: 2.87556 [sec]
+		Mean per sequence: 216.598 [musec]
+		Mean per integer: 0.567535 [ns]
 		Roaring: 0.529489 [ns]
 		
 		➜  build git:(master) ✗ ./decode clueweb09.no_full_blocks.bin2
 		decoded 21924 sequences
 		decoded 13864451283 integers
-		Elapsed time: 9.3739 [sec]
-		Mean per sequence: 427.563 [musec]
-		Mean per integer: 0.67611 [ns]
+		Elapsed time: 9.13543 [sec]
+		Mean per sequence: 416.686 [musec]
+		Mean per integer: 0.65891 [ns]
 		Roaring: 0.700808 [ns]
 		
 		➜  build git:(master) ✗ ./decode ccnews.no_full_blocks.bin2
