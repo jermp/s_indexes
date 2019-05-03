@@ -88,9 +88,9 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, int card_l,
     return size;
 }
 
-size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
-                        size_t size_in_64bit_words, uint32_t base,
-                        uint32_t* out) {
+size_t intersect_bitmaps(uint8_t const* l, uint8_t const* r,
+                         size_t size_in_64bit_words, uint32_t base,
+                         uint32_t* out) {
     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
     size_t pos = 0;
@@ -109,8 +109,8 @@ size_t intersect_bitmap(uint8_t const* l, uint8_t const* r,
 
 inline size_t dd_intersect_block(uint8_t const* l, uint8_t const* r,
                                  uint32_t base, uint32_t* out) {
-    return intersect_bitmap(l, r, constants::block_size_in_64bit_words, base,
-                            out);
+    return intersect_bitmaps(l, r, constants::block_size_in_64bit_words, base,
+                             out);
 }
 
 inline bool bitmap_contains(uint64_t const* bitmap, uint64_t pos) {
@@ -189,7 +189,9 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                     n = ds_intersect_block(data_l, data_r, card_r, b, tmp);
                     break;
                 case block_pair(type::dense, type::dense):
-                    n = dd_intersect_block(data_l, data_r, b, tmp);
+                    n = intersect_bitmaps(data_l, data_r,
+                                          constants::block_size_in_64bit_words,
+                                          b, tmp);
                     break;
                 default:
                     assert(false);
@@ -212,37 +214,13 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
     return size_t(tmp - out);
 }
 
-size_t dd_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
-                          uint32_t* out) {
-    return intersect_bitmap(l, r, constants::chunk_size_in_64bit_words, base,
-                            out);
-}
-
 size_t ds_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_r,
                           uint32_t base, uint32_t* out) {
     static std::vector<uint64_t> x(1024);
     std::fill(x.begin(), x.end(), 0);
     uncompress_sparse_chunk(r, blocks_r, x.data());
-    return dd_intersect_chunk(l, reinterpret_cast<uint8_t const*>(x.data()),
-                              base, out);
-}
-
-size_t fs_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_r,
-                          uint32_t base, uint32_t* out) {
-    (void)l;
-    return decode_sparse_chunk(r, blocks_r, base, out);
-}
-
-size_t fd_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
-                          uint32_t* out) {
-    (void)l;
-    return decode_dense_chunk(r, base, out);
-}
-
-size_t ff_intersect_chunk(uint8_t const* l, uint8_t const* r, uint32_t base,
-                          uint32_t* out) {
-    (void)r;
-    return decode_full_chunk(l, base, out);
+    return intersect_bitmaps(l, reinterpret_cast<uint8_t const*>(x.data()),
+                             constants::chunk_size_in_64bit_words, base, out);
 }
 
 size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
@@ -280,28 +258,34 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                                            base, out);
                     break;
                 case chunk_pair(type::sparse, type::full):
-                    n = fs_intersect_chunk(it_r.data, it_l.data, it_l.blocks(),
-                                           base, out);
+                    n = decode_sparse_chunk(it_l.data, it_l.blocks(), base,
+                                            out);
                     break;
                 case chunk_pair(type::dense, type::sparse):
                     n = ds_intersect_chunk(it_l.data, it_r.data, it_r.blocks(),
                                            base, out);
                     break;
                 case chunk_pair(type::dense, type::dense):
-                    n = dd_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = intersect_bitmaps(it_l.data, it_r.data,
+                                          constants::chunk_size_in_64bit_words,
+                                          base, out);
                     break;
                 case chunk_pair(type::dense, type::full):
-                    n = fd_intersect_chunk(it_r.data, it_l.data, base, out);
+                    n = decode_bitmap(it_l.data,
+                                      constants::chunk_size_in_64bit_words,
+                                      base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
-                    n = fs_intersect_chunk(it_l.data, it_r.data, it_r.blocks(),
-                                           base, out);
+                    n = decode_sparse_chunk(it_r.data, it_r.blocks(), base,
+                                            out);
                     break;
                 case chunk_pair(type::full, type::dense):
-                    n = fd_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = decode_bitmap(it_r.data,
+                                      constants::chunk_size_in_64bit_words,
+                                      base, out);
                     break;
                 case chunk_pair(type::full, type::full):
-                    n = ff_intersect_chunk(it_l.data, it_r.data, base, out);
+                    n = decode_full_chunk(base, out);
                     break;
                 default:
                     assert(false);

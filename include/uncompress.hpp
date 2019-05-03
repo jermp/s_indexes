@@ -79,10 +79,9 @@ uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
     return c;
 }
 
-uint32_t uncompress_full_chunk(uint8_t const* begin, uint64_t* out) {
-    (void)begin;
+inline uint32_t uncompress_full_chunk(uint64_t* out) {
     for (uint32_t i = 0; i != constants::chunk_size_in_64bit_words; ++i) {
-        out[i] = -1;
+        out[i] = uint64_t(-1);
     }
     return constants::chunk_size;
 }
@@ -103,7 +102,7 @@ size_t s_sequence::uncompress(uint64_t* out) {
                 u = uncompress_dense_chunk(it.data, out);
                 break;
             case type::full:
-                u = uncompress_full_chunk(it.data, out);
+                u = uncompress_full_chunk(out);
                 break;
             default:
                 assert(false);

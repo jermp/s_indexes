@@ -22,11 +22,6 @@ inline uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
     }
     return size;
 }
-uint32_t decode_dense_block(uint8_t const* begin, uint32_t base,
-                            uint32_t* out) {
-    return decode_bitmap(begin, constants::block_size_in_64bit_words, base,
-                         out);
-}
 
 uint32_t decode_sparse_block(uint8_t const* begin, int cardinality,
                              uint32_t base, uint32_t* out) {
@@ -81,7 +76,8 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
         if (type == type::sparse) {
             n = decode_sparse_block(data, card, b, tmp);
         } else {
-            n = decode_dense_block(data, b, tmp);
+            n = decode_bitmap(data, constants::block_size_in_64bit_words, b,
+                              tmp);
         }
 
         tmp += n;
@@ -92,14 +88,7 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
     return size_t(tmp - out);
 }
 
-uint32_t decode_dense_chunk(uint8_t const* begin, uint32_t base,
-                            uint32_t* out) {
-    return decode_bitmap(begin, constants::chunk_size_in_64bit_words, base,
-                         out);
-}
-
-uint32_t decode_full_chunk(uint8_t const* begin, uint32_t base, uint32_t* out) {
-    (void)begin;
+inline uint32_t decode_full_chunk(uint32_t base, uint32_t* out) {
     for (uint32_t i = 0; i != constants::chunk_size; ++i) {
         out[i] = i + base;
     }
@@ -117,10 +106,11 @@ size_t s_sequence::decode(uint32_t* out) {
                 n = decode_sparse_chunk(it.data, it.blocks(), base, out);
                 break;
             case type::dense:
-                n = decode_dense_chunk(it.data, base, out);
+                n = decode_bitmap(it.data, constants::chunk_size_in_64bit_words,
+                                  base, out);
                 break;
             case type::full:
-                n = decode_full_chunk(it.data, base, out);
+                n = decode_full_chunk(base, out);
                 break;
             default:
                 assert(false);
