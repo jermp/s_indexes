@@ -78,9 +78,9 @@ Sliced Indexes
 		➜  build git:(master) ✗ ./decode ccnews.no_full_blocks.bin2
 		decoded 23085 sequences
 		decoded 18969946075 integers
-		Elapsed time: 12.5827 [sec]
-		Mean per sequence: 545.06 [musec]
-		Mean per integer: 0.663297 [ns]
+		Elapsed time: 12.1735 [sec]
+		Mean per sequence: 527.336 [musec]
+		Mean per integer: 0.641728 [ns]
 		Roaring: 0.685912 [ns]
 		
 - Uncompressing
