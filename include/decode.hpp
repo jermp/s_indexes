@@ -2,6 +2,7 @@
 
 #include "immintrin.h"
 #include "constants.hpp"
+#include "decode.hpp"
 
 namespace sliced {
 
@@ -21,16 +22,14 @@ inline uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
     }
     return size;
 }
+uint32_t decode_dense_block(uint8_t const* begin, uint32_t base,
+                            uint32_t* out) {
+    return decode_bitmap(begin, constants::block_size_in_64bit_words, base,
+                         out);
+}
 
-uint32_t decode_sparse_block(uint8_t const* begin, uint32_t base,
-                             uint32_t* out) {
-    uint32_t cardinality = *begin++;
-    // for (uint32_t i = 0; i != cardinality; ++i) {
-    //     out[i] = *begin + base;
-    //     ++begin;
-    // }
-    // return cardinality;
-
+uint32_t decode_sparse_block(uint8_t const* begin, int cardinality,
+                             uint32_t base, uint32_t* out) {
     __m128i in_vec;
     __m256i converted;
     __m256i base_vec = _mm256_set1_epi32(base);
@@ -63,72 +62,34 @@ uint32_t decode_sparse_block(uint8_t const* begin, uint32_t base,
     return cardinality;
 }
 
-uint32_t decode_dense_block(uint8_t const* begin, uint32_t base,
-                            uint32_t* out) {
-    return decode_bitmap(begin, constants::block_size_in_64bit_words, base,
-                         out);
-}
-
-// uint32_t decode_full_block(uint8_t const* begin, uint32_t base, uint32_t*
-// out) {
-//     (void)begin;
-//     for (uint32_t i = 0; i != constants::block_size; ++i) {
-//         out[i] = i + base;
-//     }
-//     return constants::block_size;
-// }
-
-uint32_t decode_sparse_chunk(uint8_t const* begin, uint32_t base,
+uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
                              uint32_t* out) {
-    uint8_t const* data = begin + 64;
+    assert(blocks >= 1 and blocks <= 256);
+    uint8_t const* data = begin + blocks * 2;
+    uint8_t const* end = data;
     uint32_t* tmp = out;
-    uint32_t decoded = 0;
-    for (uint32_t i = 0; i != 64; ++i) {
-        uint8_t header_byte = begin[i];
-        if (header_byte == 0) {
-            base += 256 * 4;
-        } else {
-            for (uint32_t i = 0; i != 4;) {
-                uint8_t header = header_byte & 3;
-                uint32_t d = 0;
-                // switch (header) {
-                //     case type::empty:
-                //         break;
-                //     case type::sparse:
-                //         d = decode_sparse_block(data, base, tmp);
-                //         data += d + 1;
-                //         break;
-                //     case type::dense:
-                //         d = decode_dense_block(data, base, tmp);
-                //         data += 32;
-                //         break;
-                //     case type::full:
-                //         d = decode_full_block(data, base, tmp);
-                //         break;
-                //     default:
-                //         assert(false);
-                //         __builtin_unreachable();
-                // }
-                if (header == type::sparse) {
-                    d = decode_sparse_block(data, base, tmp);
-                    data += d + 1;
-                } else if (header == type::dense) {
-                    d = decode_dense_block(data, base, tmp);
-                    data += 32;
-                }
-                // else if (header == type::full) {
-                //     d = decode_full_block(data, base, tmp);
-                // }
 
-                tmp += d;
-                base += 256;
-                decoded += d;
-                header_byte >>= 2;
-                ++i;
-            }
+    while (begin != end) {
+        uint8_t id = *begin;
+        ++begin;
+        int card = *begin;
+        int type = TYPE_BY_CARDINALITY(card);
+
+        uint32_t b = base + id * 256;
+        uint32_t n = 0;
+
+        if (type == type::sparse) {
+            n = decode_sparse_block(data, card, b, tmp);
+        } else {
+            n = decode_dense_block(data, b, tmp);
         }
+
+        tmp += n;
+        data += card;
+        ++begin;
     }
-    return decoded;
+
+    return size_t(tmp - out);
 }
 
 uint32_t decode_dense_chunk(uint8_t const* begin, uint32_t base,
@@ -147,14 +108,13 @@ uint32_t decode_full_chunk(uint8_t const* begin, uint32_t base, uint32_t* out) {
 
 size_t s_sequence::decode(uint32_t* out) {
     auto it = begin();
-    size_t decoded = 0;
+    uint32_t* in = out;
     for (uint32_t i = 0; i != chunks; ++i) {
-        uint16_t id = it.id();
         uint32_t n = 0;
-        uint32_t base = id << 16;
+        uint32_t base = it.id() << 16;
         switch (it.type()) {
             case type::sparse:
-                n = decode_sparse_chunk(it.data, base, out);
+                n = decode_sparse_chunk(it.data, it.blocks(), base, out);
                 break;
             case type::dense:
                 n = decode_dense_chunk(it.data, base, out);
@@ -167,10 +127,8 @@ size_t s_sequence::decode(uint32_t* out) {
                 __builtin_unreachable();
         }
         out += n;
-        decoded += n;
         it.next();
     }
-    assert(decoded > 0);
-    return decoded;
+    return size_t(out - in);
 }
 }  // namespace sliced

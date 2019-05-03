@@ -4,6 +4,9 @@
 
 namespace sliced {
 
+#define chunk_pair(l, r) (3 * (l) + (r))
+#define block_pair(l, r) (2 * (l) + (r))
+
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 
 #define TYPE_BY_CARDINALITY(c) c != 32 ? type::sparse : type::dense

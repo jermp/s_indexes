@@ -12,12 +12,8 @@
 
 namespace sliced {
 
-/*
-Write sparse chunks by interleaving dense and sparse blocks.
-Dense and sparse blocks are written in order.
-*/
-struct s_index::builder1 {
-    builder1(parameters const& params)
+struct s_index::builder {
+    builder(parameters const& params)
         : m_params(params) {}
 
     statistics build() {
@@ -54,7 +50,8 @@ struct s_index::builder1 {
                 16 * 3 +
             stats.sequences * 16  // for the number of chunks
             ;
-        stats.blocks_header_bits = stats.blocks * 2;
+        stats.blocks_header_bits =
+            stats.dense_blocks * 16 + stats.sparse_blocks * 8;
         stats.bits = stats.chunks_header_bits + stats.blocks_header_bits +
                      stats.dense_chunks_bits + stats.dense_blocks_bits +
                      stats.sparse_blocks_bits;
@@ -75,53 +72,39 @@ private:
     std::vector<uint64_t> m_offsets;
     std::vector<uint8_t> m_sequences;
 
-    void write_header(uint32_t i, size_t offset, std::vector<uint8_t>& out,
-                      uint32_t type) {
-        assert(i < 256);
-        size_t b = i / 4;
-        size_t o = i % 4;
-        out[offset + b] |= type << (o * 2);
-    }
-
-    void encode_block(std::vector<uint32_t>& block, uint32_t& block_id,
-                      size_t header_offset, std::vector<uint8_t>& out) {
+    void encode_block(std::vector<uint32_t>& block, uint32_t& id,
+                      std::vector<uint8_t>& header,
+                      std::vector<uint8_t>& data) {
         if (block.size() > 0) {
-            // NOTE: uncomment this if we want also full blocks
-            // if (block.size() == constants::block_size) {
-            //     write_header(block_id, header_offset, out, type::full);
-            // } else
-
+            write_uint<uint8_t>(id, header);
             if (block.size() >= constants::block_sparseness_threshold - 1) {
-                write_header(block_id, header_offset, out, type::dense);
+                write_uint<uint8_t>(32, header);
                 write_bits(block.data(), block.size(), constants::block_size, 0,
-                           out);
+                           data);
             } else {
-                write_header(block_id, header_offset, out, type::sparse);
-                write_uint<uint8_t>(block.size(), out);
+                write_uint<uint8_t>(block.size(), header);
                 for (auto pos : block) {
-                    write_uint<uint8_t>(pos, out);
+                    write_uint<uint8_t>(pos, data);
                 }
             }
             block.clear();
         }
-
-        block_id += 1;
+        id += 1;
     }
 
     void encode_sparse_chunk(uint32_t const* begin, uint32_t const* end,
                              slice s, std::vector<uint32_t>& block,
                              std::vector<uint8_t>& out) {
-        size_t header_offset = out.size();
-        uint64_t empty[8] = {0};
-        auto ptr = reinterpret_cast<uint8_t const*>(empty);
-        out.insert(out.end(), ptr, ptr + 8 * sizeof(uint64_t));
-
-        uint32_t block_id = 0;
+        std::vector<uint8_t> header;
+        std::vector<uint8_t> data;
+        header.reserve(256 * 2);  // at most
+        data.reserve(256 * 32);   // at most
+        uint32_t id = 0;
         uint32_t base = s.left;
         while (*begin < s.right and begin != end) {
             uint32_t val = *begin - base;
             if (val >= constants::block_size) {
-                encode_block(block, block_id, header_offset, out);
+                encode_block(block, id, header, data);
                 base += constants::block_size;
             } else {
                 assert(val < constants::block_size);
@@ -130,7 +113,9 @@ private:
                 ++begin;
             }
         }
-        encode_block(block, block_id, header_offset, out);
+        encode_block(block, id, header, data);
+        out.insert(out.end(), header.begin(), header.end());
+        out.insert(out.end(), data.begin(), data.end());
     }
 
     void encode_sequence(uint32_t const* data, size_t n,
@@ -144,8 +129,6 @@ private:
                                          constants::chunk_size
                                    : 1;
         assert(chunks > 0 and chunks < constants::chunk_size);
-        uint32_t blocks_in_chunk =
-            constants::chunk_size / constants::block_size;
 
         stats.sequences += 1;
         stats.integers += n;
@@ -155,22 +138,13 @@ private:
         chunks_header.reserve(3 * constants::chunk_size);
         std::vector<uint8_t> tmp;
 
+        const uint32_t dense_chunk_bytes = bytes_for(constants::chunk_size);
         slice s = {0, constants::chunk_size};
 
         for (uint32_t i = 0; i != chunks; ++i) {
             uint32_t cardinality = 0;
             if (*begin < s.right) {
                 cardinality = chunk_cardinality(begin, end, s);
-
-                // actual chunk universe
-                // uint32_t chunk_universe = *(begin - 1) - base + 1;
-
-                uint32_t chunk_universe = constants::chunk_size;
-                uint32_t dense_chunk_bytes = bytes_for(chunk_universe);
-                assert(dense_chunk_bytes * 8 <= constants::chunk_size);
-                assert(chunk_universe <= constants::chunk_size);
-                assert(cardinality <= chunk_universe);
-
                 chunks_header.push_back(i);
 
                 if (cardinality < constants::chunk_sparseness_threshold) {
@@ -178,7 +152,10 @@ private:
                         sparse_chunk_bitsize(begin, end, s);
 
                     uint64_t sparse_chunk_bytes =
-                        (2 * blocks_in_chunk +
+                        (sparse_chunk_stats.dense_blocks * 16 +
+                         // NOTE: the 8 bits for the cardinality of sparse
+                         // blocks are already accounted in sparse_blocks_bits
+                         sparse_chunk_stats.sparse_blocks * 8 +
                          sparse_chunk_stats.dense_blocks_bits +
                          sparse_chunk_stats.sparse_blocks_bits) /
                         8;
@@ -195,32 +172,26 @@ private:
                         stats.sparse_chunks += 1;
                         stats.integers_in_sparse_chunks += cardinality;
 
-                        stats.blocks += blocks_in_chunk;
-                        assert(sparse_chunk_stats.blocks <= blocks_in_chunk);
-                        stats.empty_blocks +=
-                            blocks_in_chunk - sparse_chunk_stats.blocks;
+                        uint16_t num_blocks = sparse_chunk_stats.dense_blocks +
+                                              sparse_chunk_stats.sparse_blocks;
+                        assert(num_blocks >= 1 and num_blocks <= 256);
+                        stats.blocks += num_blocks;
 
                         stats.accumulate(sparse_chunk_stats);
 
-                        chunks_header.push_back(type::sparse);
-                        chunks_header.push_back(sparse_chunk_bytes);
+                        // std::cout << "num_blocks " << num_blocks <<
+                        // std::endl;
+                        uint16_t packed = type::sparse;
+                        packed |= (num_blocks - 1) << 8;
+                        chunks_header.push_back(packed);
 
-                        // std::cout << sparse_chunk_bytes * 8.0 / cardinality
-                        //           << " [bpi] in sparse chunk\n";
-                        // if (sparse_chunk_bytes * 8.0 / cardinality > 8.0) {
-                        //     stats.very_sparse_chunks += 1;
-                        //     stats.integers_in_very_sparse_chunks +=
-                        //     cardinality;
-                        // } else {
-                        //     stats.sparse_chunks += 1;
-                        //     stats.integers_in_sparse_chunks += cardinality;
-                        // }
+                        chunks_header.push_back(sparse_chunk_bytes);
 
                         encode_sparse_chunk(begin, end, s, block, tmp);
                     }
 
                 } else {
-                    if (cardinality == chunk_universe) {
+                    if (cardinality == constants::chunk_size) {
                         stats.full_chunks += 1;
                         stats.integers_in_full_chunks += cardinality;
                         chunks_header.push_back(type::full);

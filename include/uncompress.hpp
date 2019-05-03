@@ -1,22 +1,32 @@
 #pragma once
 
-#include "immintrin.h"
 #include "constants.hpp"
 
 namespace sliced {
 
-inline void set_bit(uint32_t position, uint64_t* out) {
-    size_t w = position / 64;
-    size_t o = position & 63;
-    out[w] |= uint64_t(1) << o;
-}
+uint32_t uncompress_sparse_block(uint8_t const* begin, int cardinality,
+                                 uint64_t* out) {
+    // for (int i = 0; i != cardinality; ++i) {
+    //     set_bit(*begin++, out);
+    // }
+    // return cardinality;
 
-// NOTE: can be optimized as in uncompress_sparse_block3 in uncompress3.hpp
-uint32_t uncompress_sparse_block(uint8_t const* begin, uint64_t* out) {
-    uint32_t cardinality = *begin++;
-    for (uint32_t i = 0; i != cardinality; ++i) {
-        set_bit(*begin++, out);
-    }
+    uint64_t offset, load, pos;
+    const uint64_t shift = 6;
+    uint8_t const* end = begin + cardinality;
+    __asm volatile(
+        "1:\n"
+        "movzbq (%[begin]), %[pos]\n"
+        "shrx %[shift], %[pos], %[offset]\n"
+        "mov (%[out],%[offset],8), %[load]\n"
+        "bts %[pos], %[load]\n"
+        "mov %[load], (%[out],%[offset],8)\n"
+        "add $1, %[begin]\n"
+        "cmp %[begin], %[end]\n"
+        "jnz 1b"
+        : [ begin ] "+&r"(begin), [ load ] "=&r"(load), [ pos ] "=&r"(pos),
+          [ offset ] "=&r"(offset)
+        : [ end ] "r"(end), [ out ] "r"(out), [ shift ] "r"(shift));
     return cardinality;
 }
 
@@ -30,50 +40,32 @@ uint32_t uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
     return c;
 }
 
-// uint32_t uncompress_full_block(uint8_t const* begin, uint64_t* out) {
-//     (void)begin;
-//     for (uint32_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
-//         out[i] = -1;
-//     }
-//     return constants::block_size;
-// }
-
-uint32_t uncompress_sparse_chunk(uint8_t const* begin, uint64_t* out) {
-    uint8_t const* data = begin + 64;
+uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
+                                 uint64_t* out) {
+    assert(blocks >= 1 and blocks <= 256);
+    uint8_t const* data = begin + blocks * 2;
     uint64_t* tmp = out;
+
+    uint8_t prev = 0;
     uint32_t uncompressed = 0;
-    for (uint32_t i = 0; i != 64; ++i) {
-        uint8_t header_byte = begin[i];
-        if (header_byte == 0) {
-            tmp += constants::block_size_in_64bit_words * 4;
-        } else {
-            for (uint32_t i = 0; i != 4; ++i) {
-                uint8_t header = header_byte & 3;
-                uint32_t u = 0;
-                switch (header) {
-                    case type::empty:
-                        break;
-                    case type::sparse:
-                        u = uncompress_sparse_block(data, tmp);
-                        data += u + 1;
-                        break;
-                    case type::dense:
-                        u = uncompress_dense_block(data, tmp);
-                        data += 32;
-                        break;
-                    // case type::full:
-                    //     u = uncompress_full_block(data, tmp);
-                    //     break;
-                    default:
-                        assert(false);
-                        __builtin_unreachable();
-                }
-                tmp += constants::block_size_in_64bit_words;
-                uncompressed += u;
-                header_byte >>= 2;
-            }
+    for (int i = 0; i != blocks; ++i) {
+        uint8_t id = *begin;
+        ++begin;
+        int card = *begin;
+        int type = TYPE_BY_CARDINALITY(card);
+        uint32_t u = 0;
+        tmp += (id - prev) * constants::block_size_in_64bit_words;
+        if (type == type::sparse) {
+            u = uncompress_sparse_block(data, card, tmp);
+        } else if (type == type::dense) {
+            u = uncompress_dense_block(data, tmp);
         }
+        uncompressed += u;
+        data += card;
+        ++begin;
+        prev = id;
     }
+
     return uncompressed;
 }
 
@@ -105,7 +97,7 @@ size_t s_sequence::uncompress(uint64_t* out) {
         out += (id - prev) * constants::chunk_size_in_64bit_words;
         switch (it.type()) {
             case type::sparse:
-                u = uncompress_sparse_chunk(it.data, out);
+                u = uncompress_sparse_chunk(it.data, it.blocks(), out);
                 break;
             case type::dense:
                 u = uncompress_dense_chunk(it.data, out);
