@@ -6,6 +6,8 @@
 #include "uncompress.hpp"
 #include "table.hpp"
 
+namespace sliced {
+
 #define INIT                                          \
     __m256i base_v = _mm256_set1_epi32(base);         \
     __m128i v_l = _mm_lddqu_si128((__m128i const*)l); \
@@ -38,8 +40,6 @@
     ptr += 16;                                      \
     v_##ptr = _mm_lddqu_si128((__m128i const*)ptr); \
     card_##ptr -= 16;
-
-namespace sliced {
 
 size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, int card_l,
                           int card_r, uint32_t base, uint32_t* out) {
@@ -169,24 +169,24 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             uint8_t id = *l;
             ++l;
             ++r;
-            int card_l = *l;
-            int card_r = *r;
-            int type_l = TYPE_BY_CARDINALITY(card_l);
-            int type_r = TYPE_BY_CARDINALITY(card_r);
+            int bytes_l = *l;
+            int bytes_r = *r;
+            int type_l = TYPE_BY_BYTES(bytes_l);
+            int type_r = TYPE_BY_BYTES(bytes_r);
 
             uint32_t b = base + id * 256;
             uint32_t n = 0;
 
             switch (block_pair(type_l, type_r)) {
                 case block_pair(type::sparse, type::sparse):
-                    n = ss_intersect_block(data_l, data_r, card_l, card_r, b,
+                    n = ss_intersect_block(data_l, data_r, bytes_l, bytes_r, b,
                                            tmp);
                     break;
                 case block_pair(type::sparse, type::dense):
-                    n = ds_intersect_block(data_r, data_l, card_l, b, tmp);
+                    n = ds_intersect_block(data_r, data_l, bytes_l, b, tmp);
                     break;
                 case block_pair(type::dense, type::sparse):
-                    n = ds_intersect_block(data_l, data_r, card_r, b, tmp);
+                    n = ds_intersect_block(data_l, data_r, bytes_r, b, tmp);
                     break;
                 case block_pair(type::dense, type::dense):
                     n = intersect_bitmaps(data_l, data_r,
@@ -204,8 +204,8 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                 return size_t(tmp - out);
             }
 
-            data_l += card_l;
-            data_r += card_r;
+            data_l += bytes_l;
+            data_r += bytes_r;
             ++l;
             ++r;
         }

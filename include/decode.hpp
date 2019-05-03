@@ -57,34 +57,28 @@ uint32_t decode_sparse_block(uint8_t const* begin, int cardinality,
     return cardinality;
 }
 
+inline uint32_t decode_block(uint8_t const* data, int bytes, uint32_t base,
+                             uint32_t* out) {
+    int type = TYPE_BY_BYTES(bytes);
+    if (type == type::sparse) {
+        return decode_sparse_block(data, bytes, base, out);
+    }
+    return decode_bitmap(data, constants::block_size_in_64bit_words, base, out);
+}
+
 uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
                              uint32_t* out) {
     assert(blocks >= 1 and blocks <= 256);
     uint8_t const* data = begin + blocks * 2;
     uint8_t const* end = data;
     uint32_t* tmp = out;
-
     while (begin != end) {
         uint8_t id = *begin;
-        ++begin;
-        int card = *begin;
-        int type = TYPE_BY_CARDINALITY(card);
-
-        uint32_t b = base + id * 256;
-        uint32_t n = 0;
-
-        if (type == type::sparse) {
-            n = decode_sparse_block(data, card, b, tmp);
-        } else {
-            n = decode_bitmap(data, constants::block_size_in_64bit_words, b,
-                              tmp);
-        }
-
-        tmp += n;
-        data += card;
-        ++begin;
+        int bytes = *(begin + 1);
+        tmp += decode_block(data, bytes, base + id * 256, tmp);
+        data += bytes;
+        begin += 2;
     }
-
     return size_t(tmp - out);
 }
 
@@ -95,28 +89,27 @@ inline uint32_t decode_full_chunk(uint32_t base, uint32_t* out) {
     return constants::chunk_size;
 }
 
+size_t decode_chunk(s_sequence::iterator const& it, uint32_t* out) {
+    uint32_t base = it.id() << 16;
+    switch (it.type()) {
+        case type::sparse:
+            return decode_sparse_chunk(it.data, it.blocks(), base, out);
+        case type::dense:
+            return decode_bitmap(it.data, constants::chunk_size_in_64bit_words,
+                                 base, out);
+        case type::full:
+            return decode_full_chunk(base, out);
+        default:
+            assert(false);
+            __builtin_unreachable();
+    }
+}
+
 size_t s_sequence::decode(uint32_t* out) {
     auto it = begin();
     uint32_t* in = out;
     for (uint32_t i = 0; i != chunks; ++i) {
-        uint32_t n = 0;
-        uint32_t base = it.id() << 16;
-        switch (it.type()) {
-            case type::sparse:
-                n = decode_sparse_chunk(it.data, it.blocks(), base, out);
-                break;
-            case type::dense:
-                n = decode_bitmap(it.data, constants::chunk_size_in_64bit_words,
-                                  base, out);
-                break;
-            case type::full:
-                n = decode_full_chunk(base, out);
-                break;
-            default:
-                assert(false);
-                __builtin_unreachable();
-        }
-        out += n;
+        out += decode_chunk(it, out);
         it.next();
     }
     return size_t(out - in);

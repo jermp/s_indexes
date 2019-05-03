@@ -51,17 +51,17 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
     for (int i = 0; i != blocks; ++i) {
         uint8_t id = *begin;
         ++begin;
-        int card = *begin;
-        int type = TYPE_BY_CARDINALITY(card);
+        int bytes = *begin;
+        int type = TYPE_BY_BYTES(bytes);
         uint32_t u = 0;
         tmp += (id - prev) * constants::block_size_in_64bit_words;
         if (type == type::sparse) {
-            u = uncompress_sparse_block(data, card, tmp);
+            u = uncompress_sparse_block(data, bytes, tmp);
         } else if (type == type::dense) {
             u = uncompress_dense_block(data, tmp);
         }
         uncompressed += u;
-        data += card;
+        data += bytes;
         ++begin;
         prev = id;
     }

@@ -9,7 +9,7 @@ namespace sliced {
 
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 
-#define TYPE_BY_CARDINALITY(c) c != 32 ? type::sparse : type::dense
+#define TYPE_BY_BYTES(b) b != 32 ? type::sparse : type::dense
 
 size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;

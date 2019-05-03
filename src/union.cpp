@@ -7,12 +7,12 @@
 
 #include "util.hpp"
 #include "s_index.hpp"
-#include "intersection.hpp"
+#include "union.hpp"
 
 using namespace sliced;
 
-void perf_intersection(char const* binary_filename,
-                       std::vector<query> const& queries) {
+void perf_union(char const* binary_filename,
+                std::vector<query> const& queries) {
     s_index index;
     index.mmap(binary_filename);
 
@@ -20,7 +20,7 @@ void perf_intersection(char const* binary_filename,
     std::vector<uint32_t> out(universe);
     size_t total = 0;
 
-    std::cout << "performing " << queries.size() << " pairwise-intersections..."
+    std::cout << "performing " << queries.size() << " pairwise-unions..."
               << std::endl;
 
     essentials::timer_type t;
@@ -28,7 +28,7 @@ void perf_intersection(char const* binary_filename,
     for (int run = 0; run != runs; ++run) {
         t.start();
         for (auto const& q : queries) {
-            total += pairwise_intersection(index[q.i], index[q.j], out.data());
+            total += pairwise_union(index[q.i], index[q.j], out.data());
         }
         t.stop();
     }
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     }
     std::cout << "DONE" << std::endl;
 
-    perf_intersection(binary_filename, queries);
+    perf_union(binary_filename, queries);
 
     return 0;
 }
