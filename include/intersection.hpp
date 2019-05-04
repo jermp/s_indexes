@@ -1,5 +1,7 @@
 #pragma once
 
+#include "immintrin.h"
+
 #include "constants.hpp"
 #include "util.hpp"
 #include "decode.hpp"
