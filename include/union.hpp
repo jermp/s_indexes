@@ -1,10 +1,18 @@
 #pragma once
 
 #include "constants.hpp"
+#include "util.hpp"
 #include "uncompress.hpp"
 #include "decode.hpp"
 
 namespace sliced {
+
+#define DECODE(ptr)                                               \
+    uint8_t id = *ptr;                                            \
+    int bytes = *(ptr + 1);                                       \
+    out += decode_block(data_##ptr, bytes, base + id * 256, out); \
+    data_##ptr += bytes;                                          \
+    ptr += 2;
 
 size_t ss_union_block(uint8_t const* l, uint8_t const* r, int card_l,
                       int card_r, uint32_t base, uint32_t* out) {
@@ -52,31 +60,13 @@ size_t ss_union_block(uint8_t const* l, uint8_t const* r, int card_l,
     return size;
 }
 
-size_t union_bitmaps(uint8_t const* l, uint8_t const* r,
-                     size_t size_in_64bit_words, uint32_t base, uint32_t* out) {
-    uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l);
-    uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r);
-    size_t pos = 0;
-    for (size_t i = 0; i != size_in_64bit_words; ++i) {
-        uint64_t w = bitmap_l[i] | bitmap_r[i];
-        while (w != 0) {
-            uint64_t t = w & (~w + 1);
-            int r = __builtin_ctzll(w);
-            out[pos++] = r + base;
-            w ^= t;
-        }
-        base += 64;
-    }
-    return pos;
-}
-
 size_t ds_union_block(uint8_t const* l, uint8_t const* r, int cardinality,
                       uint32_t base, uint32_t* out) {
     static uint64_t x[4];
     memcpy(x, reinterpret_cast<uint64_t const*>(l), constants::block_size / 8);
     uncompress_sparse_block(r, cardinality, x);
-    return union_bitmaps(l, reinterpret_cast<uint8_t const*>(x),
-                         constants::block_size_in_64bit_words, base, out);
+    return or_bitmaps(l, reinterpret_cast<uint8_t const*>(x),
+                      constants::block_size_in_64bit_words, base, out);
 }
 
 inline uint32_t decode_block(uint8_t const* data, int bytes, uint32_t base,
@@ -101,20 +91,12 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
 
     while (true) {
         if (*l < *r) {
-            uint8_t id = *l;
-            int bytes = *(l + 1);
-            out += decode_block(data_l, bytes, base + id * 256, out);
-            data_l += bytes;
-            l += 2;
+            DECODE(l)
             if (l == end_l) {
                 break;
             }
         } else if (*l > *r) {
-            uint8_t id = *r;
-            int bytes = *(r + 1);
-            out += decode_block(data_r, bytes, base + id * 256, out);
-            data_r += bytes;
-            r += 2;
+            DECODE(r)
             if (r == end_r) {
                 break;
             }
@@ -142,9 +124,9 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                     n = ds_union_block(data_l, data_r, bytes_r, b, out);
                     break;
                 case block_pair(type::dense, type::dense):
-                    n = union_bitmaps(data_l, data_r,
-                                      constants::block_size_in_64bit_words, b,
-                                      out);
+                    n = or_bitmaps(data_l, data_r,
+                                   constants::block_size_in_64bit_words, b,
+                                   out);
                     break;
                 default:
                     assert(false);
@@ -164,19 +146,11 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
     }
 
     while (l != end_l) {
-        uint8_t id = *l;
-        int bytes = *(l + 1);
-        out += decode_block(data_l, bytes, base + id * 256, out);
-        data_l += bytes;
-        l += 2;
+        DECODE(l)
     }
 
     while (r != end_r) {
-        uint8_t id = *r;
-        int bytes = *(r + 1);
-        out += decode_block(data_r, bytes, base + id * 256, out);
-        data_r += bytes;
-        r += 2;
+        DECODE(r)
     }
 
     return size_t(out - in);
@@ -187,8 +161,8 @@ size_t ds_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_r,
     static std::vector<uint64_t> x(1024);
     std::fill(x.begin(), x.end(), 0);
     uncompress_sparse_chunk(r, blocks_r, x.data());
-    return union_bitmaps(l, reinterpret_cast<uint8_t const*>(x.data()),
-                         constants::chunk_size_in_64bit_words, base, out);
+    return or_bitmaps(l, reinterpret_cast<uint8_t const*>(x.data()),
+                      constants::chunk_size_in_64bit_words, base, out);
 }
 
 size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out) {
@@ -233,9 +207,9 @@ size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out) {
                                        base, out);
                     break;
                 case chunk_pair(type::dense, type::dense):
-                    n = union_bitmaps(it_l.data, it_r.data,
-                                      constants::chunk_size_in_64bit_words,
-                                      base, out);
+                    n = or_bitmaps(it_l.data, it_r.data,
+                                   constants::chunk_size_in_64bit_words, base,
+                                   out);
                     break;
                 case chunk_pair(type::dense, type::full):
                     n = decode_full_chunk(base, out);

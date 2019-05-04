@@ -11,6 +11,30 @@ namespace sliced {
 
 #define TYPE_BY_BYTES(b) b != 32 ? type::sparse : type::dense
 
+#define OPERATE_BITMAPS(OP, l, r, size_in_64bit_words, base, out)    \
+    uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l); \
+    uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r); \
+    size_t size = 0;                                                 \
+    for (size_t i = 0; i != size_in_64bit_words; ++i) {              \
+        uint64_t w = bitmap_l[i] OP bitmap_r[i];                     \
+        while (w != 0) {                                             \
+            uint64_t t = w & (~w + 1);                               \
+            int r = __builtin_ctzll(w);                              \
+            out[size++] = r + base;                                  \
+            w ^= t;                                                  \
+        }                                                            \
+        base += 64;                                                  \
+    }                                                                \
+    return size;
+
+size_t and_bitmaps(uint8_t const* l, uint8_t const* r,
+                   size_t size_in_64bit_words, uint32_t base, uint32_t* out){
+    OPERATE_BITMAPS(&, l, r, size_in_64bit_words, base, out)}
+
+size_t or_bitmaps(uint8_t const* l, uint8_t const* r,
+                  size_t size_in_64bit_words, uint32_t base, uint32_t* out){
+    OPERATE_BITMAPS(|, l, r, size_in_64bit_words, base, out)}
+
 size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;
 }
