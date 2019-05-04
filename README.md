@@ -143,8 +143,8 @@ Sliced Indexes
 		DONE
 		performing 1000 pairwise-unions...
 		8211899850
-		Mean per run: 621223 [musec]
-		Mean per query: 621.223 [musec]
+		Mean per run: 581382 [musec]                                                                                                                                                      
+		Mean per query: 581.382 [musec] 
 		Roaring: 677.746000 [musecs]
 		
 		➜  build git:(master) ✗ ./union clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
@@ -152,8 +152,8 @@ Sliced Indexes
 		DONE
 		performing 1000 pairwise-unions...
 		14380225728
-		Mean per run: 1.41776e+06 [musec]
-		Mean per query: 1417.76 [musec]
+		Mean per run: 1.29741e+06 [musec]
+		Mean per query: 1297.41 [musec]
 		Roaring: 1635.801100 [musecs]
 		
 		➜  build git:(master) ✗ ./union ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K
@@ -161,6 +161,6 @@ Sliced Indexes
 		DONE
 		performing 1000 pairwise-unions...
 		20505167914
-		Mean per run: 2.51631e+06 [musec]
-		Mean per query: 2516.31 [musec]
+		Mean per run: 2.25071e+06 [musec]
+		Mean per query: 2250.71 [musec]
 		Roaring: 2153.428200 [musecs]

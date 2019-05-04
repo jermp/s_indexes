@@ -47,14 +47,12 @@ size_t ss_union_block(uint8_t const* l, uint8_t const* r, int card_l,
         }
     }
 
-    while (l != end_l) {
-        out[size++] = *l + base;
-        ++l;
+    if (l != end_l) {
+        size += decode_sparse_block(l, end_l - l, base, out + size);
     }
 
-    while (r != end_r) {
-        out[size++] = *r + base;
-        ++r;
+    if (r != end_l) {
+        size += decode_sparse_block(r, end_r - r, base, out + size);
     }
 
     return size;
