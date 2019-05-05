@@ -16,7 +16,7 @@ struct s_index {
         return m_size;
     }
 
-    size_t universe() const {
+    inline size_t universe() const {
         return m_universe;
     }
 

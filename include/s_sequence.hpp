@@ -36,48 +36,48 @@ struct s_sequence {
         iterator(s_sequence const& s, uint32_t begin, uint32_t end)
             : header(s.header())
             , data(s.data())
-            , position(begin)
+            , begin(begin)
             , end(end) {}
 
-        inline uint16_t id() const {
+        inline uint32_t id() const {
             return *header;
         }
 
-        inline uint16_t cardinality() const {
+        inline uint32_t cardinality() const {
             return *(header + 1) + 1;
         }
 
-        inline uint16_t type() const {
+        inline uint32_t type() const {
             return *(header + 2) & 255;
         }
 
-        inline uint16_t blocks() const {
+        inline uint32_t blocks() const {
             return (*(header + 2) >> 8) + 1;
         }
 
-        inline uint16_t offset() const {
+        inline uint32_t offset() const {
             return *(header + 3);
         }
 
         inline void next() {
             data += offset();
             header += 4;
-            position += 1;
+            begin += 1;
         }
 
         bool has_next() const {
-            return position < end;
+            return begin < end;
         }
 
         void advance(uint32_t lower_bound) {
-            while (id() < lower_bound and position < end) {
+            while (id() < lower_bound and begin < end) {
                 next();
             }
         }
 
         uint16_t const* header;
         uint8_t const* data;
-        uint32_t position;
+        uint32_t begin;
         uint32_t end;
     };
 

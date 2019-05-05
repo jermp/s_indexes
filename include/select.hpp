@@ -44,7 +44,7 @@ uint32_t select_sparse_chunk(uint8_t const* begin, int blocks, uint32_t rank) {
         }
         if (elements + c > rank) {
             rank -= elements;
-            assert(int(rank) <= c);
+            assert(int(rank) < c);
             uint32_t base = id * 256;
             if (type == type::sparse) {
                 return *(data + rank) + base;
@@ -69,7 +69,7 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
     bool valid = false;
 
     while (it.has_next()) {
-        uint32_t c = cardinality();
+        uint32_t c = it.cardinality();
         if (elements + c > rank) {
             valid = true;
             break;
@@ -80,7 +80,7 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
 
     if (valid) {
         rank -= elements;
-        assert(rank <= constants::chunk_size);
+        assert(rank < constants::chunk_size);
         uint32_t base = it.id() << 16;
         switch (it.type()) {
             case type::sparse:

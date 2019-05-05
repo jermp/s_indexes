@@ -27,6 +27,7 @@ void test_select(char const* binary_filename, char const* collection_filename,
         if (double(n) / universe > density) {
             auto sequence = index[k];
             uint32_t c = sequence.cardinality();
+
             if (c != n) {
                 good = false;
                 std::cout << "cardinality " << c << ": expected " << n
@@ -47,7 +48,7 @@ void test_select(char const* binary_filename, char const* collection_filename,
 
                 if (expected != value) {
                     good = false;
-                    std::cout << "error at " << j << "/" << n << ": expected "
+                    std::cout << "error at " << j << "/" << n << ": expected"
                               << expected << " but got " << value << std::endl;
                 }
             }
