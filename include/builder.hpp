@@ -80,11 +80,9 @@ private:
             write_uint<uint8_t>(id, header);
             write_uint<uint8_t>(block.size() - 1, header);
             if (block.size() >= constants::block_sparseness_threshold - 1) {
-                // write_uint<uint8_t>(32, header);
                 write_bits(block.data(), block.size(), constants::block_size, 0,
                            data);
             } else {
-                // write_uint<uint8_t>(block.size(), header);
                 for (auto pos : block) {
                     write_uint<uint8_t>(pos, data);
                 }
@@ -175,17 +173,18 @@ private:
                         stats.sparse_chunks += 1;
                         stats.integers_in_sparse_chunks += cardinality;
 
-                        uint16_t num_blocks = sparse_chunk_stats.dense_blocks +
-                                              sparse_chunk_stats.sparse_blocks;
-                        assert(num_blocks >= 1 and num_blocks <= 256);
-                        stats.blocks += num_blocks;
+                        uint16_t num_non_empty_blocks =
+                            sparse_chunk_stats.dense_blocks +
+                            sparse_chunk_stats.sparse_blocks;
+                        assert(num_non_empty_blocks >= 1 and
+                               num_non_empty_blocks <= 256);
+                        stats.blocks += num_non_empty_blocks +
+                                        sparse_chunk_stats.empty_blocks;
 
                         stats.accumulate(sparse_chunk_stats);
 
-                        // std::cout << "num_blocks " << num_blocks <<
-                        // std::endl;
                         uint16_t packed = type::sparse;
-                        packed |= (num_blocks - 1) << 8;
+                        packed |= (num_non_empty_blocks - 1) << 8;
                         chunks_header.push_back(packed);
 
                         chunks_header.push_back(sparse_chunk_bytes);

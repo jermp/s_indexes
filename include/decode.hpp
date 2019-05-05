@@ -65,7 +65,6 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
     uint32_t* tmp = out;
     while (begin != end) {
         uint8_t id = *begin;
-
         int c = *(begin + 1) + 1;
         int bytes = 32;
         int type = type::dense;
@@ -73,10 +72,6 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
             bytes = c;
             type = type::sparse;
         }
-
-        // int bytes = *(begin + 1);
-        // int type = TYPE_BY_BYTES(bytes);
-
         uint32_t b = base + id * 256;
         if (type == type::sparse) {
             tmp += decode_sparse_block(data, c, b, tmp);

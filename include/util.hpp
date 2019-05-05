@@ -10,8 +10,6 @@ namespace sliced {
 
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 
-#define TYPE_BY_BYTES(b) b != 32 ? type::sparse : type::dense
-
 #define OPERATE_BITMAPS(OP, l, r, size_in_64bit_words, base, out)    \
     uint64_t const* bitmap_l = reinterpret_cast<uint64_t const*>(l); \
     uint64_t const* bitmap_r = reinterpret_cast<uint64_t const*>(r); \
@@ -46,9 +44,6 @@ uint32_t chunks(uint64_t universe) {
                : 1;
 }
 
-// enum type { empty = 0, sparse = 1, dense = 2, full = 3 };
-
-// NOTE: allows intersecting blocks' headers
 enum type { empty = 0, sparse = 1, dense = 3, full = 2 };
 
 struct parameters {
@@ -63,19 +58,17 @@ struct query {
 
 struct statistics {
     statistics() {
-        memset(this, 0, 26 * sizeof(uint64_t));
+        memset(this, 0, sizeof(*this));
     }
 
     uint64_t sequences;
 
     uint64_t integers;
     uint64_t integers_in_sparse_chunks;
-    uint64_t integers_in_very_sparse_chunks;
     uint64_t integers_in_dense_chunks;
     uint64_t integers_in_full_chunks;
     uint64_t integers_in_sparse_blocks;
     uint64_t integers_in_dense_blocks;
-    uint64_t integers_in_full_blocks;
 
     uint64_t chunks;
     uint64_t empty_chunks;
@@ -88,7 +81,6 @@ struct statistics {
     uint64_t empty_blocks;
     uint64_t sparse_blocks;
     uint64_t dense_blocks;
-    uint64_t full_blocks;
 
     uint64_t bits;
     uint64_t chunks_header_bits;
@@ -98,15 +90,11 @@ struct statistics {
     uint64_t sparse_blocks_bits;
 
     void accumulate(statistics const& other) {
-        full_blocks += other.full_blocks;
         dense_blocks += other.dense_blocks;
         sparse_blocks += other.sparse_blocks;
         empty_blocks += other.empty_blocks;
-
-        integers_in_full_blocks += other.integers_in_full_blocks;
         integers_in_dense_blocks += other.integers_in_dense_blocks;
         integers_in_sparse_blocks += other.integers_in_sparse_blocks;
-
         dense_blocks_bits += other.dense_blocks_bits;
         sparse_blocks_bits += other.sparse_blocks_bits;
     }
@@ -128,14 +116,8 @@ struct statistics {
         std::cout << "sparse chunks: " << sparse_chunks << " ("
                   << integers_in_sparse_chunks * 100.0 / integers
                   << "% of ints)" << std::endl;
-        std::cout << "very sparse chunks: " << very_sparse_chunks << " ("
-                  << integers_in_very_sparse_chunks * 100.0 / integers
-                  << "% of ints)" << std::endl;
 
         std::cout << "blocks: " << blocks << std::endl;
-        std::cout << "full blocks: " << full_blocks << " ("
-                  << integers_in_full_blocks * 100.0 / integers << "% of ints)"
-                  << std::endl;
         std::cout << "empty blocks: " << empty_blocks << " ("
                   << empty_blocks * 100.0 / blocks << "% of blocks)"
                   << std::endl;

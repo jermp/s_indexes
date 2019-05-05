@@ -10,6 +10,8 @@
 
 namespace sliced {
 
+#define BYTES_BY_CARDINALITY(c) LIKELY(c < 31) ? c : 32
+
 #define INIT                                          \
     __m256i base_v = _mm256_set1_epi32(base);         \
     __m128i v_l = _mm_lddqu_si128((__m128i const*)l); \
@@ -122,9 +124,6 @@ size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, int card,
     return k;
 }
 
-#define BYTES_BY_CARDINALITY(c) LIKELY(c < 31) ? c : 32
-// #define TYPE_BY_CARDINALITY(c) LIKELY(c < 31) ? type::sparse : type::dense
-
 size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                           int blocks_r, uint32_t base, uint32_t* out) {
     assert(blocks_l >= 1 and blocks_l <= 256);
@@ -140,24 +139,16 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             if (l + 2 == end_l) {
                 return size_t(tmp - out);
             }
-
             int c = *(l + 1) + 1;
             data_l += BYTES_BY_CARDINALITY(c);
-
-            // data_l += *(l + 1);
-
             l += 2;
         }
         while (*l > *r) {
             if (r + 2 == end_r) {
                 return size_t(tmp - out);
             }
-
             int c = *(r + 1) + 1;
             data_r += BYTES_BY_CARDINALITY(c);
-
-            // data_r += *(r + 1);
-
             r += 2;
         }
         if (*l == *r) {
@@ -166,10 +157,6 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             ++r;
             int cl = *l + 1;
             int cr = *r + 1;
-            // int cl = *l;
-            // int cr = *r;
-            // int type_l = TYPE_BY_BYTES(cl);
-            // int type_r = TYPE_BY_BYTES(cr);
             int type_l = type::dense;
             int type_r = type::dense;
             int bl = 32;
@@ -213,9 +200,6 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             if (l + 1 == end_l or r + 1 == end_r) {
                 return size_t(tmp - out);
             }
-
-            // data_l += cl;
-            // data_r += cr;
 
             data_l += bl;
             data_r += br;
