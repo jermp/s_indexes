@@ -51,12 +51,22 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
     for (int i = 0; i != blocks; ++i) {
         uint8_t id = *begin;
         ++begin;
-        int bytes = *begin;
-        int type = TYPE_BY_BYTES(bytes);
+
+        int c = *begin + 1;
+        int bytes = 32;
+        int type = type::dense;
+        if (LIKELY(c < 31)) {
+            bytes = c;
+            type = type::sparse;
+        }
+
+        // int bytes = *begin;
+        // int type = TYPE_BY_BYTES(bytes);
+
         uint32_t u = 0;
         tmp += (id - prev) * constants::block_size_in_64bit_words;
         if (type == type::sparse) {
-            u = uncompress_sparse_block(data, bytes, tmp);
+            u = uncompress_sparse_block(data, c, tmp);
         } else if (type == type::dense) {
             u = uncompress_dense_block(data, tmp);
         }

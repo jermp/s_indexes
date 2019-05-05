@@ -39,13 +39,12 @@ void test_uncompress(char const* binary_filename,
     uint32_t const* data = input.data();
 
     assert(data[0] == 1);
-    uint32_t universe = data[1];
-    std::cout << "universe size: " << universe << std::endl;
-
-    size_t size_in_64bit_words = essentials::words_for(52000000);
+    std::cout << "universe size: " << index.universe() << std::endl;
+    size_t size_in_64bit_words = essentials::words_for(index.universe());
     std::vector<uint64_t> bitmap(size_in_64bit_words, 0);
-    std::vector<uint32_t> out(universe);
+    std::vector<uint32_t> out(index.universe());
     size_t k = 0;
+    bool good = true;
 
     for (size_t i = 2; i < input.size();) {
         uint32_t n = data[i];
@@ -57,6 +56,7 @@ void test_uncompress(char const* binary_filename,
                                               size_in_64bit_words, out.data());
 
             if (decoded != n) {
+                good = false;
                 std::cout << "decoded " << decoded << " integers: expected "
                           << n << std::endl;
             }
@@ -65,6 +65,7 @@ void test_uncompress(char const* binary_filename,
             for (size_t j = 0; j != n; ++j) {
                 uint32_t expected = *ptr++;
                 if (expected != out[j]) {
+                    good = false;
                     std::cout << "error at " << j << "/" << n << ": expected "
                               << expected << " but got " << out[j] << std::endl;
                 }
@@ -77,8 +78,10 @@ void test_uncompress(char const* binary_filename,
         }
         i += n + 1;
     }
-    std::cout << "decoded " << k << " sequences" << std::endl;
-    std::cout << "everything good" << std::endl;
+    std::cout << "uncompressed " << k << " sequences" << std::endl;
+    if (good) {
+        std::cout << "everything good" << std::endl;
+    }
 }
 
 int main(int argc, char** argv) {

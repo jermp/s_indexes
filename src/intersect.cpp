@@ -16,13 +16,10 @@ void perf_intersection(char const* binary_filename,
     s_index index;
     index.mmap(binary_filename);
 
-    const uint32_t universe = 52000000;
-    std::vector<uint32_t> out(universe);
+    std::vector<uint32_t> out(index.universe());
     size_t total = 0;
-
     std::cout << "performing " << queries.size() << " pairwise-intersections..."
               << std::endl;
-
     essentials::timer_type t;
     static const int runs = 10 + 1;
     for (int run = 0; run != runs; ++run) {

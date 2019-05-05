@@ -12,10 +12,8 @@ void decode(char const* binary_filename) {
     s_index index;
     index.mmap(binary_filename);
 
-    const uint32_t universe = 52000000;
-    std::vector<uint32_t> out(universe);
+    std::vector<uint32_t> out(index.universe());
     uint64_t integers = 0;
-
     essentials::timer_type t;
     t.start();
     for (size_t i = 0; i != index.size(); ++i) {

@@ -17,13 +17,11 @@ void test_decode(char const* binary_filename, char const* collection_filename,
     mm::file_source<uint32_t> input(collection_filename,
                                     mm::advice::sequential);
     uint32_t const* data = input.data();
-
     assert(data[0] == 1);
-    uint32_t universe = data[1];
-    std::cout << "universe size: " << universe << std::endl;
-
-    std::vector<uint32_t> out(universe);
+    std::cout << "universe size: " << index.universe() << std::endl;
+    std::vector<uint32_t> out(index.universe());
     size_t k = 0;
+    bool good = true;
 
     for (size_t i = 2; i < input.size();) {
         uint32_t n = data[i];
@@ -33,6 +31,7 @@ void test_decode(char const* binary_filename, char const* collection_filename,
             size_t decoded = sequence.decode(out.data());
 
             if (decoded != n) {
+                good = false;
                 std::cout << "decoded " << decoded << " integers: expected "
                           << n << std::endl;
             }
@@ -41,6 +40,7 @@ void test_decode(char const* binary_filename, char const* collection_filename,
             for (size_t j = 0; j != n; ++j) {
                 uint32_t expected = *ptr++;
                 if (expected != out[j]) {
+                    good = false;
                     std::cout << "error at " << j << "/" << n << ": expected "
                               << expected << " but got " << out[j] << std::endl;
                 }
@@ -54,7 +54,9 @@ void test_decode(char const* binary_filename, char const* collection_filename,
         i += n + 1;
     }
     std::cout << "decoded " << k << " sequences" << std::endl;
-    std::cout << "everything good" << std::endl;
+    if (good) {
+        std::cout << "everything good" << std::endl;
+    }
 }
 
 int main(int argc, char** argv) {

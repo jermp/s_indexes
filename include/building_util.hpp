@@ -47,7 +47,7 @@ uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
         ++begin;
         ++c;
     }
-    assert(c <= constants::chunk_size);
+    assert(c > 0 and c <= constants::chunk_size);
     return c;
 }
 
@@ -56,12 +56,6 @@ void block_bitsize(size_t block_size, statistics& stats) {
     assert(block_size <= constants::block_size);
     if (block_size == 0) {
         stats.empty_blocks += 1;
-
-        // NOTE: uncomment this if we want also full blocks
-        // } else if (block_size == constants::block_size) {
-        //     stats.full_blocks += 1;
-        //     stats.integers_in_full_blocks += constants::block_size;
-
     } else if (block_size >= constants::block_sparseness_threshold - 1) {
         stats.dense_blocks += 1;
         stats.dense_blocks_bits += constants::block_size;

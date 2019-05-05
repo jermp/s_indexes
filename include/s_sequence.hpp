@@ -5,9 +5,9 @@ namespace sliced {
 struct s_sequence {
     s_sequence(uint8_t const* addr) {
         uint16_t const* ptr = reinterpret_cast<uint16_t const*>(addr);
-        chunks = *ptr++;
+        chunks = 1 + *ptr++;
         m_header = ptr;
-        m_data = addr + sizeof(uint16_t) + chunks * 3 * sizeof(uint16_t);
+        m_data = addr + sizeof(uint16_t) + chunks * 4 * sizeof(uint16_t);
     }
 
     size_t decode(uint32_t* out);
@@ -32,27 +32,25 @@ struct s_sequence {
             return *header;
         }
 
-        // inline uint16_t type() const {
-        //     return *(header + 1);
-        // }
+        inline uint16_t cardinality() const {
+            return *(header + 1) + 1;
+        }
 
-        /* these two to be used when storing non-empty blocks only */
         inline uint16_t type() const {
-            return *(header + 1) & 255;
+            return *(header + 2) & 255;
         }
 
         inline uint16_t blocks() const {
-            return (*(header + 1) >> 8) + 1;
+            return (*(header + 2) >> 8) + 1;
         }
-        /******/
 
         inline uint16_t offset() const {
-            return *(header + 2);
+            return *(header + 3);
         }
 
         inline void next() {
             data += offset();
-            header += 3;
+            header += 4;
             position += 1;
         }
 

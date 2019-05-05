@@ -16,6 +16,10 @@ struct s_index {
         return m_size;
     }
 
+    size_t universe() const {
+        return m_universe;
+    }
+
     s_sequence operator[](size_t i) {
         assert(i < size());
         return s_sequence(m_sequences + m_offsets[i]);
@@ -25,9 +29,11 @@ struct s_index {
         m_input.open(binary_filename, mm::advice::sequential);
         auto ptr = reinterpret_cast<uint64_t const*>(m_input.data());
         m_size = *ptr++;
+        m_universe = *ptr++;
         m_offsets = ptr;
-        m_sequences =
-            m_input.data() + (m_size + 1) * sizeof(uint64_t) + sizeof(m_size);
+        m_sequences = m_input.data() + m_size * sizeof(uint64_t) +
+                      sizeof(m_size) + sizeof(m_universe);
+        m_size -= 1;
     }
 
 private:
@@ -35,6 +41,7 @@ private:
     uint64_t const* m_offsets;
     uint8_t const* m_sequences;
     uint64_t m_size;
+    uint64_t m_universe;
 };
 
 }  // namespace sliced

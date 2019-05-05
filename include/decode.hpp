@@ -65,11 +65,21 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
     uint32_t* tmp = out;
     while (begin != end) {
         uint8_t id = *begin;
-        int bytes = *(begin + 1);
-        int type = TYPE_BY_BYTES(bytes);
+
+        int c = *(begin + 1) + 1;
+        int bytes = 32;
+        int type = type::dense;
+        if (LIKELY(c < 31)) {
+            bytes = c;
+            type = type::sparse;
+        }
+
+        // int bytes = *(begin + 1);
+        // int type = TYPE_BY_BYTES(bytes);
+
         uint32_t b = base + id * 256;
         if (type == type::sparse) {
-            tmp += decode_sparse_block(data, bytes, b, tmp);
+            tmp += decode_sparse_block(data, c, b, tmp);
         } else {
             tmp += decode_bitmap(data, constants::block_size_in_64bit_words, b,
                                  tmp);

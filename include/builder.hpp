@@ -27,6 +27,7 @@ struct s_index::builder {
         assert(data[0] == 1);
         std::cout << "universe size: " << data[1] << std::endl;
 
+        m_offsets.push_back(data[1]);
         m_offsets.push_back(0);
 
         for (size_t i = 2;  // first two values reserved for a singleton
@@ -47,7 +48,7 @@ struct s_index::builder {
 
         stats.chunks_header_bits =
             (stats.full_chunks + stats.sparse_chunks + stats.dense_chunks) *
-                16 * 3 +
+                16 * 4 +
             stats.sequences * 16  // for the number of chunks
             ;
         stats.blocks_header_bits =
@@ -77,12 +78,13 @@ private:
                       std::vector<uint8_t>& data) {
         if (block.size() > 0) {
             write_uint<uint8_t>(id, header);
+            write_uint<uint8_t>(block.size() - 1, header);
             if (block.size() >= constants::block_sparseness_threshold - 1) {
-                write_uint<uint8_t>(32, header);
+                // write_uint<uint8_t>(32, header);
                 write_bits(block.data(), block.size(), constants::block_size, 0,
                            data);
             } else {
-                write_uint<uint8_t>(block.size(), header);
+                // write_uint<uint8_t>(block.size(), header);
                 for (auto pos : block) {
                     write_uint<uint8_t>(pos, data);
                 }
@@ -128,14 +130,14 @@ private:
         uint32_t chunks = universe ? (universe + constants::chunk_size - 1) /
                                          constants::chunk_size
                                    : 1;
-        assert(chunks > 0 and chunks < constants::chunk_size);
+        assert(chunks > 0 and chunks <= constants::chunk_size);
 
         stats.sequences += 1;
         stats.integers += n;
         stats.chunks += chunks;
 
         std::vector<uint16_t> chunks_header;
-        chunks_header.reserve(3 * constants::chunk_size);
+        chunks_header.reserve(4 * constants::chunk_size);  // at most
         std::vector<uint8_t> tmp;
 
         const uint32_t dense_chunk_bytes = bytes_for(constants::chunk_size);
@@ -146,6 +148,7 @@ private:
             if (*begin < s.right) {
                 cardinality = chunk_cardinality(begin, end, s);
                 chunks_header.push_back(i);
+                chunks_header.push_back(cardinality - 1);
 
                 if (cardinality < constants::chunk_sparseness_threshold) {
                     auto sparse_chunk_stats =
@@ -217,7 +220,8 @@ private:
             begin += cardinality;
         }
 
-        write_uint<uint16_t>(chunks_header.size() / 3, out);
+        chunks = chunks_header.size() / 4;
+        write_uint<uint16_t>(chunks - 1, out);
         auto ptr = reinterpret_cast<uint8_t const*>(chunks_header.data());
         out.insert(out.end(), ptr,
                    ptr + chunks_header.size() * sizeof(chunks_header.front()));

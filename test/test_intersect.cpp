@@ -12,10 +12,12 @@ void test_intersection(char const* binary_filename,
     s_index index;
     index.mmap(binary_filename);
 
-    std::vector<uint32_t> out(52000000);
-    std::vector<uint32_t> i(52000000);
-    std::vector<uint32_t> j(52000000);
-    std::vector<uint32_t> expected(52000000);
+    uint64_t universe = index.universe();
+    std::vector<uint32_t> out(universe);
+    std::vector<uint32_t> i(universe);
+    std::vector<uint32_t> j(universe);
+    std::vector<uint32_t> expected(universe);
+    bool good = true;
 
     for (auto const& q : queries) {
         size_t i_size = index[q.i].decode(i.data());
@@ -28,16 +30,22 @@ void test_intersection(char const* binary_filename,
         size_t size = pairwise_intersection(index[q.i], index[q.j], out.data());
 
         if (expected_size != size) {
+            good = false;
             std::cout << "intersection has size " << size << " but expected "
                       << expected_size << std::endl;
         }
 
         for (size_t i = 0; i != size; ++i) {
             if (expected[i] != out[i]) {
+                good = false;
                 std::cout << "error at " << i << "/" << size << ": expected "
                           << expected[i] << " but got " << out[i] << std::endl;
             }
         }
+    }
+    std::cout << "tested " << queries.size() << " queries" << std::endl;
+    if (good) {
+        std::cout << "everything good" << std::endl;
     }
 }
 

@@ -122,6 +122,9 @@ size_t ds_intersect_block(uint8_t const* l, uint8_t const* r, int card,
     return k;
 }
 
+#define BYTES_BY_CARDINALITY(c) LIKELY(c < 31) ? c : 32
+// #define TYPE_BY_CARDINALITY(c) LIKELY(c < 31) ? type::sparse : type::dense
+
 size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                           int blocks_r, uint32_t base, uint32_t* out) {
     assert(blocks_l >= 1 and blocks_l <= 256);
@@ -137,38 +140,63 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             if (l + 2 == end_l) {
                 return size_t(tmp - out);
             }
-            data_l += *(l + 1);
+
+            int c = *(l + 1) + 1;
+            data_l += BYTES_BY_CARDINALITY(c);
+
+            // data_l += *(l + 1);
+
             l += 2;
         }
         while (*l > *r) {
             if (r + 2 == end_r) {
                 return size_t(tmp - out);
             }
-            data_r += *(r + 1);
+
+            int c = *(r + 1) + 1;
+            data_r += BYTES_BY_CARDINALITY(c);
+
+            // data_r += *(r + 1);
+
             r += 2;
         }
         if (*l == *r) {
             uint8_t id = *l;
             ++l;
             ++r;
-            int bytes_l = *l;
-            int bytes_r = *r;
-            int type_l = TYPE_BY_BYTES(bytes_l);
-            int type_r = TYPE_BY_BYTES(bytes_r);
+            int cl = *l + 1;
+            int cr = *r + 1;
+            // int cl = *l;
+            // int cr = *r;
+            // int type_l = TYPE_BY_BYTES(cl);
+            // int type_r = TYPE_BY_BYTES(cr);
+            int type_l = type::dense;
+            int type_r = type::dense;
+            int bl = 32;
+            int br = 32;
+
+            if (LIKELY(cl < 31)) {
+                bl = cl;
+                type_l = type::sparse;
+            }
+
+            if (LIKELY(cr < 31)) {
+                br = cr;
+                type_r = type::sparse;
+            }
 
             uint32_t b = base + id * 256;
             uint32_t n = 0;
 
             switch (block_pair(type_l, type_r)) {
                 case block_pair(type::sparse, type::sparse):
-                    n = ss_intersect_block(data_l, data_r, bytes_l, bytes_r, b,
-                                           tmp);
+                    n = ss_intersect_block(data_l, data_r, cl, cr, b, tmp);
                     break;
                 case block_pair(type::sparse, type::dense):
-                    n = ds_intersect_block(data_r, data_l, bytes_l, b, tmp);
+                    n = ds_intersect_block(data_r, data_l, cl, b, tmp);
                     break;
                 case block_pair(type::dense, type::sparse):
-                    n = ds_intersect_block(data_l, data_r, bytes_r, b, tmp);
+                    n = ds_intersect_block(data_l, data_r, cr, b, tmp);
                     break;
                 case block_pair(type::dense, type::dense):
                     n = and_bitmaps(data_l, data_r,
@@ -186,8 +214,11 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
                 return size_t(tmp - out);
             }
 
-            data_l += bytes_l;
-            data_r += bytes_r;
+            // data_l += cl;
+            // data_r += cr;
+
+            data_l += bl;
+            data_r += br;
             ++l;
             ++r;
         }
