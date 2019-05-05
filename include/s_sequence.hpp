@@ -21,6 +21,16 @@ struct s_sequence {
         return m_data;
     }
 
+    uint32_t cardinality() const {
+        auto const* h = header();
+        uint32_t c = 0;
+        for (uint32_t i = 0; i != chunks; ++i) {
+            c += *(h + 1) + 1;
+            h += 4;
+        }
+        return c;
+    }
+
     struct iterator {
         iterator(s_sequence const& s, uint32_t begin, uint32_t end)
             : header(s.header())

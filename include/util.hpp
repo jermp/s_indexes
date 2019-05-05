@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include "constants.hpp"
 
 namespace sliced {
 
@@ -37,6 +38,12 @@ size_t or_bitmaps(uint8_t const* l, uint8_t const* r,
 
 size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;
+}
+
+uint32_t chunks(uint64_t universe) {
+    return universe
+               ? (universe + constants::chunk_size - 1) / constants::chunk_size
+               : 1;
 }
 
 // enum type { empty = 0, sparse = 1, dense = 2, full = 3 };

@@ -1,10 +1,6 @@
 #include <iostream>
 
-#include "immintrin.h"
-
-#include "../external/essentials/include/essentials.hpp"
 #include "../external/mm_file/include/mm_file/mm_file.hpp"
-
 #include "util.hpp"
 #include "s_index.hpp"
 #include "uncompress.hpp"
@@ -39,8 +35,9 @@ void test_uncompress(char const* binary_filename,
     uint32_t const* data = input.data();
 
     assert(data[0] == 1);
-    std::cout << "universe size: " << index.universe() << std::endl;
-    size_t size_in_64bit_words = essentials::words_for(index.universe());
+    uint64_t universe = index.universe();
+    std::cout << "universe size: " << universe << std::endl;
+    size_t size_in_64bit_words = chunks(universe) * constants::chunk_size / 64;
     std::vector<uint64_t> bitmap(size_in_64bit_words, 0);
     std::vector<uint32_t> out(index.universe());
     size_t k = 0;
@@ -52,8 +49,13 @@ void test_uncompress(char const* binary_filename,
         if (double(n) / universe > density) {
             auto sequence = index[k];
             size_t decoded = sequence.uncompress(bitmap.data());
-            decoded = decode_bitmap_and_reset(bitmap.data(),
-                                              size_in_64bit_words, out.data());
+            size_t d = decode_bitmap_and_reset(bitmap.data(),
+                                               size_in_64bit_words, out.data());
+            if (decoded != d) {
+                good = false;
+                std::cout << "decoded " << decoded << " integers: expected "
+                          << d << std::endl;
+            }
 
             if (decoded != n) {
                 good = false;

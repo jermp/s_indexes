@@ -51,7 +51,6 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
     for (int i = 0; i != blocks; ++i) {
         uint8_t id = *begin;
         ++begin;
-
         int c = *begin + 1;
         int bytes = 32;
         int type = type::dense;
@@ -59,10 +58,6 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
             bytes = c;
             type = type::sparse;
         }
-
-        // int bytes = *begin;
-        // int type = TYPE_BY_BYTES(bytes);
-
         uint32_t u = 0;
         tmp += (id - prev) * constants::block_size_in_64bit_words;
         if (type == type::sparse) {
@@ -80,8 +75,7 @@ uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
 }
 
 uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
-    auto ptr = reinterpret_cast<uint64_t const*>(begin);
-    memcpy(out, ptr, constants::chunk_size / 8);
+    memcpy(out, begin, constants::chunk_size / 8);
     uint32_t c = 0;
     for (size_t i = 0; i != constants::chunk_size_in_64bit_words; ++i) {
         c += __builtin_popcountll(out[i]);

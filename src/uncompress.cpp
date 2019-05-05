@@ -12,7 +12,10 @@ void uncompress(char const* binary_filename) {
     s_index index;
     index.mmap(binary_filename);
 
-    std::vector<uint64_t> out(essentials::words_for(index.universe()), 0);
+    uint64_t universe = index.universe();
+    std::cout << "universe size: " << universe << std::endl;
+    size_t size_in_64bit_words = chunks(universe) * constants::chunk_size / 64;
+    std::vector<uint64_t> out(size_in_64bit_words, 0);
     uint64_t integers = 0;
     essentials::timer_type t;
     t.start();
