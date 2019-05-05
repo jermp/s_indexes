@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "../external/essentials/include/essentials.hpp"
 #include "../external/mm_file/include/mm_file/mm_file.hpp"
 
 #include "util.hpp"
@@ -29,6 +28,13 @@ void test_decode(char const* binary_filename, char const* collection_filename,
         if (double(n) / universe > density) {
             auto sequence = index[k];
             size_t decoded = sequence.decode(out.data());
+
+            uint32_t c = sequence.cardinality();
+            if (c != n) {
+                good = false;
+                std::cout << "cardinality " << c << ": expected " << n
+                          << std::endl;
+            }
 
             if (decoded != n) {
                 good = false;
