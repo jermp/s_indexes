@@ -22,7 +22,7 @@ void perf_cardinality(char const* binary_filename) {
         }
         t.stop();
     }
-    std::cout << total << std::endl;
+    std::cout << total / runs << std::endl;
     t.discard_first();
     double avg = t.average();
     std::cout << "Mean per run: " << avg << " [musec]\n";
