@@ -14,7 +14,7 @@ struct s_sequence {
     size_t uncompress(uint64_t* out);
     bool select(uint32_t rank, uint32_t& value);
     bool contains(uint32_t value);
-    // uint32_t next_geq(uint32_t value);
+    uint32_t next_geq(uint32_t value);
 
     uint16_t const* header() const {
         return m_header;
@@ -67,12 +67,12 @@ struct s_sequence {
             begin += 1;
         }
 
-        bool has_next() const {
+        inline bool has_next() const {
             return begin < end;
         }
 
         void advance(uint32_t lower_bound) {
-            while (id() < lower_bound and begin < end) {
+            while (id() < lower_bound and has_next()) {
                 next();
             }
         }

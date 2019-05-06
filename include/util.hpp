@@ -8,6 +8,8 @@ namespace sliced {
 #define chunk_pair(l, r) (3 * (l) + (r))
 #define block_pair(l, r) (2 * (l) + (r))
 
+#define BYTES_BY_CARDINALITY(c) LIKELY(c < 31) ? c : 32
+
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 
 #define OPERATE_BITMAPS(OP, l, r, size_in_64bit_words, base, out)    \

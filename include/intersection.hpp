@@ -10,8 +10,6 @@
 
 namespace sliced {
 
-#define BYTES_BY_CARDINALITY(c) LIKELY(c < 31) ? c : 32
-
 #define INIT                                          \
     __m256i base_v = _mm256_set1_epi32(base);         \
     __m128i v_l = _mm_lddqu_si128((__m128i const*)l); \
