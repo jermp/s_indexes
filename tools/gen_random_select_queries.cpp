@@ -12,7 +12,9 @@ void generate(char const* binary_filename, uint32_t num_queries) {
     s_index index;
     index.mmap(binary_filename);
 
-    std::vector<query> queries(index.size() * num_queries);
+    std::vector<query> queries;
+    queries.reserve(index.size() * num_queries);
+
     for (size_t i = 0; i != index.size(); ++i) {
         auto sequence = index[i];
         uint32_t cardinality = sequence.cardinality();
@@ -25,14 +27,14 @@ void generate(char const* binary_filename, uint32_t num_queries) {
         }
     }
 
-    std::random_shuffle(queries.begin(), queries.end());
+    // std::random_shuffle(queries.begin(), queries.end());
     for (auto q : queries) {
         std::cout << q.i << "\t" << q.j << "\n";
     }
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 2;
+    int mandatory = 3;
     if (argc < mandatory) {
         std::cout << argv[0] << " index_filename num_queries_per_list"
                   << std::endl;
