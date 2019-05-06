@@ -18,7 +18,7 @@ void perf_select(char const* binary_filename,
               << std::endl;
     essentials::timer_type t;
     static const int runs = 10 + 1;
-    uint32_t value;
+    uint32_t value = 0;
     for (int run = 0; run != runs; ++run) {
         t.start();
         for (auto const& q : queries) {
