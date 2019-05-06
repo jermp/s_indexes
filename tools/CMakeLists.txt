@@ -1,0 +1,1 @@
+add_executable(gen_random_select_queries gen_random_select_queries.cpp)
