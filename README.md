@@ -164,3 +164,33 @@ Sliced Indexes
 		Mean per run: 2.25071e+06 [musec]
 		Mean per query: 2250.71 [musec]
 		Roaring: 2153.428200 [musecs]
+		
+- Select
+
+		➜  build git:(master) ✗ ./select gov2.no_full_blocks.bin3 13276000 < gov2.select_queries2                     
+		reading queries...
+		DONE
+		performing 13276000 select queries...
+		636846348152652
+		Mean per run: 2.36133e+06 [musec]
+		Mean per query: 0.177865 [musec]
+		Roaring: 0.287290 [musecs]
+		
+		➜  build git:(master) ✗ ./select clueweb09.no_full_blocks.bin3 21924000 < clueweb09.select_queries
+		reading queries...
+		DONE
+		performing 21924000 select queries...
+		1951476283887376
+		Mean per run: 7.28288e+06 [musec]
+		Mean per query: 0.332188 [musec]
+		Roaring: 0.456158 [musecs]
+		
+		➜  build git:(master) ✗ ./select ccnews.no_full_blocks.bin3 23085000 < ccnews.select_queries
+		reading queries...
+		DONE
+		performing 23085000 select queries...
+		1944166548915776
+		Mean per run: 8.17139e+06 [musec]
+		Mean per query: 0.353969 [musec]
+		Roaring: 0.438018 [musecs]		
+		

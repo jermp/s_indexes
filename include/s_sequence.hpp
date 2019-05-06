@@ -13,6 +13,8 @@ struct s_sequence {
     size_t decode(uint32_t* out);
     size_t uncompress(uint64_t* out);
     bool select(uint32_t rank, uint32_t& value);
+    bool contains(uint32_t value);
+    // uint32_t next_geq(uint32_t value);
 
     uint16_t const* header() const {
         return m_header;

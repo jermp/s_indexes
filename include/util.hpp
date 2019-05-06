@@ -31,8 +31,24 @@ size_t and_bitmaps(uint8_t const* l, uint8_t const* r,
     OPERATE_BITMAPS(&, l, r, size_in_64bit_words, base, out)}
 
 size_t or_bitmaps(uint8_t const* l, uint8_t const* r,
-                  size_t size_in_64bit_words, uint32_t base, uint32_t* out){
-    OPERATE_BITMAPS(|, l, r, size_in_64bit_words, base, out)}
+                  size_t size_in_64bit_words, uint32_t base, uint32_t* out) {
+    OPERATE_BITMAPS(|, l, r, size_in_64bit_words, base, out)
+}
+
+inline bool bitmap_contains(uint64_t const* bitmap, uint64_t pos) {
+    // uint64_t w = bitmap[pos >> 6];
+    // w >>= pos & 63;
+    // return w & 1;
+
+    uint64_t r;
+    uint64_t w = bitmap[pos >> 6];
+    __asm volatile(
+        "bt %2,%1\n"
+        "sbb %0,%0"
+        : "=r"(r)
+        : "r"(w), "r"(pos));
+    return r;
+}
 
 size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;
