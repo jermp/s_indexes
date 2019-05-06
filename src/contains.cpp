@@ -21,7 +21,6 @@ void perf_contains(char const* binary_filename,
     for (int run = 0; run != runs; ++run) {
         t.start();
         for (auto const& q : queries) {
-            assert(index[q.i].contains(q.j));
             total += index[q.i].contains(q.j);
         }
         t.stop();

@@ -1,11 +1,12 @@
 #pragma once
 
+// #include "immintrin.h"
+
 namespace sliced {
 
 bool sparse_block_contains(uint8_t const* begin, int cardinality,
                            uint32_t value) {
-    // _mm_cmpeq_epi8_mask
-
+    // scalar code as fast as SIMD approach
     for (int i = 0; i != cardinality; ++i) {
         if (begin[i] > value) {
             return false;
@@ -15,6 +16,12 @@ bool sparse_block_contains(uint8_t const* begin, int cardinality,
         }
     }
     return false;
+
+    // (void)cardinality;
+    // __m256i c = _mm256_set1_epi8(value);
+    // __m256i v = _mm256_loadu_si256((__m256i const*)begin);
+    // __m256i res = _mm256_cmpeq_epi8(c, v);
+    // return _mm256_testz_si256(res, _mm256_setzero_si256());
 }
 
 bool contains_sparse_chunk(uint8_t const* begin, int blocks, uint32_t value) {
@@ -61,7 +68,7 @@ bool s_sequence::contains(uint32_t value) {
             return false;
         }
         if (it.id() == chunk_id) {
-            uint32_t base = it.id() << 16;
+            uint32_t base = chunk_id << 16;
             assert(value >= base);
             value -= base;
             switch (it.type()) {
@@ -77,6 +84,7 @@ bool s_sequence::contains(uint32_t value) {
                     __builtin_unreachable();
             }
         }
+        it.next();
     }
     return false;
 }
