@@ -11,15 +11,26 @@ uint32_t select_bitmap(uint8_t const* data, size_t size_in_64bit_words,
         int c = __builtin_popcountll(w);
         if (elements + c > rank) {
             uint32_t base = i * 64;
-            while (w != 0) {
-                uint64_t t = w & (~w + 1);
-                int r = __builtin_ctzll(w);
-                if (elements == rank) {
-                    return r + base;
-                }
-                w ^= t;
-                ++elements;
-            }
+
+            assert(rank >= elements);
+            rank -= elements;
+            uint64_t i = 1ULL << rank;
+            asm("pdep %[w], %[mask], %[w]" : [ w ] "+r"(w) : [ mask ] "r"(i));
+            asm("tzcnt %[bit], %[index]"
+                : [ index ] "=r"(i)
+                : [ bit ] "g"(w)
+                : "cc");
+            return i + base;
+
+            // while (w != 0) {
+            //     uint64_t t = w & (~w + 1);
+            //     int r = __builtin_ctzll(w);
+            //     if (elements == rank) {
+            //         return r + base;
+            //     }
+            //     w ^= t;
+            //     ++elements;
+            // }
         }
         elements += c;
     }

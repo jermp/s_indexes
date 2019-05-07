@@ -4,6 +4,7 @@ namespace sliced {
 
 uint32_t next_geq_sparse_block(uint8_t const* begin, int cardinality,
                                uint32_t value) {
+    // NOTE: maybe can use SIMD here
     for (int i = 0; i != cardinality; ++i) {
         if (begin[i] >= value) {
             return begin[i];
@@ -24,30 +25,24 @@ uint32_t max_value_in_bitmap(uint8_t const* data, size_t size_in_64bit_words) {
     return 0;
 }
 
-uint32_t next_geq_bitmap(uint8_t const* data, size_t size_in_64bit_words,
-                         uint32_t value) {
+// NOTE: assume bitmap is *not* empty
+uint32_t next_geq_bitmap(uint8_t const* data, uint32_t value) {
     uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(data);
-    uint32_t k = value / 64;
-    uint64_t word = bitmap[k];
-    const int diff = value - k * 64;
-    word = (word >> diff) << diff;
+    uint32_t i = value / 64;
+    uint64_t word = bitmap[i];
+    uint64_t base = i * 64;
+    assert(value >= base);
+    value -= base;
+    word &= uint64_t(1) << value;
     while (word == 0) {
-        k++;
-        if (k == size_in_64bit_words) {
-            return -1;
-        }
-        word = bitmap[k];
+        word = bitmap[i++];
     }
-    return k * 64 + __builtin_ctzll(word);
+    return __builtin_ctzll(word) + base;
 }
 
 uint32_t max_value_in_block(uint8_t const* begin, uint8_t const* data) {
     int c = *(begin + 1) + 1;
-    int type = type::dense;
-    if (LIKELY(c < 31)) {
-        type = type::sparse;
-    }
-    if (type == type::sparse) {
+    if (LIKELY(c < 31)) {  // block type is sparse
         return *(data + c - 1);
     }
     return max_value_in_bitmap(data, constants::block_size_in_64bit_words);
@@ -56,11 +51,9 @@ uint32_t max_value_in_block(uint8_t const* begin, uint8_t const* data) {
 uint32_t next_geq_sparse_chunk(uint8_t const* begin, int blocks,
                                uint32_t value) {
     assert(blocks >= 1 and blocks <= 256);
-
     uint8_t const* data = begin + blocks * 2;
     uint8_t const* end = data;
     uint32_t block_id = value >> 8;
-
     uint32_t id = 0;
 
     while (begin != end) {
@@ -74,7 +67,7 @@ uint32_t next_geq_sparse_chunk(uint8_t const* begin, int blocks,
     }
 
     if (begin != end) {
-        uint32_t lower_bound = value & 255;
+        uint32_t lower_bound = value & 0xFF;
         uint32_t upper_bound = max_value_in_block(begin, data);
         if (lower_bound > upper_bound) {
             int c = *(begin + 1) + 1;
@@ -87,24 +80,10 @@ uint32_t next_geq_sparse_chunk(uint8_t const* begin, int blocks,
         assert(value >= base);
         value -= base;
         int c = *(begin + 1) + 1;
-        int type = type::dense;
-        if (LIKELY(c < 31)) {
-            type = type::sparse;
+        if (LIKELY(c < 31)) {  // block type is sparse
+            return next_geq_sparse_block(data, c, value) + base;
         }
-        switch (type) {
-            case type::sparse:
-                value = next_geq_sparse_block(data, c, value);
-                break;
-            case type::dense:
-                value = next_geq_bitmap(
-                    data, constants::block_size_in_64bit_words, value);
-                break;
-            default:
-                assert(false);
-                __builtin_unreachable();
-        }
-
-        return value + base;
+        return next_geq_bitmap(data, value) + base;
     }
 
     return -1;
@@ -124,11 +103,7 @@ uint32_t max_value_in_sparse_chunk(uint8_t const* begin, int blocks) {
     }
 
     uint32_t base = id * 256;
-    int type = type::dense;
-    if (LIKELY(c < 31)) {
-        type = type::sparse;
-    }
-    if (type == type::sparse) {
+    if (LIKELY(c < 31)) {  // block type is sparse
         return *(data + c - 1) + base;
     }
     return max_value_in_bitmap(data, constants::block_size_in_64bit_words) +
@@ -150,8 +125,9 @@ uint32_t s_sequence::next_geq(uint32_t value) {
     auto it = begin();
     uint32_t chunk_id = value >> 16;
     it.advance(chunk_id);
+
     if (it.has_next()) {
-        uint32_t lower_bound = value & 65535;
+        uint32_t lower_bound = value & 0xFFFF;
         uint32_t upper_bound = max_value_in_chunk(it);
         if (lower_bound > upper_bound) {
             it.next();
@@ -166,8 +142,7 @@ uint32_t s_sequence::next_geq(uint32_t value) {
                 value = next_geq_sparse_chunk(it.data, it.blocks(), value);
                 break;
             case type::dense:
-                value = next_geq_bitmap(
-                    it.data, constants::chunk_size_in_64bit_words, value);
+                value = next_geq_bitmap(it.data, value);
                 break;
             case type::full:
                 break;
