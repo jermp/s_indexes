@@ -1,13 +1,19 @@
 #pragma once
 
+#include "constants.hpp"
+
 namespace sliced {
 
 struct s_sequence {
     s_sequence(uint8_t const* addr) {
         uint16_t const* ptr = reinterpret_cast<uint16_t const*>(addr);
         chunks = 1 + *ptr++;
-        m_header = ptr;
-        m_data = addr + sizeof(uint16_t) + chunks * 4 * sizeof(uint16_t);
+        m_offsets = reinterpret_cast<uint64_t const*>(ptr);
+        uint64_t offsets_bytes =
+            chunks / constants::associativity * sizeof(uint64_t);
+        uint64_t header_bytes = chunks * 4 * sizeof(uint16_t);
+        m_header = ptr + offsets_bytes / sizeof(uint16_t);
+        m_data = addr + sizeof(uint16_t) + offsets_bytes + header_bytes;
     }
 
     size_t decode(uint32_t* out);
@@ -15,6 +21,10 @@ struct s_sequence {
     bool select(uint32_t rank, uint32_t& value);
     bool contains(uint32_t value);
     uint32_t next_geq(uint32_t value);
+
+    uint64_t const* offsets() const {
+        return m_offsets;
+    }
 
     uint16_t const* header() const {
         return m_header;
@@ -36,7 +46,8 @@ struct s_sequence {
 
     struct iterator {
         iterator(s_sequence const& s, uint32_t begin, uint32_t end)
-            : header(s.header())
+            : offsets(s.offsets())
+            , header(s.header())
             , data(s.data())
             , begin(begin)
             , end(end) {}
@@ -77,10 +88,29 @@ struct s_sequence {
             }
         }
 
+        void skip_to(uint32_t lower_bound) {
+            while (skip_position() < end and *skip_header() <= lower_bound) {
+                data += *offsets++;
+                header = skip_header();
+                begin = skip_position();
+            }
+            advance(lower_bound);
+        }
+
+        uint64_t const* offsets;
         uint16_t const* header;
         uint8_t const* data;
         uint32_t begin;
-        uint32_t end;
+        const uint32_t end;
+
+    private:
+        inline uint32_t skip_position() const {
+            return begin + constants::associativity;
+        }
+
+        inline uint16_t const* skip_header() const {
+            return header + 4 * constants::associativity;
+        }
     };
 
     iterator begin() const {
@@ -90,6 +120,7 @@ struct s_sequence {
     uint32_t chunks;
 
 private:
+    uint64_t const* m_offsets;
     uint16_t const* m_header;
     uint8_t const* m_data;
 };

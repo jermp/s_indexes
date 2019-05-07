@@ -221,6 +221,19 @@ private:
 
         chunks = chunks_header.size() / 4;
         write_uint<uint16_t>(chunks - 1, out);
+
+        // write chunks / constants::associativity offsets
+        uint64_t offsets = chunks / constants::associativity;
+        for (uint64_t i = 0; i != offsets; ++i) {
+            uint32_t base = i * 4 * constants::associativity;
+            uint64_t offset = 0;
+            for (uint32_t j = 1; j != constants::associativity + 1; ++j) {
+                offset += chunks_header[base + 4 * j - 1];
+            }
+            std::cout << "writing offset " << offset << std::endl;
+            write_uint<uint64_t>(offset, out);
+        }
+
         auto ptr = reinterpret_cast<uint8_t const*>(chunks_header.data());
         out.insert(out.end(), ptr,
                    ptr + chunks_header.size() * sizeof(chunks_header.front()));

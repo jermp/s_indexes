@@ -36,22 +36,20 @@ void test_nextgeq(char const* binary_filename, char const* collection_filename,
 
             uint32_t const* ptr = data + i + 1;
             for (size_t j = 0; j != n; ++j) {
-                // uint32_t value = *ptr++;
-                // uint32_t next_geq = sequence.next_geq(value);
-                // if (value != next_geq) {
-                //     good = false;
-                //     std::cout << "error at " << j << "/" << n << ": got "
-                //               << next_geq << " but expected " << value
-                //               << std::endl;
-                // }
+                uint32_t value = *ptr++;
+                uint32_t next_geq = sequence.next_geq(value);
+                if (value != next_geq) {
+                    good = false;
+                    std::cout << "error at " << j << "/" << n << ": got "
+                              << next_geq << " but expected " << value
+                              << std::endl;
+                }
 
-                uint32_t next_geq = sequence.next_geq(j);
-                // std::cout << "next_geq(" << j << "/" << n << ") = " <<
-                // next_geq
+                // next_geq = sequence.next_geq(universe);
+                // std::cout << "next_geq(" << universe << ") = " << next_geq
                 //           << std::endl;
-                assert(next_geq >= j);
+                // assert(next_geq >= j);
             }
-
             ++k;
             if (k % 1000 == 0) {
                 std::cout << "checked " << k << " sequences" << std::endl;

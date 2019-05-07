@@ -41,9 +41,14 @@ void write_bits(uint32_t const* begin, size_t n, size_t bits, uint32_t base,
 uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
                            slice s) {
     uint32_t c = 0;
+    uint32_t prev = -1;
     while (*begin < s.right and begin != end) {
         assert(*begin >= s.left);
         assert(*begin - s.left < constants::chunk_size);
+        if (*begin == prev) {
+            throw std::runtime_error("duplicate element");
+        }
+        prev = *begin;
         ++begin;
         ++c;
     }
