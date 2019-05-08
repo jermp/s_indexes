@@ -26,6 +26,11 @@ void write_uint(T val, std::vector<uint8_t>& out) {
     out.insert(out.end(), ptr, ptr + sizeof(T));
 }
 
+template <typename T = uint32_t>
+void write_uint(T x, std::ofstream& out) {
+    out.write(reinterpret_cast<char const*>(&x), sizeof(T));
+}
+
 void write_bits(uint32_t const* begin, size_t n, size_t bits, uint32_t base,
                 std::vector<uint8_t>& out) {
     assert(bits % 64 == 0);

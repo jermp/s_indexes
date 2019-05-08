@@ -56,10 +56,8 @@ size_t bytes_for(size_t bits) {
     return (bits + 8 - 1) / 8;
 }
 
-uint32_t chunks(uint64_t universe) {
-    return universe
-               ? (universe + constants::chunk_size - 1) / constants::chunk_size
-               : 1;
+uint32_t num_chunks(uint64_t universe) {
+    return (universe + constants::chunk_size) / constants::chunk_size;
 }
 
 enum type { empty = 0, sparse = 1, dense = 3, full = 2 };

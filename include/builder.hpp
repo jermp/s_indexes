@@ -123,9 +123,7 @@ private:
         auto begin = data;
         auto end = data + n;
         uint32_t universe = *(data + n - 1);
-        uint32_t chunks = universe ? (universe + constants::chunk_size - 1) /
-                                         constants::chunk_size
-                                   : 1;
+        uint32_t chunks = num_chunks(universe);
         assert(chunks > 0 and chunks <= constants::chunk_size);
 
         stats.sequences += 1;
@@ -217,6 +215,7 @@ private:
             begin += cardinality;
         }
 
+        assert(begin == end);
         chunks = chunks_header.size() / 4;
         write_uint<uint16_t>(chunks - 1, out);
 

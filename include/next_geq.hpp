@@ -9,6 +9,24 @@ namespace sliced {
     return min_value_in_bitmap(data, constants::block_size_in_64bit_words) + \
            base;
 
+#define CHUNK_MIN                                                              \
+    switch (it.type()) {                                                       \
+        case type::sparse:                                                     \
+            value = min_value_in_sparse_chunk(it.data, it.blocks());           \
+            break;                                                             \
+        case type::dense:                                                      \
+            value = min_value_in_bitmap(it.data,                               \
+                                        constants::chunk_size_in_64bit_words); \
+            break;                                                             \
+        case type::full:                                                       \
+            value = 0;                                                         \
+            break;                                                             \
+        default:                                                               \
+            assert(false);                                                     \
+            __builtin_unreachable();                                           \
+    }                                                                          \
+    return value + it.base();
+
 uint32_t next_geq_sparse_block(uint8_t const* begin, int cardinality,
                                uint32_t value) {
     for (int i = 0; i != cardinality; ++i) {
@@ -127,6 +145,10 @@ uint32_t s_sequence::next_geq(uint32_t value) {
     uint32_t chunk_id = value >> 16;
     it.skip_to(chunk_id);
 
+    if (it.base() >= value) {  // saturate
+        CHUNK_MIN
+    }
+
     if (it.has_next()) {
         value &= 0xFFFF;
         switch (it.type()) {
@@ -148,27 +170,12 @@ uint32_t s_sequence::next_geq(uint32_t value) {
             return value + it.base();
         }
 
+        // saturate
         it.next();
-        switch (it.type()) {
-            case type::sparse:
-                value = min_value_in_sparse_chunk(it.data, it.blocks());
-                break;
-            case type::dense:
-                value = min_value_in_bitmap(
-                    it.data, constants::chunk_size_in_64bit_words);
-                break;
-            case type::full:
-                value = 0;
-                break;
-            default:
-                assert(false);
-                __builtin_unreachable();
-        }
-
-        return value + it.base();
+        CHUNK_MIN
     }
 
-    return -1;
+    return constants::not_found;
 }
 
 }  // namespace sliced

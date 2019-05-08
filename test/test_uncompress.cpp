@@ -37,7 +37,8 @@ void test_uncompress(char const* binary_filename,
     assert(data[0] == 1);
     uint64_t universe = index.universe();
     std::cout << "universe size: " << universe << std::endl;
-    size_t size_in_64bit_words = chunks(universe) * constants::chunk_size / 64;
+    size_t size_in_64bit_words =
+        num_chunks(universe) * constants::chunk_size / 64;
     std::vector<uint64_t> bitmap(size_in_64bit_words, 0);
     std::vector<uint32_t> out(index.universe());
     size_t k = 0;

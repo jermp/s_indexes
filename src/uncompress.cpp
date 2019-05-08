@@ -14,7 +14,8 @@ void uncompress(char const* binary_filename) {
 
     uint64_t universe = index.universe();
     std::cout << "universe size: " << universe << std::endl;
-    size_t size_in_64bit_words = chunks(universe) * constants::chunk_size / 64;
+    size_t size_in_64bit_words =
+        num_chunks(universe) * constants::chunk_size / 64;
     std::vector<uint64_t> out(size_in_64bit_words, 0);
     uint64_t integers = 0;
     essentials::timer_type t;

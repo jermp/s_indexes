@@ -3,25 +3,18 @@
 #include <vector>
 #include <algorithm>
 
+#include "building_util.hpp"
+
 #include "../external/essentials/include/essentials.hpp"
-
-template <typename T = uint32_t>
-void write_int(std::ofstream& out, T x) {
-    out.write(reinterpret_cast<char const*>(&x), sizeof(T));
-}
-
-template <typename T = uint32_t>
-void write_list(std::ofstream& out, char const* begin, size_t n) {
-    out.write(begin, n);
-}
 
 void gen(uint32_t num_lists, uint32_t min_length, uint32_t max_length,
          uint32_t universe, char const* output_filename) {
+    using namespace sliced;
     std::ofstream out(std::string(output_filename),
                       std::ios_base::binary | std::ios_base::out);
     // header: singleton list containing the universe
-    write_int(out, 1);
-    write_int(out, universe);
+    write_uint(uint32_t(1), out);
+    write_uint(universe, out);
     essentials::uniform_int_rng<uint32_t> length(min_length, max_length);
     essentials::uniform_int_rng<uint32_t> element(0, universe);
     std::vector<uint32_t> list;
@@ -35,7 +28,7 @@ void gen(uint32_t num_lists, uint32_t min_length, uint32_t max_length,
         std::sort(list.begin(), list.end());
         auto it = std::unique(list.begin(), list.end());
         n = std::distance(list.begin(), it);
-        write_int(out, n);
+        write_uint(n, out);
         char const* begin = reinterpret_cast<char const*>(list.data());
         out.write(begin, n * sizeof(uint32_t));
     }
