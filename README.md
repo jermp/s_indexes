@@ -6,8 +6,27 @@ Below experimental results for Gov2, Clueweb09 and CCNews.
 All lists whose density is > 0.001 were considered.
 
 - Building
-	
-		GOV2
+
+		GOV2 (d = 0.0001)
+		processed 85893 sequences, 5390038277 integers
+		chunks: 21519120
+		full chunks: 16850 (20.4875% of ints)
+		empty chunks: 10521930 (48.8957% of chunks)
+		dense chunks: 23094 (16.3721% of ints)
+		sparse chunks: 10957246 (63.1404% of ints)
+		blocks: 2162460812
+		empty blocks: 1853185897 (85.698% of blocks)
+		dense blocks: 25055202 (39.0037% of ints)
+		sparse blocks: 284219713 (24.1367% of ints)
+		0.134573 [bpi] for chunks' headers
+		0.496219 [bpi] for blocks' headers
+		0.280794 [bpi] for dense chunks
+		1.19 [bpi] for dense blocks
+		2.35278 [bpi] for sparse blocks
+		total bytes: 3001837604
+		total bpi: 4.45539
+
+		GOV2 (d = 0.001)
 		processed 13276 sequences, 5066748826 integers
 		chunks: 4611821
 		full chunks: 16850 (21.7947% of ints)
@@ -25,6 +44,26 @@ All lists whose density is > 0.001 were considered.
 		1.99164 [bpi] for sparse blocks
 		total bytes: 2476613040
 		total bpi: 3.91038
+
+		GOV2 (d = 0.01)
+		processed 3513 sequences, 4347653438 integers
+		chunks: 1311927
+		full chunks: 16713 (25.193% of ints)
+		empty chunks: 362208 (27.6089% of chunks)
+		dense chunks: 21009 (18.8613% of ints)
+		sparse chunks: 911997 (55.9457% of ints)
+		blocks: 211234855
+		empty blocks: 102848622 (48.6892% of blocks)
+		dense blocks: 20893566 (40.0391% of ints)
+		sparse blocks: 87492667 (15.9067% of ints)
+		0.0144035 [bpi] for chunks' headers
+		0.237884 [bpi] for blocks' headers
+		0.316687 [bpi] for dense chunks
+		1.23026 [bpi] for dense blocks
+		1.43353 [bpi] for sparse blocks
+		total bytes: 1756894432
+		total bpi: 3.23281
+
 
 		CLUEWEB09    
 		processed 21924 sequences, 13864451283 integers
