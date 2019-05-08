@@ -56,6 +56,10 @@ struct s_sequence {
             return *header;
         }
 
+        inline uint32_t base() const {
+            return id() << 16;
+        }
+
         inline uint32_t cardinality() const {
             return *(header + 1) + 1;
         }

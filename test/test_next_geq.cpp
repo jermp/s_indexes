@@ -34,21 +34,17 @@ void test_nextgeq(char const* binary_filename, char const* collection_filename,
                           << std::endl;
             }
 
-            uint32_t const* ptr = data + i + 1;
+            uint32_t const* list = data + i + 1;
             for (size_t j = 0; j != n; ++j) {
-                uint32_t value = *ptr++;
-                uint32_t next_geq = sequence.next_geq(value);
-                if (value != next_geq) {
+                auto it = std::lower_bound(list, list + n, j);
+                uint32_t next_geq = sequence.next_geq(j);
+                assert(next_geq >= j);
+                if (next_geq != *it) {
                     good = false;
                     std::cout << "error at " << j << "/" << n << ": got "
-                              << next_geq << " but expected " << value
-                              << std::endl;
+                              << next_geq << " but expected next_geq(" << j
+                              << ") = " << *it << std::endl;
                 }
-
-                // next_geq = sequence.next_geq(universe);
-                // std::cout << "next_geq(" << universe << ") = " << next_geq
-                //           << std::endl;
-                // assert(next_geq >= j);
             }
             ++k;
             if (k % 1000 == 0) {

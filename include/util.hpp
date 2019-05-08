@@ -157,6 +157,7 @@ struct statistics {
         std::cout << double(sparse_blocks_bits) / integers
                   << " [bpi] for sparse blocks" << std::endl;
 
+        std::cout << "total bytes: " << bits / 8 << std::endl;
         std::cout << "total bpi: " << double(bits) / integers << std::endl;
     }
 };

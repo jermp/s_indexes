@@ -63,28 +63,21 @@ bool contains_sparse_chunk(uint8_t const* begin, int blocks, uint32_t value) {
 bool s_sequence::contains(uint32_t value) {
     auto it = begin();
     uint32_t chunk_id = value >> 16;
-    while (it.has_next()) {
-        if (it.id() > chunk_id) {
-            return false;
+    it.skip_to(chunk_id);
+    if (it.id() == chunk_id) {
+        value &= 0xFFFF;
+        switch (it.type()) {
+            case type::sparse:
+                return contains_sparse_chunk(it.data, it.blocks(), value);
+            case type::dense:
+                return bitmap_contains(
+                    reinterpret_cast<uint64_t const*>(it.data), value);
+            case type::full:
+                return true;
+            default:
+                assert(false);
+                __builtin_unreachable();
         }
-        if (it.id() == chunk_id) {
-            uint32_t base = chunk_id << 16;
-            assert(value >= base);
-            value -= base;
-            switch (it.type()) {
-                case type::sparse:
-                    return contains_sparse_chunk(it.data, it.blocks(), value);
-                case type::dense:
-                    return bitmap_contains(
-                        reinterpret_cast<uint64_t const*>(it.data), value);
-                case type::full:
-                    return true;
-                default:
-                    assert(false);
-                    __builtin_unreachable();
-            }
-        }
-        it.next();
     }
     return false;
 }

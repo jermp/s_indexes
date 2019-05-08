@@ -46,18 +46,16 @@ struct s_index::builder {
             i += n + 1;
         }
 
-        stats.chunks_header_bits =
-            (stats.full_chunks + stats.sparse_chunks + stats.dense_chunks) *
-                16 * 4 +
-            stats.sequences * 16  // for the number of chunks
-            ;
+        m_offsets.pop_back();
+
         stats.blocks_header_bits =
             stats.dense_blocks * 16 + stats.sparse_blocks * 8;
         stats.bits = stats.chunks_header_bits + stats.blocks_header_bits +
                      stats.dense_chunks_bits + stats.dense_blocks_bits +
                      stats.sparse_blocks_bits;
 
-        m_offsets.pop_back();
+        stats.bits += 2 * 64;
+        stats.bits += m_offsets.size() * 64;
 
         return stats;
     }
@@ -230,7 +228,6 @@ private:
             for (uint32_t j = 1; j != constants::associativity + 1; ++j) {
                 offset += chunks_header[base + 4 * j - 1];
             }
-            std::cout << "writing offset " << offset << std::endl;
             write_uint<uint64_t>(offset, out);
         }
 
@@ -238,6 +235,8 @@ private:
         out.insert(out.end(), ptr,
                    ptr + chunks_header.size() * sizeof(chunks_header.front()));
         out.insert(out.end(), tmp.begin(), tmp.end());
+
+        stats.chunks_header_bits += chunks * 16 * 4 + 16 + offsets * 64;
     }
 };
 

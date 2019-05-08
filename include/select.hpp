@@ -92,7 +92,6 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
     if (valid) {
         rank -= elements;
         assert(rank < constants::chunk_size);
-        uint32_t base = it.id() << 16;
         switch (it.type()) {
             case type::sparse:
                 value = select_sparse_chunk(it.data, it.blocks(), rank);
@@ -109,7 +108,7 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
                 __builtin_unreachable();
         }
 
-        value += base;
+        value += it.id() << 16;
         return true;
     } else {
         return false;
