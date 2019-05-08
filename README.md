@@ -65,7 +65,7 @@ All lists whose density is > 0.001 were considered.
 		total bpi: 3.23281
 
 
-		CLUEWEB09    
+		CLUEWEB09 (d = 0.001)
 		processed 21924 sequences, 13864451283 integers
 		chunks: 14220978
 		full chunks: 712 (0.336556% of ints)
@@ -84,7 +84,7 @@ All lists whose density is > 0.001 were considered.
 		total bytes: 11074648021
 		total bpi: 6.39024
 
-    	CCNEWS
+    	CCNEWS (d = 0.001)
 		processed 23085 sequences, 18969946075 integers
 		chunks: 15010868
 		full chunks: 0 (0% of ints)
