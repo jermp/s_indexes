@@ -11,7 +11,6 @@ namespace sliced {
 
 uint32_t next_geq_sparse_block(uint8_t const* begin, int cardinality,
                                uint32_t value) {
-    // NOTE: maybe can use SIMD here
     for (int i = 0; i != cardinality; ++i) {
         if (begin[i] >= value) {
             return begin[i];

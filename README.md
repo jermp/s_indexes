@@ -1,6 +1,10 @@
 Sliced Indexes
 --------------
 
+Below experimental results for Gov2, Clueweb09 and CCNews.
+
+All lists whose density is > 0.001 were considered.
+
 - Building
 	
 		GOV2
@@ -8,54 +12,57 @@ Sliced Indexes
 		chunks: 4611821
 		full chunks: 16850 (21.7947% of ints)
 		empty chunks: 1557705 (33.7764% of chunks)
-		dense chunks: 19686 (16.0473% of ints)
-		sparse chunks: 3017580 (62.158% of ints)
-		blocks: 772500480
-		empty blocks: 560911704 (72.6099% of blocks)
-		dense blocks: 24731408 (40.9162% of ints)
-		sparse blocks: 186857368 (21.2418% of ints)
-		0.0289752 [bpi] for chunks' headers
-		0.304929 [bpi] for blocks' headers
-		0.254629 [bpi] for dense chunks
-		1.24957 [bpi] for dense blocks
-		1.99438 [bpi] for sparse blocks
-		total bpi: 3.83248
+		dense chunks: 23081 (17.4136% of ints)
+		sparse chunks: 3014185 (60.7917% of ints)
+		blocks: 667844436
+		empty blocks: 457120838 (68.4472% of blocks)
+		dense blocks: 23943484 (39.5826% of ints)
+		sparse blocks: 186780114 (21.2091% of ints)
+		0.0397521 [bpi] for chunks' headers
+		0.370521 [bpi] for blocks' headers
+		0.298542 [bpi] for dense chunks
+		1.20976 [bpi] for dense blocks
+		1.99164 [bpi] for sparse blocks
+		total bytes: 2476613040
+		total bpi: 3.91038
 
-		CLUEWEB09
-		processed 21924 sequences, 13864451283 integers                                                                                                
+		CLUEWEB09    
+		processed 21924 sequences, 13864451283 integers
 		chunks: 14220978
 		full chunks: 712 (0.336556% of ints)
 		empty chunks: 118978 (0.836637% of chunks)
-		dense chunks: 45352 (13.7609% of ints)
-		sparse chunks: 14055936 (85.9026% of ints)
-		blocks: 3598319616
-		empty blocks: 2389304628 (66.4006% of blocks)
-		dense blocks: 88144466 (47.2667% of ints)
-		sparse blocks: 1120870522 (38.6359% of ints)
-		0.0488477 [bpi] for chunks' headers
-		0.519071 [bpi] for blocks' headers
-		0.214375 [bpi] for dense chunks
-		1.62754 [bpi] for dense blocks
-		3.73763 [bpi] for sparse blocks
-		total bpi: 6.14746
-    
+		dense chunks: 84428 (19.3996% of ints)
+		sparse chunks: 14016860 (80.2639% of ints)
+		blocks: 3464202407
+		empty blocks: 2265160718 (65.3877% of blocks)
+		dense blocks: 79113925 (41.7708% of ints)
+		sparse blocks: 1119927764 (38.4931% of ints)
+		0.0670807 [bpi] for chunks' headers
+		0.737515 [bpi] for blocks' headers
+		0.399083 [bpi] for dense chunks
+		1.4608 [bpi] for dense blocks
+		3.72566 [bpi] for sparse blocks
+		total bytes: 11074648021
+		total bpi: 6.39024
+
     	CCNEWS
 		processed 23085 sequences, 18969946075 integers
 		chunks: 15010868
+		full chunks: 0 (0% of ints)
 		empty chunks: 4580 (0.0305112% of chunks)
-		dense chunks: 146406 (22.6026% of ints)
-		sparse chunks: 14859882 (77.3974% of ints)
-		very sparse chunks: 0 (0% of ints)
-		blocks: 3804129792
-		empty blocks: 1820584913 (47.8581% of blocks)
-		dense blocks: 106213467 (33.2166% of ints)
-		sparse blocks: 1877331412 (44.1808% of ints)
-		0.0379902 [bpi] for chunks' headers
-		0.401069 [bpi] for blocks' headers
-		0.505793 [bpi] for dense chunks
-		1.43335 [bpi] for dense blocks
-		4.32617 [bpi] for sparse blocks
-		total bpi: 6.70438
+		dense chunks: 305016 (36.3812% of ints)
+		sparse chunks: 14701272 (63.6188% of ints)
+		blocks: 3717284783
+		empty blocks: 1774286703 (47.7307% of blocks)
+		dense blocks: 69579620 (19.8884% of ints)
+		sparse blocks: 1873418460 (43.7303% of ints)
+		0.05217 [bpi] for chunks' headers
+		0.848744 [bpi] for blocks' headers
+		1.05375 [bpi] for dense chunks
+		0.938979 [bpi] for dense blocks
+		4.28848 [bpi] for sparse blocks
+		total bytes: 17030745141
+		total bpi: 7.1822
 		
 - Decoding
 
