@@ -222,3 +222,32 @@ Sliced Indexes
 		Mean per run: 3.51994e+06 [musec]
 		Mean per query: 0.152477 [musec]
 		Roaring: 0.121576 [musecs]
+		
+- Nextgeq
+
+		➜  build git:(master) ✗ ./next_geq gov2.no_full_blocks.bin3 13276000 < gov2.contains_queries
+		reading queries...
+		DONE
+		performing 13276000 next_geq queries...
+		636846348152652
+		Mean per run: 1.18542e+06 [musec]
+		Mean per query: 0.0892906 [musec]
+		Roaring: 0.089513 [musecs]
+		
+		➜  build git:(master) ✗ ./next_geq clueweb09.no_full_blocks.bin3 21924000 < clueweb09.contains_queries
+		reading queries...
+		DONE
+		performing 21924000 next_geq queries...
+		1951476283887376
+		Mean per run: 2.40277e+06 [musec]
+		Mean per query: 0.109595 [musec]
+		Roaring: 0.118386 [musecs]
+
+		➜  build git:(master) ✗ ./next_geq ccnews.no_full_blocks.bin3 23085000 < ccnews.contains_queries 
+		reading queries...
+		DONE
+		performing 23085000 next_geq queries...
+		1944166548915776
+		Mean per run: 3.08929e+06 [musec]
+		Mean per query: 0.133822 [musec]
+		Roaring: 0.135233 [musecs]
