@@ -79,6 +79,7 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
     auto it = begin();
     bool valid = false;
 
+    // NOTE: could maintain skips to make this a lot faster
     while (it.has_next()) {
         uint32_t c = it.cardinality();
         if (elements + c > rank) {
