@@ -9,36 +9,33 @@
 
 using namespace sliced;
 
-void generate(char const* binary_filename, uint32_t num_queries) {
+void generate(char const* binary_filename, uint32_t num_queries_per_sequence) {
     s_index index;
     index.mmap(binary_filename);
 
-    std::vector<query> queries;
-    queries.reserve(index.size() * num_queries);
+    std::vector<uint32_t> queries;
+    queries.reserve(index.size() * num_queries_per_sequence);
     std::vector<uint32_t> out(index.universe());
 
     for (size_t i = 0; i != index.size(); ++i) {
         auto sequence = index[i];
         size_t decoded = sequence.decode(out.data());
-        query q;
         essentials::uniform_int_rng<uint32_t> rng(0, decoded - 1);
-        for (uint32_t k = 0; k != num_queries; ++k) {
-            q.i = i;
-            q.j = out[rng.gen()];
-            queries.push_back(q);
+        for (uint32_t k = 0; k != num_queries_per_sequence; ++k) {
+            queries.push_back(out[rng.gen()]);
         }
     }
 
     // std::random_shuffle(queries.begin(), queries.end());
     for (auto q : queries) {
-        std::cout << q.i << "\t" << q.j << "\n";
+        std::cout << q << "\n";
     }
 }
 
 int main(int argc, char** argv) {
     int mandatory = 3;
     if (argc < mandatory) {
-        std::cout << argv[0] << " index_filename num_queries_per_list"
+        std::cout << argv[0] << " index_filename num_queries_per_sequence"
                   << std::endl;
         return 1;
     }

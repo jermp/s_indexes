@@ -35,13 +35,13 @@ void test_nextgeq(char const* binary_filename, char const* collection_filename,
             }
 
             uint32_t const* list = data + i + 1;
-            for (size_t j = 0; j != n + 1; ++j) {
+            for (size_t j = 0; j != n /*+ 1*/; ++j) {
                 auto it = std::lower_bound(list, list + n, j);
                 uint32_t next_geq = sequence.next_geq(j);
-                if (j >= n) {
-                    std::cout << "next_geq(" << j << ") = " << next_geq
-                              << std::endl;
-                }
+                // if (j >= n) {
+                //     std::cout << "next_geq(" << j << ") = " << next_geq
+                //               << std::endl;
+                // }
                 assert(next_geq >= j);
                 if (next_geq != *it) {
                     good = false;

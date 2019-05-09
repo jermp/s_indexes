@@ -1,4 +1,5 @@
 add_executable(gen_uniform_data gen_uniform_data.cpp)
 add_executable(gen_clustered_data gen_clustered_data.cpp)
+add_executable(gen_pairwise_queries gen_pairwise_queries.cpp)
 add_executable(gen_random_select_queries gen_random_select_queries.cpp)
-add_executable(gen_random_contains_queries gen_random_contains_queries.cpp)
+add_executable(gen_random_next_geq_queries gen_random_next_geq_queries.cpp)
