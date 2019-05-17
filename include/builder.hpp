@@ -219,7 +219,11 @@ private:
         chunks = chunks_header.size() / 4;
         write_uint<uint16_t>(chunks - 1, out);
 
-        // write chunks / constants::associativity offsets
+        // write chunks / constants::associativity pointers
+        // NOTE: a pointer is
+        // cardinality | byte_offset
+        // -----------   -----------
+        //   32 bits       32 bits
         uint64_t offsets = chunks / constants::associativity;
         uint32_t offset = 0;
         uint32_t cardinality = 0;
