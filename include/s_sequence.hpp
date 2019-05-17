@@ -8,12 +8,12 @@ struct s_sequence {
     s_sequence(uint8_t const* addr) {
         uint16_t const* ptr = reinterpret_cast<uint16_t const*>(addr);
         chunks = 1 + *ptr++;
-        m_offsets = reinterpret_cast<uint64_t const*>(ptr);
-        uint64_t offsets_bytes =
-            chunks / constants::associativity * sizeof(uint64_t);
+        m_pointers = reinterpret_cast<uint32_t const*>(ptr);
+        uint64_t pointers_bytes =
+            chunks / constants::associativity * sizeof(uint32_t) * 2;
         uint64_t header_bytes = chunks * 4 * sizeof(uint16_t);
-        m_header = ptr + offsets_bytes / sizeof(uint16_t);
-        m_data = addr + sizeof(uint16_t) + offsets_bytes + header_bytes;
+        m_header = ptr + pointers_bytes / sizeof(uint16_t);
+        m_data = addr + sizeof(uint16_t) + pointers_bytes + header_bytes;
     }
 
     size_t decode(uint32_t* out);
@@ -22,8 +22,8 @@ struct s_sequence {
     bool contains(uint32_t value);
     uint32_t next_geq(uint32_t value);
 
-    uint64_t const* offsets() const {
-        return m_offsets;
+    uint32_t const* pointers() const {
+        return m_pointers;
     }
 
     uint16_t const* header() const {
@@ -46,7 +46,7 @@ struct s_sequence {
 
     struct iterator {
         iterator(s_sequence const& s, uint32_t begin, uint32_t end)
-            : offsets(s.offsets())
+            : pointers(s.pointers())
             , header(s.header())
             , data(s.data())
             , begin(begin)
@@ -92,16 +92,44 @@ struct s_sequence {
             }
         }
 
+        // can try SIMD here?
         void skip_to(uint32_t lower_bound) {
             while (skip_position() < end and *skip_header() <= lower_bound) {
-                data += *offsets++;
+                data += *(pointers + 1);
+                pointers += 2;
                 header = skip_header();
                 begin = skip_position();
             }
             advance(lower_bound);
         }
 
-        uint64_t const* offsets;
+        uint32_t advance_to(uint32_t rank) {
+            uint32_t elements = 0;
+            while (skip_position() < end) {
+                uint32_t c = *pointers;
+                if (elements + c > rank) {
+                    break;
+                }
+                elements += c;
+                data += *(pointers + 1);
+                pointers += 2;
+                header = skip_header();
+                begin = skip_position();
+            }
+
+            while (has_next()) {
+                uint32_t c = cardinality();
+                if (elements + c > rank) {
+                    return elements;
+                }
+                elements += c;
+                next();
+            }
+
+            return elements;
+        }
+
+        uint32_t const* pointers;
         uint16_t const* header;
         uint8_t const* data;
         uint32_t begin;
@@ -124,7 +152,7 @@ struct s_sequence {
     uint32_t chunks;
 
 private:
-    uint64_t const* m_offsets;
+    uint32_t const* m_pointers;
     uint16_t const* m_header;
     uint8_t const* m_data;
 };

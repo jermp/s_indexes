@@ -48,7 +48,7 @@ void test_select(char const* binary_filename, char const* collection_filename,
 
                 if (expected != value) {
                     good = false;
-                    std::cout << "error at " << j << "/" << n << ": expected"
+                    std::cout << "error at " << j << "/" << n << ": expected "
                               << expected << " but got " << value << std::endl;
                 }
             }

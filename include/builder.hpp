@@ -221,13 +221,19 @@ private:
 
         // write chunks / constants::associativity offsets
         uint64_t offsets = chunks / constants::associativity;
+        uint32_t offset = 0;
+        uint32_t cardinality = 0;
         for (uint64_t i = 0; i != offsets; ++i) {
             uint32_t base = i * 4 * constants::associativity;
-            uint64_t offset = 0;
+            offset = 0;
+            cardinality = 0;
             for (uint32_t j = 1; j != constants::associativity + 1; ++j) {
-                offset += chunks_header[base + 4 * j - 1];
+                cardinality += chunks_header[base + 1] + 1;
+                offset += chunks_header[base + 3];
+                base += 4;
             }
-            write_uint<uint64_t>(offset, out);
+            write_uint<uint32_t>(cardinality, out);
+            write_uint<uint32_t>(offset, out);
         }
 
         auto ptr = reinterpret_cast<uint8_t const*>(chunks_header.data());
@@ -235,7 +241,9 @@ private:
                    ptr + chunks_header.size() * sizeof(chunks_header.front()));
         out.insert(out.end(), tmp.begin(), tmp.end());
 
-        stats.chunks_header_bits += chunks * 16 * 4 + 16 + offsets * 64;
+        stats.chunks_header_bits += chunks * 16 * 4 + 16 +
+                                    offsets * sizeof(offset) * 8 +
+                                    offsets * sizeof(cardinality) * 8;
     }
 };
 

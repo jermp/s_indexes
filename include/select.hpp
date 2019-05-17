@@ -75,22 +75,24 @@ uint32_t select_sparse_chunk(uint8_t const* begin, int blocks, uint32_t rank) {
 }
 
 bool s_sequence::select(uint32_t rank, uint32_t& value) {
-    uint32_t elements = 0;
+    // uint32_t elements = 0;
     auto it = begin();
-    bool valid = false;
+    // bool valid = false;
+
+    uint32_t elements = it.advance_to(rank);
 
     // NOTE: could maintain skips to make this a lot faster
-    while (it.has_next()) {
-        uint32_t c = it.cardinality();
-        if (elements + c > rank) {
-            valid = true;
-            break;
-        }
-        elements += c;
-        it.next();
-    }
+    // while (it.has_next()) {
+    //     uint32_t c = it.cardinality();
+    //     if (elements + c > rank) {
+    //         valid = true;
+    //         break;
+    //     }
+    //     elements += c;
+    //     it.next();
+    // }
 
-    if (valid) {
+    if (it.has_next()) {
         rank -= elements;
         assert(rank < constants::chunk_size);
         switch (it.type()) {
@@ -111,9 +113,9 @@ bool s_sequence::select(uint32_t rank, uint32_t& value) {
 
         value += it.id() << 16;
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 }  // namespace sliced
