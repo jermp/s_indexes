@@ -76,7 +76,7 @@ uint32_t select_sparse_chunk(uint8_t const* begin, int blocks, uint32_t rank) {
 
 bool s_sequence::select(uint32_t rank, uint32_t& value) {
     auto it = begin();
-    uint32_t elements = it.advance_to(rank);
+    uint32_t elements = it.skip_to_position(rank);
     if (it.has_next()) {
         rank -= elements;
         assert(rank < constants::chunk_size);

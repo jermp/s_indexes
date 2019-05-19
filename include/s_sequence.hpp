@@ -92,8 +92,7 @@ struct s_sequence {
             }
         }
 
-        // can try SIMD here?
-        void skip_to(uint32_t lower_bound) {
+        void skip_to_value(uint32_t lower_bound) {
             while (skip_position() < end and *skip_header() <= lower_bound) {
                 data += *(pointers + 1);
                 pointers += 2;
@@ -103,7 +102,7 @@ struct s_sequence {
             advance(lower_bound);
         }
 
-        uint32_t advance_to(uint32_t rank) {
+        uint32_t skip_to_position(uint32_t rank) {
             uint32_t elements = 0;
             while (skip_position() < end) {
                 uint32_t c = *pointers;

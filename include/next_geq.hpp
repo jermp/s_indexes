@@ -143,7 +143,7 @@ uint32_t min_value_in_sparse_chunk(uint8_t const* begin, int blocks) {
 uint32_t s_sequence::next_geq(uint32_t value) {
     auto it = begin();
     uint32_t chunk_id = value >> 16;
-    it.skip_to(chunk_id);
+    it.skip_to_value(chunk_id);
 
     if (it.base() >= value) {  // saturate
         CHUNK_MIN

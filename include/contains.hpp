@@ -63,7 +63,7 @@ bool contains_sparse_chunk(uint8_t const* begin, int blocks, uint32_t value) {
 bool s_sequence::contains(uint32_t value) {
     auto it = begin();
     uint32_t chunk_id = value >> 16;
-    it.skip_to(chunk_id);
+    it.skip_to_value(chunk_id);
     if (it.id() == chunk_id) {
         value &= 0xFFFF;
         switch (it.type()) {
