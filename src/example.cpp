@@ -10,16 +10,18 @@ using namespace sliced;
 
 int main(int argc, char** argv) {
     int mandatory = 1;
-    if (argc < mandatory) {
-        std::cout << argv[0] << " -o output_filename < input" << std::endl;
-        return 1;
-    }
-
     char const* output_filename = nullptr;
+
     for (int i = mandatory; i != argc; ++i) {
         if (std::string(argv[i]) == "-o") {
             ++i;
             output_filename = argv[i];
+        } else if (std::string(argv[i]) == "-h") {
+            std::cout << argv[0] << " -o output_filename < input" << std::endl;
+            return 1;
+        } else {
+            std::cout << "unknown option '" << argv[i] << "'" << std::endl;
+            return 1;
         }
     }
 
