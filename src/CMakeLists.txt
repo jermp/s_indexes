@@ -7,3 +7,5 @@ add_executable(cardinality cardinality.cpp)
 add_executable(select select.cpp)
 add_executable(contains contains.cpp)
 add_executable(next_geq next_geq.cpp)
+
+add_executable(example example.cpp)

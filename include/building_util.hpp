@@ -47,7 +47,7 @@ uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
                            slice s) {
     uint32_t c = 0;
     uint32_t prev = -1;
-    while (*begin < s.right and begin != end) {
+    while (begin != end and *begin < s.right) {
         assert(*begin >= s.left);
         assert(*begin - s.left < constants::chunk_size);
         if (*begin == prev) {
@@ -83,7 +83,7 @@ statistics sparse_chunk_bitsize(uint32_t const* begin, uint32_t const* end,
     statistics stats;
     uint32_t base = s.left;
     size_t block_size = 0;
-    while (*begin < s.right and begin != end) {
+    while (begin != end and *begin < s.right) {
         uint32_t val = *begin - base;
         if (val >= constants::block_size) {
             block_bitsize(block_size, stats);

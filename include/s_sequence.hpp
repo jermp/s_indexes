@@ -5,6 +5,8 @@
 namespace sliced {
 
 struct s_sequence {
+    struct builder;
+
     s_sequence(uint8_t const* addr) {
         uint16_t const* ptr = reinterpret_cast<uint16_t const*>(addr);
         chunks = 1 + *ptr++;
@@ -34,7 +36,7 @@ struct s_sequence {
         return m_data;
     }
 
-    uint32_t cardinality() const {
+    inline uint32_t cardinality() const {
         auto const* h = header();
         uint32_t c = 0;
         for (uint32_t i = 0; i != chunks; ++i) {
@@ -42,6 +44,10 @@ struct s_sequence {
             h += 4;
         }
         return c;
+    }
+
+    inline uint32_t size() const {
+        return cardinality();
     }
 
     struct iterator {

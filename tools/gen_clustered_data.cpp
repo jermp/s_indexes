@@ -26,13 +26,29 @@ int gen_event(std::vector<event> const& events, float p) {
     return events[i].code;
 };
 
-void gen(uint32_t num_lists, uint32_t universe, char const* output_filename) {
+void gen(uint32_t num_lists, uint32_t universe, char const* output_filename,
+         bool binary) {
     using namespace sliced;
-    std::ofstream out(std::string(output_filename),
-                      std::ios_base::binary | std::ios_base::out);
-    // header: singleton list containing the universe
-    write_uint(uint32_t(1), out);
-    write_uint(universe, out);
+
+    std::ofstream out;
+    if (binary) {
+        out.open(std::string(output_filename),
+                 std::ios_base::binary | std::ios_base::out);
+    } else {
+        out.open(std::string(output_filename));
+    }
+
+    if (!out.is_open()) {
+        std::cout << "error in opening file" << std::endl;
+        return;
+    }
+
+    if (binary) {
+        // header: singleton list containing the universe
+        write_uint(uint32_t(1), out);
+        write_uint(universe, out);
+    }
+
     essentials::uniform_int_rng<uint32_t> length(1000, constants::chunk_size);
     typedef essentials::uniform_int_rng<uint32_t> random_int;
     random_int* element = nullptr;
@@ -42,8 +58,8 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename) {
 
     std::vector<event> events(3);
     events[0] = {event_code::skip, 0.3};
-    events[1] = {event_code::include_all, 0.5};
-    events[2] = {event_code::include_some, 0.2};
+    events[1] = {event_code::include_all, 0.3};
+    events[2] = {event_code::include_some, 0.4};
 
     for (uint32_t i = 0; i != num_lists; ++i) {
         list.clear();
@@ -80,9 +96,17 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename) {
         std::sort(list.begin(), list.end());
         auto end = std::unique(list.begin(), list.end());
         uint32_t n = std::distance(list.begin(), end);
-        write_uint(n, out);
-        char const* begin = reinterpret_cast<char const*>(list.data());
-        out.write(begin, n * sizeof(uint32_t));
+
+        if (binary) {
+            write_uint(n, out);
+            char const* begin = reinterpret_cast<char const*>(list.data());
+            out.write(begin, n * sizeof(uint32_t));
+        } else {
+            out << n << "\n";
+            for (auto x : list) {
+                out << x << "\n";
+            }
+        }
     }
     out.close();
 }
@@ -90,7 +114,7 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename) {
 int main(int argc, char** argv) {
     int mandatory = 4;
     if (argc < mandatory) {
-        std::cout << argv[0] << " num_lists universe output_filename"
+        std::cout << argv[0] << " num_lists universe output_filename --binary"
                   << std::endl;
         return 1;
     }
@@ -98,8 +122,15 @@ int main(int argc, char** argv) {
     uint32_t num_lists = std::atoi(argv[1]);
     uint32_t universe = std::atoi(argv[2]);
     char const* output_filename = argv[3];
+    bool binary = false;
 
-    gen(num_lists, universe, output_filename);
+    for (int i = mandatory; i != argc; ++i) {
+        if (std::string(argv[i]) == "--binary") {
+            binary = true;
+        }
+    }
+
+    gen(num_lists, universe, output_filename, binary);
 
     return 0;
 }
