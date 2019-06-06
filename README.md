@@ -1,5 +1,18 @@
-#Sliced Indexes
---------------
+Sliced Indexes
+==============
+--
+
+A C++ implementation of *sliced* indexes.
+
+This guide is meant to provide a brief overview of the library and to illustrate its functionalities through some examples.
+##### Table of contents
+* [Compiling the code](#compiling-the-code)
+* [Quick Start](#quick-start)
+* [Building a collection of sequences](#building-a-collection-of-sequences)
+* [Operations](#operations)
+* [Testing](#testing)
+* [Tools](#tools)
+* [Authors](#authors)
 
 Compiling the code
 ------------------
@@ -202,21 +215,21 @@ Given a single *sliced* sequence, it is possible to execute the
 following operations (see also `include/s_sequence.hpp`):
 
 ```C++
-  	/* decode the sequence to the output buffer */
-    size_t decode(uint32_t* out);
+/* decode the sequence to the output buffer */
+size_t decode(uint32_t* out);
     
-    /* convert the sequence to an output bitmap */ 
-    size_t uncompress(uint64_t* out);
+/* convert the sequence to an output bitmap */ 
+size_t uncompress(uint64_t* out);
     
-    /* select the i-th value */
-    bool select(uint32_t i, uint32_t& value);
+/* select the i-th value */
+bool select(uint32_t i, uint32_t& value);
     
-    /* check if value is present in the sequence */
-    bool contains(uint32_t value);
+/* check if value is present in the sequence */
+bool contains(uint32_t value);
     
-    /* returns the minimum value that is >= lower_bound
-       if found, otherwise a "not found" value is returned */
-    uint32_t next_geq(uint32_t lower_bound);
+/* returns the minimum value that is >= lower_bound
+   if found, otherwise a "not found" value is returned */
+uint32_t next_geq(uint32_t lower_bound);
 ```
 
 Given a collection of (at least 2) *sliced* sequences, it is possible to intersect and merge two sequences
@@ -224,14 +237,13 @@ Given a collection of (at least 2) *sliced* sequences, it is possible to interse
 respectively):
 
 ```C++
-	/* writes the result of the intersection between l and s to the output buffer,
-	   returning the size of the result */
-	size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
-                             uint32_t* out);
+/* writes the result of the intersection between l and s to the output buffer,
+   returning the size of the result */
+size_t pairwise_intersection(s_sequence const& l, s_sequence const& r, uint32_t* out);
                              
-	/* writes the result of the union between l and s to the output buffer,
-	   returning the size of the result */                     
-	size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);                          
+/* writes the result of the union between l and s to the output buffer,
+   returning the size of the result */                     
+size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);                          
 ```
 
 The source `src` folder contains programs to benchmark such operations.
@@ -289,11 +301,11 @@ For example, the sequence `data/test_sequence` was generated with
 
 	$ ./gen_clustered_data 1 1000000 test_sequence
 
-The collection `data/test_collection` was generated with
+A test collection can be generated with
 
 	$ ./gen_clustered_data 100 1000000 test_collection --binary
 
-The queries `data/test_pairwise_queries` were generated with
+A test query log can be generated with
 	
 	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
