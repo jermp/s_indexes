@@ -1,299 +1,303 @@
-Sliced Indexes
+#Sliced Indexes
 --------------
 
-Below experimental results for Gov2, Clueweb09 and CCNews.
+Compiling the code
+------------------
 
-All lists whose density is > 0.001 were considered.
+The code is tested on Linux with `gcc` 7.3.0 and on Mac 10.14 with `clang` 10.0.0.
+To build the code, [`CMake`](https://cmake.org/) is required.
 
-- Building
+The code has few external dependencies (for testing, serialization and memory-mapping facilities), so clone the repository with
+	
+	$ git clone --recursive https://github.com/jermp/s_indexes.git
 
-		GOV2 (d = 0.0001)
-		processed 85893 sequences, 5390038277 integers
-		chunks: 21519120
-		full chunks: 16850 (20.4875% of ints)
-		empty chunks: 10521930 (48.8957% of chunks)
-		dense chunks: 23094 (16.3721% of ints)
-		sparse chunks: 10957246 (63.1404% of ints)
-		blocks: 2162460812
-		empty blocks: 1853185897 (85.698% of blocks)
-		dense blocks: 25055202 (39.0037% of ints)
-		sparse blocks: 284219713 (24.1367% of ints)
-		0.134573 [bpi] for chunks' headers
-		0.496219 [bpi] for blocks' headers
-		0.280794 [bpi] for dense chunks
-		1.19 [bpi] for dense blocks
-		2.35278 [bpi] for sparse blocks
-		total bytes: 3001837604
-		total bpi: 4.45539
+If you have cloned the repository without `--recursive`, you will need to perform the following commands before
+compiling:
 
-		GOV2 (d = 0.001)
-		processed 13276 sequences, 5066748826 integers
-		chunks: 4611821
-		full chunks: 16850 (21.7947% of ints)
-		empty chunks: 1557705 (33.7764% of chunks)
-		dense chunks: 23081 (17.4136% of ints)
-		sparse chunks: 3014185 (60.7917% of ints)
-		blocks: 667844436
-		empty blocks: 457120838 (68.4472% of blocks)
-		dense blocks: 23943484 (39.5826% of ints)
-		sparse blocks: 186780114 (21.2091% of ints)
-		0.0397521 [bpi] for chunks' headers
-		0.370521 [bpi] for blocks' headers
-		0.298542 [bpi] for dense chunks
-		1.20976 [bpi] for dense blocks
-		1.99164 [bpi] for sparse blocks
-		total bytes: 2476613040
-		total bpi: 3.91038
+    $ git submodule init
+    $ git submodule update
 
-		GOV2 (d = 0.01)
-		processed 3513 sequences, 4347653438 integers
-		chunks: 1311927
-		full chunks: 16713 (25.193% of ints)
-		empty chunks: 362208 (27.6089% of chunks)
-		dense chunks: 21009 (18.8613% of ints)
-		sparse chunks: 911997 (55.9457% of ints)
-		blocks: 211234855
-		empty blocks: 102848622 (48.6892% of blocks)
-		dense blocks: 20893566 (40.0391% of ints)
-		sparse blocks: 87492667 (15.9067% of ints)
-		0.0144035 [bpi] for chunks' headers
-		0.237884 [bpi] for blocks' headers
-		0.316687 [bpi] for dense chunks
-		1.23026 [bpi] for dense blocks
-		1.43353 [bpi] for sparse blocks
-		total bytes: 1756894432
-		total bpi: 3.23281
+To compile the code for a release environment (see file `CMakeLists.txt` for the used compilation flags), it is sufficient to do the following:
+
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+    $ make
+
+Hint: Use `make -j4` to compile the library in parallel using, e.g., 4 jobs.
+
+For a testing environment, use the following instead:
+
+    $ mkdir debug_build
+    $ cd debug_build
+    $ cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=On
+    $ make
+
+Quick Start
+-------
+
+For a quick start, see the source file `src/example.cpp`.
+After compilation, run this example with
+
+	$ ./example < ../data/test_sequence
+
+which will:
+
+1. read from the standard input using a test
+sequence from the directory `data`;
+2. build the data structure in memory and perform some operations (decode and select).
+
+By specifying an output file name, it is possible to
+serialize the data structure on disk. To perform the
+operations, the data structure is then memory mapped
+from such file. To do so, type
+
+	$ ./example -o out.bin < ../data/test_sequence
+
+```C++
+#include <iostream>
+
+#include "../external/essentials/include/essentials.hpp"
+#include "builder.hpp"
+#include "s_sequence.hpp"
+#include "select.hpp"
+#include "decode.hpp"
+
+using namespace sliced;
+
+int main(int argc, char** argv) {
+    int mandatory = 1;
+    char const* output_filename = nullptr;
+
+    for (int i = mandatory; i != argc; ++i) {
+        if (std::string(argv[i]) == "-o") {
+            ++i;
+            output_filename = argv[i];
+        } else if (std::string(argv[i]) == "-h") {
+            std::cout << argv[0] << " -o output_filename < input" << std::endl;
+            return 1;
+        } else {
+            std::cout << "unknown option '" << argv[i] << "'" << std::endl;
+            return 1;
+        }
+    }
+
+    std::vector<uint32_t> input;
+
+    {  // read input from std::in
+        uint32_t n, x;
+        std::cin >> n;
+        input.reserve(n);
+        for (uint32_t i = 0; i != n; ++i) {
+            std::cin >> x;
+            input.push_back(x);
+        }
+    }
+
+    // build the sequence and print statistics
+    s_sequence::builder builder;
+    auto stats = builder.build(input.data(), input.size());
+    stats.print();
+
+    mm::file_source<uint8_t> mm_file;
+    uint8_t const* data = nullptr;
+
+    if (output_filename) {  // if an output file is specified, then serialize
+        essentials::print_size(builder);
+        essentials::save<s_sequence::builder>(builder, output_filename);
+
+        // mmap
+        int advice = mm::advice::normal;  // can be also random and sequential
+        mm_file.open(output_filename, advice);
+
+        // skip first 8 bytes storing the number of written bytes
+        data = mm_file.data() + 8;
+
+    } else {  // otherwise work directly in memory
+        data = builder.data();
+    }
+
+    // initialize a s_sequence from data, regardless the source
+    s_sequence ss(data);
+
+    uint32_t size = ss.size();
+
+    // decode whole list to an output buffer
+    std::vector<uint32_t> out(size);
+    ss.decode(out.data());
+    // check written values
+    uint32_t value = 0;
+    for (uint32_t i = 0; i != size; ++i) {
+        if (input[i] != out[i]) {
+            std::cout << "got " << out[i] << " but expected " << input[i]
+                      << std::endl;
+            return 1;
+        }
+
+        ss.select(i, value);  // select i-th element
+        if (value != out[i]) {
+            std::cout << "got " << value << " but expected " << out[i]
+                      << std::endl;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+```
+
+Building a collection of sequences
+----------------------------------
+
+Typically, we want to build all the sequences from
+a collection.
+In this case, we assume that the input collection
+is a binary file with all the sequences being written
+as 32-bit integers, as popular for also other libraries
+such as [`ds2i`](https://github.com/ot/ds2i).
+In particular, each sequence is prefixed by an additional
+32-bit integer representing the size of the sequence.
+The collection file starts with a singleton sequence
+containing the universe of representation of the sequences, i.e., the maximum representable value.
+
+For example, an test input collection with 100 sequences drawn
+from a universe of size 1,000,000 can be generated
+with
+
+	$ ./gen_clustered_data 100 1000000 test_collection --binary
+
+To build an index from such collection, then use
+
+	$ ./build test_collection 0.01 -o test_collection.out
+	
+with a density threshold of 0.01 and an output file
+`test_collection.out` onto which the data structure is serialized.
+You should get an output like:
+
+	universe size: 1000000
+	processed 100 sequences, 45911859 integers
+	chunks: 1572
+	full chunks: 466 (66.5183% of ints)
+	empty chunks: 310 (19.7201% of chunks)
+	dense chunks: 513 (30.3916% of ints)
+	sparse chunks: 283 (3.09016% of ints)
+	blocks: 23395
+	empty blocks: 14 (0.0598418% of blocks)
+	dense blocks: 7614 (2.53826% of ints)
+	sparse blocks: 15767 (0.551905% of ints)
+	0.00179405 [bpi] for chunks' headers
+	0.00540078 [bpi] for blocks' headers
+	0.732272 [bpi] for dense chunks
+	0.0424549 [bpi] for dense blocks
+	0.0468998 [bpi] for sparse blocks
+	total bytes: 4757416
+	total bpi: 0.828965
+
+from which you can see some statistics about the built data structure.
+
+Operations
+----------
+
+Given a single *sliced* sequence, it is possible to execute the
+following operations (see also `include/s_sequence.hpp`):
+
+```C++
+  	/* decode the sequence to the output buffer */
+    size_t decode(uint32_t* out);
+    
+    /* convert the sequence to an output bitmap */ 
+    size_t uncompress(uint64_t* out);
+    
+    /* select the i-th value */
+    bool select(uint32_t i, uint32_t& value);
+    
+    /* check if value is present in the sequence */
+    bool contains(uint32_t value);
+    
+    /* returns the minimum value that is >= lower_bound
+       if found, otherwise a "not found" value is returned */
+    uint32_t next_geq(uint32_t lower_bound);
+```
+
+Given a collection of (at least 2) *sliced* sequences, it is possible to intersect and merge two sequences
+(see also `include/intersection.hpp` and `include/union.hpp`
+respectively):
+
+```C++
+	/* writes the result of the intersection between l and s to the output buffer,
+	   returning the size of the result */
+	size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
+                             uint32_t* out);
+                             
+	/* writes the result of the union between l and s to the output buffer,
+	   returning the size of the result */                     
+	size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);                          
+```
+
+The source `src` folder contains programs to benchmark such operations.
+
+#### Example 1.
+Use:
+
+	$ ./decode test_collection.out
+
+to decode all the sequences in the collection. You should get something
+like:
+
+	decoded 100 sequences
+	decoded 45911859 integers
+	Elapsed time: 0.034721 [sec]
+	Mean per sequence: 347.21 [musec]
+	Mean per integer: 0.756253 [ns]
+
+#### Example 2.
+To execute some intersection operations, first generate some queries with
+
+	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
+
+and then run
+
+	$ ./intersect test_collection.out 1000 < test_pairwise_queries
+	
+You should get something like:
+	
+	performing 1000 pairwise-intersections...
+	Mean per run: 136562 [musec]
+	Mean per query: 136.562 [musec]
+	
+Testing
+-------
+The subfolder `test` contains testing programs to maintain
+the correctness of the implementation.
+
+To run a test, just run the corresponding program without
+argument to see the required ones.
+
+For example, to test decoding correctness, use
+
+	$ ./test_decode test_collection.out ../data/test_collection 0.01
+
+which will check every decoded integer against the original input
+collection (note that you must provide the *correct* original input collection as well as the *density level* it was used during building).
+
+Tools
+-----
+The subfolder `tools` contains some programs generating
+synthetic data to test the code.
+
+For example, the sequence `data/test_sequence` was generated with
+
+	$ ./gen_clustered_data 1 1000000 test_sequence
+
+The collection `data/test_collection` was generated with
+
+	$ ./gen_clustered_data 100 1000000 test_collection --binary
+
+The queries `data/test_pairwise_queries` were generated with
+	
+	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
 
-		CLUEWEB09 (d = 0.001)
-		processed 21924 sequences, 13864451283 integers
-		chunks: 14220978
-		full chunks: 712 (0.336556% of ints)
-		empty chunks: 118978 (0.836637% of chunks)
-		dense chunks: 84428 (19.3996% of ints)
-		sparse chunks: 14016860 (80.2639% of ints)
-		blocks: 3464202407
-		empty blocks: 2265160718 (65.3877% of blocks)
-		dense blocks: 79113925 (41.7708% of ints)
-		sparse blocks: 1119927764 (38.4931% of ints)
-		0.0670807 [bpi] for chunks' headers
-		0.737515 [bpi] for blocks' headers
-		0.399083 [bpi] for dense chunks
-		1.4608 [bpi] for dense blocks
-		3.72566 [bpi] for sparse blocks
-		total bytes: 11074648021
-		total bpi: 6.39024
-
-    	CCNEWS (d = 0.001)
-		processed 23085 sequences, 18969946075 integers
-		chunks: 15010868
-		full chunks: 0 (0% of ints)
-		empty chunks: 4580 (0.0305112% of chunks)
-		dense chunks: 305016 (36.3812% of ints)
-		sparse chunks: 14701272 (63.6188% of ints)
-		blocks: 3717284783
-		empty blocks: 1774286703 (47.7307% of blocks)
-		dense blocks: 69579620 (19.8884% of ints)
-		sparse blocks: 1873418460 (43.7303% of ints)
-		0.05217 [bpi] for chunks' headers
-		0.848744 [bpi] for blocks' headers
-		1.05375 [bpi] for dense chunks
-		0.938979 [bpi] for dense blocks
-		4.28848 [bpi] for sparse blocks
-		total bytes: 17030745141
-		total bpi: 7.1822
-		
-- Decoding
-
-		➜  build git:(master) ✗ ./decode gov2.no_full_blocks.bin2                                                                                                                         
-		decoded 13276 sequences                                                                                                                                                           
-		decoded 5066748826 integers                                                                                                                                                       
-		Elapsed time: 2.87556 [sec]
-		Mean per sequence: 216.598 [musec]
-		Mean per integer: 0.567535 [ns]
-		Roaring: 0.529489 [ns]
-		
-		➜  build git:(master) ✗ ./decode clueweb09.no_full_blocks.bin2
-		decoded 21924 sequences
-		decoded 13864451283 integers
-		Elapsed time: 9.13543 [sec]
-		Mean per sequence: 416.686 [musec]
-		Mean per integer: 0.65891 [ns]
-		Roaring: 0.700808 [ns]
-		
-		➜  build git:(master) ✗ ./decode ccnews.no_full_blocks.bin2
-		decoded 23085 sequences
-		decoded 18969946075 integers
-		Elapsed time: 12.1735 [sec]
-		Mean per sequence: 527.336 [musec]
-		Mean per integer: 0.641728 [ns]
-		Roaring: 0.685912 [ns]
-		
-- Uncompressing
-
-		➜  build git:(master) ✗ ./uncompress gov2.no_full_blocks.bin2                                                                                                                     
-		decoded 13276 sequences                                                                                                                                                           
-		decoded 5066748826 integers                                                                                                                                                       
-		Elapsed time: 1.79108 [sec]
-		Mean per sequence: 134.911 [musec]
-		Mean per integer: 0.353496 [ns]
-		
-		➜  build git:(master) ✗ ./uncompress clueweb09.no_full_blocks.bin2                                                                                                                
-		decoded 21924 sequences                                                                                                                                                           
-		decoded 13864451283 integers                                                                                                                                                      
-		Elapsed time: 9.87102 [sec]
-		Mean per sequence: 450.238 [musec]
-		Mean per integer: 0.711966 [ns]
-
-
-		➜  build git:(master) ✗ ./uncompress ccnews.no_full_blocks.bin2
-		decoded 23085 sequences
-		decoded 18969946075 integers
-		Elapsed time: 14.3469 [sec]
-		Mean per sequence: 621.48 [musec]
-		Mean per integer: 0.756295 [ns]
-
-- Intersection
-
-		➜  build git:(master) ✗ ./intersect gov2.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K                                     
-		reading queries...                                                                                                                                                                
-		DONE
-		performing 1000 pairwise-intersections...                                                                                                                                         
-		163312853
-		Mean per run: 130174 [musec]
-		Mean per query: 130.174 [musec]
-		Roaring: 98 [musec]
-		
-		➜  build git:(master) ✗ ./intersect clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
-		reading queries...
-		DONE
-		performing 1000 pairwise-intersections...                                                                                                                                         
-		122236213
-		Mean per run: 360178 [musec]
-		Mean per query: 360.178 [musec]
-		Roaring: 231 [musec]
-	   
-		➜  build git:(master) ✗ ./intersect ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K                                 
-		reading queries...                                                                                                                                                                
-		DONE                                                                                                                                                                            
-		performing 1000 pairwise-intersections...
-		415462927
-		Mean per run: 792785 [musec]
-		Mean per query: 792.785 [musec]
-		Roaring: 350 [musec]
-		         
-- Union
-
-		➜  build git:(master) ✗ ./union gov2.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/gov2/random.queries.u13276.1K
-		reading queries...
-		DONE
-		performing 1000 pairwise-unions...
-		8211899850
-		Mean per run: 581382 [musec]                                                                                                                                                      
-		Mean per query: 581.382 [musec] 
-		Roaring: 677.746000 [musecs]
-		
-		➜  build git:(master) ✗ ./union clueweb09.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/clueweb09/random.queries.u21924.1K
-		reading queries...
-		DONE
-		performing 1000 pairwise-unions...
-		14380225728
-		Mean per run: 1.29741e+06 [musec]
-		Mean per query: 1297.41 [musec]
-		Roaring: 1635.801100 [musecs]
-		
-		➜  build git:(master) ✗ ./union ccnews.no_full_blocks.bin2 1000 < ~/CRoaring/benchmarks/realdata/ds2i/queries/ccnews/random.queries.u23085.1K
-		reading queries...
-		DONE
-		performing 1000 pairwise-unions...
-		20505167914
-		Mean per run: 2.25071e+06 [musec]
-		Mean per query: 2250.71 [musec]
-		Roaring: 2153.428200 [musecs]
-		
-- Select
-
-		➜  build git:(master) ✗ ./select gov2.no_full_blocks.bin3 13276000 < gov2.select_queries2                     
-		reading queries...
-		DONE
-		performing 13276000 select queries...
-		636846348152652
-		Mean per run: 2.2946e+06 [musec]
-		Mean per query: 0.172838 [musec]
-		Roaring: 0.287290 [musecs]
-		
-		➜  build git:(master) ✗ ./select clueweb09.no_full_blocks.bin3 21924000 < clueweb09.select_queries
-		reading queries...
-		DONE
-		performing 21924000 select queries...
-		1951476283887376
-		Mean per run: 7.19159e+06 [musec]
-		Mean per query: 0.328023 [musec]
-		Roaring: 0.456158 [musecs]
-		
-		➜  build git:(master) ✗ ./select ccnews.no_full_blocks.bin3 23085000 < ccnews.select_queries
-		reading queries...
-		DONE
-		performing 23085000 select queries...
-		1944166548915776
-		Mean per run: 8.15949e+06 [musec]
-		Mean per query: 0.353454 [musec]
-		Roaring: 0.438018 [musecs]		
-		
-- Contains
-
-		➜  build git:(master) ✗ ./contains gov2.no_full_blocks.bin3 13276000 < gov2.contains_queries                                                                             [12/1953]
-		reading queries...                                                                                                                                                                
-		DONE                                                                                                                                                                              
-		performing 13276000 contains queries...                                                                                                                                           
-		53104000                                                                                                                                                                          
-		Mean per run: 1.23467e+06 [musec]
-		Mean per query: 0.0930005 [musec]
-		Roaring: 0.067059 [musecs]
-		
-		➜  build git:(master) ✗ ./contains clueweb09.no_full_blocks.bin3 21924000 < clueweb09.contains_queries
-		reading queries...
-		DONE
-		performing 21924000 contains queries...
-		87696000
-		Mean per run: 2.5195e+06 [musec]
-		Mean per query: 0.11492 [musec]
-		Roaring: 0.104661 [musecs]
-		
-		➜  build git:(master) ✗ ./contains ccnews.no_full_blocks.bin3 23085000 < ccnews.contains_queries
-		reading queries...
-		DONE
-		performing 23085000 contains queries...
-		92340000
-		Mean per run: 3.51994e+06 [musec]
-		Mean per query: 0.152477 [musec]
-		Roaring: 0.121576 [musecs]
-		
-- Nextgeq
-
-		➜  build git:(master) ✗ ./next_geq gov2.no_full_blocks.bin3 13276000 < gov2.contains_queries
-		reading queries...
-		DONE
-		performing 13276000 next_geq queries...
-		636846348152652
-		Mean per run: 1.18542e+06 [musec]
-		Mean per query: 0.0892906 [musec]
-		Roaring: 0.089513 [musecs]
-		
-		➜  build git:(master) ✗ ./next_geq clueweb09.no_full_blocks.bin3 21924000 < clueweb09.contains_queries
-		reading queries...
-		DONE
-		performing 21924000 next_geq queries...
-		1951476283887376
-		Mean per run: 2.40277e+06 [musec]
-		Mean per query: 0.109595 [musec]
-		Roaring: 0.118386 [musecs]
-
-		➜  build git:(master) ✗ ./next_geq ccnews.no_full_blocks.bin3 23085000 < ccnews.contains_queries 
-		reading queries...
-		DONE
-		performing 23085000 next_geq queries...
-		1944166548915776
-		Mean per run: 3.08929e+06 [musec]
-		Mean per query: 0.133822 [musec]
-		Roaring: 0.135233 [musecs]
+Authors
+-------
+* [Giulio Ermanno Pibiri](http://pages.di.unipi.it/pibiri/), <giulio.ermanno.pibiri@isti.cnr.it>
