@@ -1,6 +1,5 @@
 Sliced Indexes
 ==============
---
 
 A C++ implementation of *sliced* indexes.
 
