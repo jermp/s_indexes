@@ -11,7 +11,9 @@ This guide is meant to provide a brief overview of the library and to illustrate
 * [Operations](#operations)
 * [Testing](#testing)
 * [Tools](#tools)
+* [An example microbenchark](#an-example-microbenchmark)
 * [Authors](#authors)
+* [References](#references)
 
 Compiling the code
 ------------------
@@ -308,7 +310,48 @@ A test query log can be generated with
 	
 	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
+An example microbenchmark
+-----
+In the following microbenchmark we show the number of bits per integer (bpi) and average microseconds per list intersection query.
+
+We compare Slicing with Roaring [1] and Partitioned Elias-Fano [2].
+
+We use the datasets Census-Income, Census-1881, Weather and Wikileaks shipped with the [CRoaring Library](https://github.com/RoaringBitmap/CRoaring) (see directory `benchmarks/realdata`).
+See [1] for a description of such datasets.
+
+To measure the bpi rate, we serialize the data structures and take the written number of bytes.
+To measure query timings, we compute 1,000 intersections between
+random pairs of lists for 10 times and report the average.
+
+The benchmark was executed on a Linux 4.4.0 server machine with
+an Intel i7-7700 CPU (@3.6 GHz) and 64 GB of RAM.
+The code was compiled with gcc 7.3.0 with all optimizations
+(see also `CMakeLists.txt`).
+
+#### Table 1. Bits per integer
+|**Dataset** |**Roaring** | **Slicing**  | **PEF**|
+|------------|-----------:|-------------:|-------:|
+|Census-Income|	2.74	   |2.23	|2.03|
+|Census-1881|	  15.93      |	10.83|	7.28|
+|Weather	|     5.43      |	4.05|	3.13|
+|Wikileaks|	  16.30      |	10.18|	8.87|
+
+#### Table 2. µsec per list intersection
+|**Dataset**  |**Roaring** | **Slicing**  | **PEF**|
+|-------------|-----------:|-------------:|-------:|
+|Census-Income|	4.68	|11.56|	115.17|
+|Census-1881  |	0.15	|0.18	|0.92|
+|Weather	    |  13.37	|25.70	|213.00|
+|Wikileaks    |	0.86	|0.47	|2.51|
 
 Authors
 -------
 * [Giulio Ermanno Pibiri](http://pages.di.unipi.it/pibiri/), <giulio.ermanno.pibiri@isti.cnr.it>
+
+References
+-------
+
+* [1] Daniel Lemire, Owen Kaser, Nathan Kurz, Luca Deri, Chris O’Hara, François Saint-Jacques, and Gregory Ssi-Yan-Kai. 2018. *Roaring bitmaps: Implementation of an optimized software library*. Software: Practice and Experience 48, 4,
+867–895.
+* [2] Giuseppe Ottaviano and Rossano Venturini. *Partitioned Elias-Fano Indexes*. 2014. In Proceedings of the 37th International
+Conference on Research and Development in Information Retrieval. 273–282.
