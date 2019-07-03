@@ -1,7 +1,7 @@
 Sliced Indexes
 ==============
 
-A C++ implementation of *sliced* indexes.
+A C++ implementation of [*sliced indexes*](https://arxiv.org/abs/1907.01032) [3].
 
 This guide is meant to provide a brief overview of the library and to illustrate its functionalities through some examples.
 ##### Table of contents
@@ -22,7 +22,7 @@ The code is tested on Linux with `gcc` 7.3.0 and on Mac 10.14 with `clang` 10.0.
 To build the code, [`CMake`](https://cmake.org/) is required.
 
 The code has few external dependencies (for testing, serialization and memory-mapping facilities), so clone the repository with
-	
+
 	$ git clone --recursive https://github.com/jermp/s_indexes.git
 
 If you have cloned the repository without `--recursive`, you will need to perform the following commands before
@@ -183,7 +183,7 @@ with
 To build an index from such collection, then use
 
 	$ ./build test_collection 0.01 -o test_collection.out
-	
+
 with a density threshold of 0.01 and an output file
 `test_collection.out` onto which the data structure is serialized.
 You should get an output like:
@@ -218,16 +218,16 @@ following operations (see also `include/s_sequence.hpp`):
 ```C++
 /* decode the sequence to the output buffer */
 size_t decode(uint32_t* out);
-    
-/* convert the sequence to an output bitmap */ 
+
+/* convert the sequence to an output bitmap */
 size_t uncompress(uint64_t* out);
-    
+
 /* select the i-th value */
 bool select(uint32_t i, uint32_t& value);
-    
+
 /* check if value is present in the sequence */
 bool contains(uint32_t value);
-    
+
 /* returns the minimum value that is >= lower_bound
    if found, otherwise a "not found" value is returned */
 uint32_t next_geq(uint32_t lower_bound);
@@ -241,10 +241,10 @@ respectively):
 /* writes the result of the intersection between l and s to the output buffer,
    returning the size of the result */
 size_t pairwise_intersection(s_sequence const& l, s_sequence const& r, uint32_t* out);
-                             
+
 /* writes the result of the union between l and s to the output buffer,
-   returning the size of the result */                     
-size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);                          
+   returning the size of the result */
+size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);
 ```
 
 The source `src` folder contains programs to benchmark such operations.
@@ -271,13 +271,13 @@ To execute some intersection operations, first generate some queries with
 and then run
 
 	$ ./intersect test_collection.out 1000 < test_pairwise_queries
-	
+
 You should get something like:
-	
+
 	performing 1000 pairwise-intersections...
 	Mean per run: 136562 [musec]
 	Mean per query: 136.562 [musec]
-	
+
 Testing
 -------
 The subfolder `test` contains testing programs to maintain
@@ -307,7 +307,7 @@ A test collection can be generated with
 	$ ./gen_clustered_data 100 1000000 test_collection --binary
 
 A test query log can be generated with
-	
+
 	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
 An example microbenchmark
@@ -355,3 +355,4 @@ References
 867–895.
 * [2] Giuseppe Ottaviano and Rossano Venturini. *Partitioned Elias-Fano Indexes*. 2014. In Proceedings of the 37th International
 Conference on Research and Development in Information Retrieval. 273–282.
+* [3] Giulio Ermanno Pibiri. *On Slicing Sorted Integer Sequences*. 2019. arXiv preprint. https://arxiv.org/abs/1907.01032
