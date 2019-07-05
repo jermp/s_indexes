@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
         } else if (std::string(argv[i]) == "--size") {
             ++i;
             params.size = std::atoi(argv[i]);
-        } else if (std::string(argv[i]) == "-o") {
+        } else if (std::string(argv[i]) == "--out") {
             ++i;
             output_filename = argv[i];
         }
