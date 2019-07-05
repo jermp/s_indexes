@@ -19,22 +19,27 @@ void build(parameters const& params, char const* output_filename) {
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 3;
+    int mandatory = 2;
     if (argc < mandatory) {
         std::cout << argv[0]
-                  << " <collection_filename> <density> [-o output_filename]"
+                  << " <collection_filename> [--density d] [--size s] [--out "
+                     "output_filename]"
                   << std::endl;
         return 1;
     }
 
     parameters params;
     params.collection_filename = argv[1];
-    params.density = std::stod(argv[2]);
-
     char const* output_filename = nullptr;
 
     for (int i = mandatory; i != argc; ++i) {
-        if (std::string(argv[i]) == "-o") {
+        if (std::string(argv[i]) == "--density") {
+            ++i;
+            params.density = std::stod(argv[i]);
+        } else if (std::string(argv[i]) == "--size") {
+            ++i;
+            params.size = std::atoi(argv[i]);
+        } else if (std::string(argv[i]) == "-o") {
             ++i;
             output_filename = argv[i];
         }

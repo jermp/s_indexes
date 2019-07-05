@@ -182,7 +182,7 @@ with
 
 To build an index from such collection, then use
 
-	$ ./build test_collection 0.01 -o test_collection.out
+	$ ./build test_collection --density 0.01 --out test_collection.out
 
 with a density threshold of 0.01 and an output file
 `test_collection.out` onto which the data structure is serialized.

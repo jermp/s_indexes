@@ -63,8 +63,14 @@ uint32_t num_chunks(uint64_t universe) {
 enum type { empty = 0, sparse = 1, dense = 3, full = 2 };
 
 struct parameters {
+    parameters()
+        : collection_filename("")
+        , density(-1.0)
+        , size(0) {}
+
     std::string collection_filename;
     double density;
+    uint32_t size;
 };
 
 struct query {
