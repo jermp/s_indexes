@@ -8,8 +8,8 @@
 
 using namespace sliced;
 
-void test_nextgeq(char const* binary_filename, char const* collection_filename,
-                  double density) {
+void test_nextgeq_enumerator(char const* binary_filename,
+                             char const* collection_filename, double density) {
     s_index index;
     index.mmap(binary_filename);
 
@@ -35,9 +35,10 @@ void test_nextgeq(char const* binary_filename, char const* collection_filename,
             }
 
             uint32_t const* list = data + i + 1;
+            next_geq_enumerator e(sequence);
             for (size_t j = 0; j != n; ++j) {
                 auto it = std::lower_bound(list, list + n, j);
-                uint32_t next_geq = sequence.next_geq(j);
+                uint32_t next_geq = e.next_geq(j);
                 assert(next_geq >= j);
                 if (next_geq != *it) {
                     good = false;
@@ -71,7 +72,7 @@ int main(int argc, char** argv) {
     char const* collection_filename = argv[2];
     double density = std::stod(argv[3]);
 
-    test_nextgeq(index_filename, collection_filename, density);
+    test_nextgeq_enumerator(index_filename, collection_filename, density);
 
     return 0;
 }

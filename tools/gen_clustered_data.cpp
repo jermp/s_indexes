@@ -58,8 +58,8 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename,
 
     std::vector<event> events(3);
     events[0] = {event_code::skip, 0.3};
-    events[1] = {event_code::include_all, 0.3};
-    events[2] = {event_code::include_some, 0.4};
+    events[1] = {event_code::include_all, 0.2};
+    events[2] = {event_code::include_some, 0.5};
 
     for (uint32_t i = 0; i != num_lists; ++i) {
         list.clear();
