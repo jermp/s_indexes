@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     int mandatory = 2;
     if (argc < mandatory) {
         std::cout << argv[0]
-                  << " <collection_filename> [--density d] [--size s] [--out "
+                  << " collection_filename [--density d] [--size s] [--out "
                      "output_filename]"
                   << std::endl;
         return 1;

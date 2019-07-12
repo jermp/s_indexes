@@ -9,11 +9,11 @@
 using namespace sliced;
 
 void test_nextgeq_enumerator(char const* binary_filename,
-                             char const* collection_filename, double density) {
+                             parameters const& params) {
     s_index index;
     index.mmap(binary_filename);
 
-    mm::file_source<uint32_t> input(collection_filename,
+    mm::file_source<uint32_t> input(params.collection_filename,
                                     mm::advice::sequential);
     uint32_t const* data = input.data();
     assert(data[0] == 1);
@@ -24,7 +24,15 @@ void test_nextgeq_enumerator(char const* binary_filename,
     for (size_t i = 2; i < input.size();) {
         uint32_t n = data[i];
         uint32_t universe = data[i + n];
-        if (double(n) / universe > density) {
+
+        bool go = false;
+        if (params.density >= 0.0) {
+            if (double(n) / universe > params.density) go = true;
+        } else {
+            if (n > params.size) go = true;
+        }
+
+        if (go) {
             auto sequence = index[k];
             uint32_t c = sequence.cardinality();
 
@@ -61,18 +69,30 @@ void test_nextgeq_enumerator(char const* binary_filename,
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 4;
+    int mandatory = 3;
     if (argc < mandatory) {
-        std::cout << argv[0] << " index_filename collection_filename density"
-                  << std::endl;
+        std::cout
+            << argv[0]
+            << " index_filename collection_filename [--density d] [--size s]"
+            << std::endl;
         return 1;
     }
 
     char const* index_filename = argv[1];
-    char const* collection_filename = argv[2];
-    double density = std::stod(argv[3]);
+    parameters params;
+    params.collection_filename = argv[2];
 
-    test_nextgeq_enumerator(index_filename, collection_filename, density);
+    for (int i = mandatory; i != argc; ++i) {
+        if (std::string(argv[i]) == "--density") {
+            ++i;
+            params.density = std::stod(argv[i]);
+        } else if (std::string(argv[i]) == "--size") {
+            ++i;
+            params.size = std::atoi(argv[i]);
+        }
+    }
+
+    test_nextgeq_enumerator(index_filename, params);
 
     return 0;
 }
