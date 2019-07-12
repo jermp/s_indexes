@@ -73,6 +73,13 @@ struct parameters {
     uint32_t size;
 };
 
+bool pass(parameters const& params, uint32_t n, uint32_t universe) {
+    if (params.density >= 0.0 and double(n) / universe > params.density)
+        return true;
+    if (n > params.size) return true;
+    return false;
+}
+
 struct query {
     uint32_t i;
     uint32_t j;

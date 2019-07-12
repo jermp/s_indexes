@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "../external/mm_file/include/mm_file/mm_file.hpp"
+
+#include "test_common.hpp"
 #include "util.hpp"
 #include "s_index.hpp"
 #include "uncompress.hpp"
@@ -25,12 +27,11 @@ uint32_t decode_bitmap_and_reset(uint64_t* bitmap, size_t size_in_64bit_words,
     return size;
 }
 
-void test_uncompress(char const* binary_filename,
-                     char const* collection_filename, double density) {
+void test(char const* binary_filename, parameters const& params) {
     s_index index;
     index.mmap(binary_filename);
 
-    mm::file_source<uint32_t> input(collection_filename,
+    mm::file_source<uint32_t> input(params.collection_filename,
                                     mm::advice::sequential);
     uint32_t const* data = input.data();
 
@@ -47,7 +48,8 @@ void test_uncompress(char const* binary_filename,
     for (size_t i = 2; i < input.size();) {
         uint32_t n = data[i];
         uint32_t universe = data[i + n];
-        if (double(n) / universe > density) {
+
+        if (pass(params, n, universe)) {
             auto sequence = index[k];
             size_t decoded = sequence.uncompress(bitmap.data());
             size_t d = decode_bitmap_and_reset(bitmap.data(),
@@ -88,19 +90,5 @@ void test_uncompress(char const* binary_filename,
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 4;
-    if (argc < mandatory) {
-        std::cout << argv[0]
-                  << " <index_filename> <collection_filename> <density>"
-                  << std::endl;
-        return 1;
-    }
-
-    char const* index_filename = argv[1];
-    char const* collection_filename = argv[2];
-    double density = std::stod(argv[3]);
-
-    test_uncompress(index_filename, collection_filename, density);
-
-    return 0;
+    TEST return 0;
 }

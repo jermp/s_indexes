@@ -7,8 +7,7 @@
 
 using namespace sliced;
 
-void test_intersection(char const* binary_filename,
-                       std::vector<query> const& queries) {
+void test(char const* binary_filename, std::vector<query> const& queries) {
     s_index index;
     index.mmap(binary_filename);
 
@@ -73,7 +72,7 @@ int main(int argc, char** argv) {
         queries.push_back(q);
     }
 
-    test_intersection(binary_filename, queries);
+    test(binary_filename, queries);
 
     return 0;
 }

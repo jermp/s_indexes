@@ -2,18 +2,18 @@
 
 #include "../external/mm_file/include/mm_file/mm_file.hpp"
 
+#include "test_common.hpp"
 #include "util.hpp"
 #include "s_index.hpp"
 #include "decode.hpp"
 
 using namespace sliced;
 
-void test_decode(char const* binary_filename, char const* collection_filename,
-                 double density) {
+void test(char const* binary_filename, parameters const& params) {
     s_index index;
     index.mmap(binary_filename);
 
-    mm::file_source<uint32_t> input(collection_filename,
+    mm::file_source<uint32_t> input(params.collection_filename,
                                     mm::advice::sequential);
     uint32_t const* data = input.data();
     assert(data[0] == 1);
@@ -25,7 +25,7 @@ void test_decode(char const* binary_filename, char const* collection_filename,
     for (size_t i = 2; i < input.size();) {
         uint32_t n = data[i];
         uint32_t universe = data[i + n];
-        if (double(n) / universe > density) {
+        if (pass(params, n, universe)) {
             auto sequence = index[k];
             size_t decoded = sequence.decode(out.data());
 
@@ -66,19 +66,5 @@ void test_decode(char const* binary_filename, char const* collection_filename,
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 4;
-    if (argc < mandatory) {
-        std::cout << argv[0]
-                  << " <index_filename> <collection_filename> <density>"
-                  << std::endl;
-        return 1;
-    }
-
-    char const* index_filename = argv[1];
-    char const* collection_filename = argv[2];
-    double density = std::stod(argv[3]);
-
-    test_decode(index_filename, collection_filename, density);
-
-    return 0;
+    TEST return 0;
 }

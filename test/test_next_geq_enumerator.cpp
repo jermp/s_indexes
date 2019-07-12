@@ -2,14 +2,14 @@
 
 #include "../external/mm_file/include/mm_file/mm_file.hpp"
 
+#include "test_common.hpp"
 #include "util.hpp"
 #include "s_index.hpp"
 #include "next_geq.hpp"
 
 using namespace sliced;
 
-void test_nextgeq_enumerator(char const* binary_filename,
-                             parameters const& params) {
+void test(char const* binary_filename, parameters const& params) {
     s_index index;
     index.mmap(binary_filename);
 
@@ -25,14 +25,7 @@ void test_nextgeq_enumerator(char const* binary_filename,
         uint32_t n = data[i];
         uint32_t universe = data[i + n];
 
-        bool go = false;
-        if (params.density >= 0.0) {
-            if (double(n) / universe > params.density) go = true;
-        } else {
-            if (n > params.size) go = true;
-        }
-
-        if (go) {
+        if (pass(params, n, universe)) {
             auto sequence = index[k];
             uint32_t c = sequence.cardinality();
 
@@ -69,30 +62,5 @@ void test_nextgeq_enumerator(char const* binary_filename,
 }
 
 int main(int argc, char** argv) {
-    int mandatory = 3;
-    if (argc < mandatory) {
-        std::cout
-            << argv[0]
-            << " index_filename collection_filename [--density d] [--size s]"
-            << std::endl;
-        return 1;
-    }
-
-    char const* index_filename = argv[1];
-    parameters params;
-    params.collection_filename = argv[2];
-
-    for (int i = mandatory; i != argc; ++i) {
-        if (std::string(argv[i]) == "--density") {
-            ++i;
-            params.density = std::stod(argv[i]);
-        } else if (std::string(argv[i]) == "--size") {
-            ++i;
-            params.size = std::atoi(argv[i]);
-        }
-    }
-
-    test_nextgeq_enumerator(index_filename, params);
-
-    return 0;
+    TEST return 0;
 }

@@ -231,15 +231,7 @@ struct s_index::builder {
              i < input.size();) {
             uint32_t n = data[i];
             uint32_t universe = data[i + n];
-
-            bool can_encode = false;
-            if (m_params.density >= 0.0) {
-                if (double(n) / universe > m_params.density) can_encode = true;
-            } else {
-                if (n > m_params.size) can_encode = true;
-            }
-
-            if (can_encode) {
+            if (pass(m_params, n, universe)) {
                 encode_sequence(data + i + 1, n, block, stats, m_sequences);
                 m_offsets.push_back(m_sequences.size());
                 if (stats.sequences % 1000 == 0) {
