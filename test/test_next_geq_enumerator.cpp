@@ -5,7 +5,7 @@
 #include "test_common.hpp"
 #include "util.hpp"
 #include "s_index.hpp"
-#include "next_geq.hpp"
+#include "next_geq_enumerator.hpp"
 
 using namespace sliced;
 
