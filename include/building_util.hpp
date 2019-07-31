@@ -75,6 +75,7 @@ void block_bitsize(size_t block_size, statistics& stats) {
         stats.sparse_blocks += 1;
         stats.integers_in_sparse_blocks += block_size;
         stats.sparse_blocks_bits += 8 * (block_size + 1);
+        stats.sparse_blocks_cardinalities[block_size] += 1;
     }
 }
 

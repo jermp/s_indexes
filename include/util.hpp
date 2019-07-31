@@ -118,6 +118,8 @@ struct statistics {
     uint64_t dense_blocks_bits;
     uint64_t sparse_blocks_bits;
 
+    uint64_t sparse_blocks_cardinalities[1 + 30];
+
     void accumulate(statistics const& other) {
         dense_blocks += other.dense_blocks;
         sparse_blocks += other.sparse_blocks;
@@ -126,6 +128,11 @@ struct statistics {
         integers_in_sparse_blocks += other.integers_in_sparse_blocks;
         dense_blocks_bits += other.dense_blocks_bits;
         sparse_blocks_bits += other.sparse_blocks_bits;
+
+        for (int i = 1; i != 30 + 1; i++) {
+            sparse_blocks_cardinalities[i] +=
+                other.sparse_blocks_cardinalities[i];
+        }
     }
 
     void print() {
@@ -170,6 +177,17 @@ struct statistics {
 
         std::cout << "total bytes: " << bits / 8 << std::endl;
         std::cout << "total bpi: " << double(bits) / integers << std::endl;
+
+        std::cout << "== sparse blocks cardinalities ==" << std::endl;
+        double expected_value = 0.0;
+        for (int i = 1; i != 30 + 1; ++i) {
+            double p_i = static_cast<double>(sparse_blocks_cardinalities[i]) /
+                         sparse_blocks;
+            std::cout << "sparse blocks with card. " << i << ": " << p_i * 100.0
+                      << std::endl;
+            expected_value += i * p_i;
+        }
+        std::cout << "expected_value " << expected_value << std::endl;
     }
 };
 
