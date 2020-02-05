@@ -13,7 +13,12 @@ struct next_geq_enumerator {
         , m_begin(nullptr)
         , m_end(nullptr)
         , m_data(nullptr)
+        , m_size(s.size())
         , m_it(s.begin()) {}
+
+    uint64_t size() const {
+        return m_size;
+    }
 
     uint32_t next_geq(uint32_t value) {
         uint32_t chunk_id = value >> 16;
@@ -112,6 +117,8 @@ private:
     uint8_t const* m_begin;
     uint8_t const* m_end;
     uint8_t const* m_data;
+    uint64_t m_size;
     s_sequence::iterator m_it;
 };
+
 }  // namespace sliced
