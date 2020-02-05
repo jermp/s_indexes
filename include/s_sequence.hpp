@@ -51,6 +51,13 @@ struct s_sequence {
     }
 
     struct iterator {
+        iterator()
+            : pointers(nullptr)
+            , header(nullptr)
+            , data(nullptr)
+            , begin(0)
+            , end(0) {}
+
         iterator(s_sequence const& s, uint32_t begin, uint32_t end)
             : pointers(s.pointers())
             , header(s.header())
@@ -138,7 +145,7 @@ struct s_sequence {
         uint16_t const* header;
         uint8_t const* data;
         uint32_t begin;
-        const uint32_t end;
+        uint32_t end;
 
     private:
         inline uint32_t skip_position() const {

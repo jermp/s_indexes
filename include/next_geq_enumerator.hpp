@@ -5,6 +5,8 @@
 namespace sliced {
 
 struct next_geq_enumerator {
+    next_geq_enumerator() {}
+
     next_geq_enumerator(s_sequence const& s)
         : m_chunk_id(-1)
         , m_id(0)
