@@ -74,7 +74,7 @@ uint32_t select_sparse_chunk(uint8_t const* begin, int blocks, uint32_t rank) {
     return elements;
 }
 
-bool s_sequence::select(uint32_t rank, uint32_t& value) {
+bool s_sequence::select(uint32_t rank, uint32_t& value) const {
     auto it = begin();
     uint32_t elements = it.skip_to_position(rank);
     if (it.has_next()) {

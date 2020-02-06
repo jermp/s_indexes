@@ -149,7 +149,7 @@ uint32_t min_value_in_sparse_chunk(uint8_t const* begin, int blocks) {
     BLOCK_MIN
 }
 
-uint32_t s_sequence::next_geq(uint32_t value) {
+uint32_t s_sequence::next_geq(uint32_t value) const {
     auto it = begin();
     uint32_t chunk_id = value >> 16;
     it.skip_to_value(chunk_id);

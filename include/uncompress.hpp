@@ -90,7 +90,7 @@ inline uint32_t uncompress_full_chunk(uint64_t* out) {
     return constants::chunk_size;
 }
 
-size_t s_sequence::uncompress(uint64_t* out) {
+size_t s_sequence::uncompress(uint64_t* out) const {
     auto it = begin();
     size_t uncompressed = 0;
     uint16_t prev = 0;

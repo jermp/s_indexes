@@ -108,7 +108,7 @@ size_t decode_chunk(s_sequence::iterator const& it, uint32_t* out) {
     }
 }
 
-size_t s_sequence::decode(uint32_t* out) {
+size_t s_sequence::decode(uint32_t* out) const {
     auto it = begin();
     uint32_t* in = out;
     for (uint32_t i = 0; i != chunks; ++i) {

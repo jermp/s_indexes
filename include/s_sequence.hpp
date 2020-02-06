@@ -7,6 +7,12 @@ namespace sliced {
 struct s_sequence {
     struct builder;
 
+    s_sequence()
+        : chunks(0)
+        , m_pointers(nullptr)
+        , m_header(nullptr)
+        , m_data(nullptr) {}
+
     s_sequence(uint8_t const* addr) {
         uint16_t const* ptr = reinterpret_cast<uint16_t const*>(addr);
         chunks = 1 + *ptr++;
@@ -18,11 +24,11 @@ struct s_sequence {
         m_data = addr + sizeof(uint16_t) + pointers_bytes + header_bytes;
     }
 
-    size_t decode(uint32_t* out);
-    size_t uncompress(uint64_t* out);
-    bool select(uint32_t rank, uint32_t& value);
-    bool contains(uint32_t value);
-    uint32_t next_geq(uint32_t value);
+    size_t decode(uint32_t* out) const;
+    size_t uncompress(uint64_t* out) const;
+    bool select(uint32_t rank, uint32_t& value) const;
+    bool contains(uint32_t value) const;
+    uint32_t next_geq(uint32_t value) const;
 
     uint32_t const* pointers() const {
         return m_pointers;

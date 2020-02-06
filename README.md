@@ -217,20 +217,20 @@ following operations (see also `include/s_sequence.hpp`):
 
 ```C++
 /* decode the sequence to the output buffer */
-size_t decode(uint32_t* out);
+size_t decode(uint32_t* out) const;
 
 /* convert the sequence to an output bitmap */
-size_t uncompress(uint64_t* out);
+size_t uncompress(uint64_t* out) const;
 
 /* select the i-th value */
-bool select(uint32_t i, uint32_t& value);
+bool select(uint32_t i, uint32_t& value) const;
 
 /* check if value is present in the sequence */
-bool contains(uint32_t value);
+bool contains(uint32_t value) const;
 
 /* returns the minimum value that is >= lower_bound
    if found, otherwise a "not found" value is returned */
-uint32_t next_geq(uint32_t lower_bound);
+uint32_t next_geq(uint32_t lower_bound) const;
 ```
 
 Given a collection of (at least 2) *sliced* sequences, it is possible to intersect and merge two sequences
