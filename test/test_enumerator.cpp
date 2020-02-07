@@ -28,7 +28,7 @@ void test(char const* binary_filename, parameters const& params) {
         uint32_t universe = data[i + n];
         if (pass(params, n, universe)) {
             auto sequence = index[k];
-            e.init(sequence);
+            e.init(sequence, index.universe());
 
             uint32_t const* ptr = data + i + 1;
             for (size_t j = 0; j != n; ++j, e.next()) {
