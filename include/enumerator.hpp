@@ -20,6 +20,10 @@ struct enumerator {
         decode_chunk(m_it, m_buf.data());
     }
 
+    bool has_next() const {
+        return m_has_next;
+    }
+
     void next() {
         if (++m_i == m_cardinality) {
             if (++m_chunk == m_chunks) {

@@ -5,6 +5,8 @@
 #include "s_index.hpp"
 #include "intersection.hpp"
 
+#include "intersection_many.hpp"
+
 using namespace sliced;
 
 void test(char const* binary_filename, std::vector<query> const& queries) {
@@ -26,7 +28,12 @@ void test(char const* binary_filename, std::vector<query> const& queries) {
                                   j.begin() + j_size, expected.begin());
         size_t expected_size = it - expected.begin();
 
-        size_t size = pairwise_intersection(index[q.i], index[q.j], out.data());
+        std::vector<s_sequence> sequences(2);
+        sequences[0] = index[q.i];
+        sequences[1] = index[q.j];
+        size_t size = intersection(sequences, out.data());
+        // size_t size = pairwise_intersection(index[q.i], index[q.j],
+        // out.data());
 
         if (expected_size != size) {
             good = false;

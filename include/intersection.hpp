@@ -196,7 +196,7 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
 
 size_t ds_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_r,
                           uint32_t base, uint32_t* out) {
-    static std::vector<uint64_t> x(1024);
+    static std::vector<uint64_t> x(constants::chunk_size_in_64bit_words);
     std::fill(x.begin(), x.end(), 0);
     uncompress_sparse_chunk(r, blocks_r, x.data());
     return and_bitmaps(l, reinterpret_cast<uint8_t const*>(x.data()),

@@ -72,7 +72,8 @@ struct s_sequence {
             , end(end) {}
 
         inline uint32_t id() const {
-            return *header;
+            // return *header;
+            return has_next() ? *header : 65536;  // saturate
         }
 
         inline uint32_t base() const {

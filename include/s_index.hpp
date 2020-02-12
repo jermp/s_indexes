@@ -20,7 +20,7 @@ struct s_index {
         return m_universe;
     }
 
-    s_sequence operator[](size_t i) {
+    s_sequence operator[](size_t i) const {
         assert(i < size());
         return s_sequence(m_sequences + m_offsets[i]);
     }

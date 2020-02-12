@@ -90,29 +90,30 @@ inline uint32_t uncompress_full_chunk(uint64_t* out) {
     return constants::chunk_size;
 }
 
+inline size_t uncompress_chunk(s_sequence::iterator const& it, uint64_t* out) {
+    switch (it.type()) {
+        case type::sparse: {
+            for (uint64_t i = 0; i != 1024; ++i) out[i] = 0;
+            return uncompress_sparse_chunk(it.data, it.blocks(), out);
+        }
+        case type::dense:
+            return uncompress_dense_chunk(it.data, out);
+        case type::full:
+            return uncompress_full_chunk(out);
+        default:
+            assert(false);
+            __builtin_unreachable();
+    }
+}
+
 size_t s_sequence::uncompress(uint64_t* out) const {
     auto it = begin();
     size_t uncompressed = 0;
     uint16_t prev = 0;
     for (uint32_t i = 0; i != chunks; ++i) {
         uint16_t id = it.id();
-        uint32_t u = 0;
         out += (id - prev) * constants::chunk_size_in_64bit_words;
-        switch (it.type()) {
-            case type::sparse:
-                u = uncompress_sparse_chunk(it.data, it.blocks(), out);
-                break;
-            case type::dense:
-                u = uncompress_dense_chunk(it.data, out);
-                break;
-            case type::full:
-                u = uncompress_full_chunk(out);
-                break;
-            default:
-                assert(false);
-                __builtin_unreachable();
-        }
-        uncompressed += u;
+        uncompressed += uncompress_chunk(it, out);
         prev = id;
         it.next();
     }
