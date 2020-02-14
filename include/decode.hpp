@@ -6,9 +6,9 @@
 
 namespace sliced {
 
-inline uint32_t decode_bitmap(uint8_t const* begin, size_t size_in_64bit_words,
-                              uint32_t base, uint32_t* out) {
-    uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(begin);
+inline uint32_t decode_bitmap(uint64_t const* bitmap,
+                              size_t size_in_64bit_words, uint32_t base,
+                              uint32_t* out) {
     uint32_t size = 0;
     for (size_t i = 0; i != size_in_64bit_words; ++i) {
         uint64_t w = bitmap[i];
@@ -76,8 +76,8 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
         if (type == type::sparse) {
             tmp += decode_sparse_block(data, c, b, tmp);
         } else {
-            tmp += decode_bitmap(data, constants::block_size_in_64bit_words, b,
-                                 tmp);
+            tmp += decode_bitmap(reinterpret_cast<uint64_t const*>(data),
+                                 constants::block_size_in_64bit_words, b, tmp);
         }
         data += bytes;
         begin += 2;
@@ -98,8 +98,9 @@ size_t decode_chunk(s_sequence::iterator const& it, uint32_t* out) {
         case type::sparse:
             return decode_sparse_chunk(it.data, it.blocks(), base, out);
         case type::dense:
-            return decode_bitmap(it.data, constants::chunk_size_in_64bit_words,
-                                 base, out);
+            return decode_bitmap(reinterpret_cast<uint64_t const*>(it.data),
+                                 constants::chunk_size_in_64bit_words, base,
+                                 out);
         case type::full:
             return decode_full_chunk(base, out);
         default:

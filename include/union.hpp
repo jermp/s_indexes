@@ -79,7 +79,8 @@ inline uint32_t decode_block(uint8_t const* data, int type, int cardinality,
     if (type == type::sparse) {
         return decode_sparse_block(data, cardinality, base, out);
     }
-    return decode_bitmap(data, constants::block_size_in_64bit_words, base, out);
+    return decode_bitmap(reinterpret_cast<uint64_t const*>(data),
+                         constants::block_size_in_64bit_words, base, out);
 }
 
 size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,

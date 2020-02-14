@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     char const* binary_filename = argv[1];
     uint64_t num_queries = std::stoull(argv[2]);
 
-    std::cout << "reading " << num_queries << " queries..." << std::endl;
+    std::cout << "reading queries..." << std::endl;
     std::vector<query_type> queries;
     queries.reserve(num_queries);
     query_type q;

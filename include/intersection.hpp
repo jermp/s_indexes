@@ -251,18 +251,18 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r,
                                     out);
                     break;
                 case chunk_pair(type::dense, type::full):
-                    n = decode_bitmap(it_l.data,
-                                      constants::chunk_size_in_64bit_words,
-                                      base, out);
+                    n = decode_bitmap(
+                        reinterpret_cast<uint64_t const*>(it_l.data),
+                        constants::chunk_size_in_64bit_words, base, out);
                     break;
                 case chunk_pair(type::full, type::sparse):
                     n = decode_sparse_chunk(it_r.data, it_r.blocks(), base,
                                             out);
                     break;
                 case chunk_pair(type::full, type::dense):
-                    n = decode_bitmap(it_r.data,
-                                      constants::chunk_size_in_64bit_words,
-                                      base, out);
+                    n = decode_bitmap(
+                        reinterpret_cast<uint64_t const*>(it_r.data),
+                        constants::chunk_size_in_64bit_words, base, out);
                     break;
                 case chunk_pair(type::full, type::full):
                     n = decode_full_chunk(base, out);

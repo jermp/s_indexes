@@ -4,13 +4,11 @@
 
 namespace sliced {
 
-uint32_t uncompress_sparse_block(uint8_t const* begin, int cardinality,
-                                 uint64_t* out) {
+inline void uncompress_sparse_block(uint8_t const* begin, int cardinality,
+                                    uint64_t* out) {
     // for (int i = 0; i != cardinality; ++i) {
     //     set_bit(*begin++, out);
     // }
-    // return cardinality;
-
     uint64_t offset, load, pos;
     const uint64_t shift = 6;
     uint8_t const* end = begin + cardinality;
@@ -27,83 +25,70 @@ uint32_t uncompress_sparse_block(uint8_t const* begin, int cardinality,
         : [ begin ] "+&r"(begin), [ load ] "=&r"(load), [ pos ] "=&r"(pos),
           [ offset ] "=&r"(offset)
         : [ end ] "r"(end), [ out ] "r"(out), [ shift ] "r"(shift));
-    return cardinality;
 }
 
-uint32_t uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
-    memcpy(out, reinterpret_cast<uint64_t const*>(begin),
-           constants::block_size / 8);
-    uint32_t c = 0;
-    for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
-        c += __builtin_popcountll(out[i]);
-    }
-    return c;
+inline void uncompress_dense_block(uint8_t const* begin, uint64_t* out) {
+    memcpy(out, begin, constants::block_size / 8);
 }
 
-uint32_t uncompress_sparse_chunk(uint8_t const* begin, int blocks,
-                                 uint64_t* out) {
+void uncompress_sparse_chunk(uint8_t const* begin, int blocks, uint64_t* out) {
     assert(blocks >= 1 and blocks <= 256);
     uint8_t const* data = begin + blocks * 2;
-    uint64_t* tmp = out;
-
+    uint64_t* bitmap = out;
     uint8_t prev = 0;
-    uint32_t uncompressed = 0;
     for (int i = 0; i != blocks; ++i) {
         uint8_t id = *begin;
         ++begin;
-        int c = *begin + 1;
+        int c = *begin;
+        c += 1;
         int bytes = 32;
         int type = type::dense;
         if (LIKELY(c < 31)) {
             bytes = c;
             type = type::sparse;
         }
-        uint32_t u = 0;
-        tmp += (id - prev) * constants::block_size_in_64bit_words;
+        bitmap += (id - prev) * constants::block_size_in_64bit_words;
         if (type == type::sparse) {
-            u = uncompress_sparse_block(data, c, tmp);
+            uncompress_sparse_block(data, c, bitmap);
         } else if (type == type::dense) {
-            u = uncompress_dense_block(data, tmp);
+            uncompress_dense_block(data, bitmap);
         }
-        uncompressed += u;
         data += bytes;
         ++begin;
         prev = id;
     }
-
-    return uncompressed;
 }
 
-uint32_t uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
+inline void uncompress_dense_chunk(uint8_t const* begin, uint64_t* out) {
     memcpy(out, begin, constants::chunk_size / 8);
-    uint32_t c = 0;
-    for (size_t i = 0; i != constants::chunk_size_in_64bit_words; ++i) {
-        c += __builtin_popcountll(out[i]);
-    }
-    return c;
 }
 
-inline uint32_t uncompress_full_chunk(uint64_t* out) {
+inline void uncompress_full_chunk(uint64_t* out) {
     for (uint32_t i = 0; i != constants::chunk_size_in_64bit_words; ++i) {
         out[i] = uint64_t(-1);
     }
-    return constants::chunk_size;
 }
 
 inline size_t uncompress_chunk(s_sequence::iterator const& it, uint64_t* out) {
     switch (it.type()) {
         case type::sparse: {
             for (uint64_t i = 0; i != 1024; ++i) out[i] = 0;
-            return uncompress_sparse_chunk(it.data, it.blocks(), out);
+            uncompress_sparse_chunk(it.data, it.blocks(), out);
+            break;
         }
-        case type::dense:
-            return uncompress_dense_chunk(it.data, out);
-        case type::full:
-            return uncompress_full_chunk(out);
+        case type::dense: {
+            uncompress_dense_chunk(it.data, out);
+            break;
+        }
+        case type::full: {
+            uncompress_full_chunk(out);
+            break;
+        }
         default:
             assert(false);
             __builtin_unreachable();
     }
+    return it.cardinality();
 }
 
 size_t s_sequence::uncompress(uint64_t* out) const {

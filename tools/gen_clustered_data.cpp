@@ -49,7 +49,7 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename,
         write_uint(universe, out);
     }
 
-    essentials::uniform_int_rng<uint32_t> length(1000, constants::chunk_size);
+    essentials::uniform_int_rng<uint32_t> length(10, constants::chunk_size / 4);
     typedef essentials::uniform_int_rng<uint32_t> random_int;
     random_int* element = nullptr;
 
