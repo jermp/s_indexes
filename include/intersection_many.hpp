@@ -41,12 +41,10 @@ size_t intersection(std::vector<s_sequence>& sequences, uint32_t* out) {
     }
 
     {
+        static std::vector<uint64_t> bitmap(1024);
         for (size_t i = 0; i != sequences.size(); ++i) {
             iterators[i] = sequences[i].begin();
         }
-
-        static std::vector<uint64_t> bitmap(1024);
-
         for (uint64_t i = 0; i != num_headers; ++i) {
             uint32_t header = headers[i];
             uint32_t base = header << 16;

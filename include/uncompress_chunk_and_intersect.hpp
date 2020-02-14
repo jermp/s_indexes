@@ -4,32 +4,33 @@
 
 namespace sliced {
 
-uint32_t uncompress_sparse_block_and_intersect(uint8_t const* begin,
-                                               int cardinality, uint64_t* out) {
-    static std::vector<uint64_t> tmp(constants::block_size_in_64bit_words);
-    tmp[0] = 0;
-    tmp[1] = 0;
-    tmp[2] = 0;
-    tmp[3] = 0;
-    uncompress_sparse_block(begin, cardinality, tmp.data());
-    uint32_t c = 0;
-    for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
-        out[i] &= tmp[i];
-        c += __builtin_popcountll(out[i]);
-    }
-    return c;
-}
+// uint32_t uncompress_sparse_block_and_intersect(uint8_t const* begin,
+//                                                int cardinality, uint64_t*
+//                                                out) {
+//     static std::vector<uint64_t> tmp(constants::block_size_in_64bit_words);
+//     tmp[0] = 0;
+//     tmp[1] = 0;
+//     tmp[2] = 0;
+//     tmp[3] = 0;
+//     uncompress_sparse_block(begin, cardinality, tmp.data());
+//     uint32_t c = 0;
+//     for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
+//         out[i] &= tmp[i];
+//         c += __builtin_popcountll(out[i]);
+//     }
+//     return c;
+// }
 
-uint32_t uncompress_dense_block_and_intersect(uint8_t const* begin,
-                                              uint64_t* out) {
-    uint64_t const* in = reinterpret_cast<uint64_t const*>(begin);
-    uint32_t c = 0;
-    for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
-        out[i] &= in[i];
-        c += __builtin_popcountll(out[i]);
-    }
-    return c;
-}
+// uint32_t uncompress_dense_block_and_intersect(uint8_t const* begin,
+//                                               uint64_t* out) {
+//     uint64_t const* in = reinterpret_cast<uint64_t const*>(begin);
+//     uint32_t c = 0;
+//     for (size_t i = 0; i != constants::block_size_in_64bit_words; ++i) {
+//         out[i] &= in[i];
+//         c += __builtin_popcountll(out[i]);
+//     }
+//     return c;
+// }
 
 uint32_t uncompress_sparse_chunk_and_intersect(uint8_t const* begin, int blocks,
                                                uint64_t* out) {

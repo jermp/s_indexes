@@ -1,28 +1,14 @@
 #include <iostream>
 #include <algorithm>
-#include <sstream>
 
 #include "util.hpp"
 #include "s_index.hpp"
 #include "enumerator.hpp"
+#include "test_common.hpp"
 #include "intersection_many.hpp"
 
 using namespace sliced;
-
-typedef std::vector<uint32_t> query_type;
-
-bool read_query_and_remove_duplicates(query_type& query,
-                                      std::istream& is = std::cin) {
-    query.clear();
-    std::string line;
-    if (!std::getline(is, line)) return false;
-    std::istringstream iline(line);
-    uint32_t index;
-    while (iline >> index) query.push_back(index);
-    std::sort(query.begin(), query.end());
-    query.erase(std::unique(query.begin(), query.end()), query.end());
-    return true;
-}
+using namespace sliced::testing;
 
 std::vector<uint32_t> pairwise_intersection(std::vector<uint32_t> const& l,
                                             std::vector<uint32_t> const& r) {
@@ -124,7 +110,7 @@ int main(int argc, char** argv) {
     queries.reserve(num_queries);
     query_type q;
     uint64_t i = 0;
-    while (i != num_queries and read_query_and_remove_duplicates(q)) {
+    while (i != num_queries and testing::read_query_and_remove_duplicates(q)) {
         assert(!q.empty());
         queries.push_back(q);
         ++i;

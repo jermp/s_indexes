@@ -1,6 +1,26 @@
 #pragma once
 
+#include <vector>
+#include <sstream>
+
 namespace sliced {
+
+namespace testing {
+typedef std::vector<uint32_t> query_type;
+
+bool read_query_and_remove_duplicates(query_type& query,
+                                      std::istream& is = std::cin) {
+    query.clear();
+    std::string line;
+    if (!std::getline(is, line)) return false;
+    std::istringstream iline(line);
+    uint32_t index;
+    while (iline >> index) query.push_back(index);
+    std::sort(query.begin(), query.end());
+    query.erase(std::unique(query.begin(), query.end()), query.end());
+    return true;
+}
+}  // namespace testing
 
 #define TEST                                                                  \
     int mandatory = 3;                                                        \
