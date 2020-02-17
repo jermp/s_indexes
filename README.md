@@ -233,9 +233,7 @@ bool contains(uint32_t value) const;
 uint32_t next_geq(uint32_t lower_bound) const;
 ```
 
-Given a collection of (at least 2) *sliced* sequences, it is possible to intersect and merge two sequences
-(see also `include/intersection.hpp` and `include/union.hpp`
-respectively):
+Given a collection of (at least 2) *sliced* sequences, it is possible to perform intersection and merging of the sequences:
 
 ```C++
 /* writes the result of the intersection between l and s to the output buffer,
@@ -245,6 +243,15 @@ size_t pairwise_intersection(s_sequence const& l, s_sequence const& r, uint32_t*
 /* writes the result of the union between l and s to the output buffer,
    returning the size of the result */
 size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out);
+
+/* writes the result of the intersection between the
+   sequences to the output buffer, returning the size of the result */
+size_t intersection(std::vector<s_sequence>& sequences, uint32_t* out);
+
+/* writes the result of the union between the
+   sequences to the output buffer, returning the size of the result */
+size_t union_many(std::vector<s_sequence>& sequences, uint32_t* out);
+
 ```
 
 The source `src` folder contains programs to benchmark such operations.
@@ -312,7 +319,7 @@ A test query log can be generated with
 
 An example microbenchmark
 -----
-In the following microbenchmark we show the number of bits per integer (bpi) and average microseconds per list intersection query.
+In the following microbenchmark we show the number of bits per integer (bpi) and average microseconds per list intersection query with 2 sequences.
 
 We compare Slicing with Roaring [1] and Partitioned Elias-Fano [2].
 
