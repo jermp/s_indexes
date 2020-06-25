@@ -35,17 +35,33 @@ void test(char const* binary_filename, parameters const& params) {
             }
 
             uint32_t const* list = data + i + 1;
-            for (size_t j = 0; j != n; ++j) {
-                auto it = std::lower_bound(list, list + n, j);
-                uint32_t next_geq = sequence.next_geq(j);
-                assert(next_geq >= j);
+
+            /* run next_geq for all values in [0, universe] */
+            for (size_t lower_bound = 0; lower_bound != universe + 1;
+                 ++lower_bound) {
+                auto it = std::lower_bound(list, list + n, lower_bound);
+                uint32_t next_geq = sequence.next_geq(lower_bound);
+                assert(next_geq >= lower_bound);
                 if (next_geq != *it) {
                     good = false;
-                    std::cout << "error at " << j << "/" << n << ": got "
-                              << next_geq << " but expected next_geq(" << j
+                    std::cout << "error at " << lower_bound << "/" << universe
+                              << ": got " << next_geq
+                              << " but expected next_geq(" << lower_bound
                               << ") = " << *it << std::endl;
                 }
             }
+
+            /* test some out-of-bound values */
+            for (size_t lower_bound = universe + 1;
+                 lower_bound != universe + 1000000 + 1; lower_bound += 10000) {
+                uint32_t next_geq = sequence.next_geq(lower_bound);
+                if (next_geq != constants::not_found) {
+                    good = false;
+                    std::cout << "error : got " << next_geq << " but expected "
+                              << constants::not_found << std::endl;
+                }
+            }
+
             ++k;
             if (k % 1000 == 0) {
                 std::cout << "checked " << k << " sequences" << std::endl;

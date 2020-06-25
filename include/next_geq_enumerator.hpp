@@ -105,7 +105,9 @@ struct next_geq_enumerator {
 
             // saturate
             m_it.next();
-            CHUNK_MIN(m_it)
+            if (m_it.has_next()) {
+                CHUNK_MIN(m_it)
+            }
         }
 
         return constants::not_found;

@@ -181,7 +181,9 @@ uint32_t s_sequence::next_geq(uint32_t value) const {
 
         // saturate
         it.next();
-        CHUNK_MIN(it)
+        if (it.has_next()) {
+            CHUNK_MIN(it)
+        }
     }
 
     return constants::not_found;
