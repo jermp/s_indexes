@@ -1,7 +1,9 @@
 Sliced Indexes
-==============
+--------------
 
-A C++ implementation of [*sliced indexes*](https://arxiv.org/abs/1907.01032) [3].
+A C++ implementation of [*sliced indexes*](https://arxiv.org/abs/1907.01032) [3],
+that can be used to compress bitmaps and inverted lists.
+Refer also to the [CSUR paper](http://pages.di.unipi.it/pibiri/papers/ii_survey.pdf) [4] for further experiments and comparisons (Section 6).
 
 This guide is meant to provide a brief overview of the library and to illustrate its functionalities through some examples.
 ##### Table of contents
@@ -363,3 +365,4 @@ References
 * [2] Giuseppe Ottaviano and Rossano Venturini. *Partitioned Elias-Fano Indexes*. 2014. In Proceedings of the 37th International
 Conference on Research and Development in Information Retrieval. 273–282.
 * [3] Giulio Ermanno Pibiri. *On Slicing Sorted Integer Sequences*. 2019. arXiv preprint. https://arxiv.org/abs/1907.01032
+* [4] Giulio Ermanno Pibiri and Rossano Venturini. *Techniques for Inverted Index Compression*. 2020. ACM Computing Surveys (CSUR). [https://arxiv.org/abs/1908.10598v2](https://arxiv.org/abs/1908.10598v2)
