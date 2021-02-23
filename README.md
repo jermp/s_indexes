@@ -3,7 +3,7 @@ Sliced Indexes
 
 A C++ implementation of [*sliced indexes*](https://arxiv.org/abs/1907.01032) [3,4],
 that can be used to compress bitmaps and inverted lists.
-Refer also to the [CSUR paper](http://pages.di.unipi.it/pibiri/papers/ii_survey.pdf) [5] for further experiments and comparisons (Section 6).
+Refer also to the [CSUR paper](https://arxiv.org/abs/1908.10598v2) [5] for further experiments and comparisons (Section 6).
 
 This guide is meant to provide a brief overview of the library and to illustrate its functionalities through some examples.
 ##### Table of contents
