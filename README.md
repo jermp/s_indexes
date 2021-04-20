@@ -13,7 +13,7 @@ This guide is meant to provide a brief overview of the library and to illustrate
 * [Operations](#operations)
 * [Testing](#testing)
 * [Tools](#tools)
-* [An example microbenchark](#an-example-microbenchmark)
+* [An example microbenchmark](#an-example-microbenchmark)
 * [Authors](#authors)
 * [References](#references)
 
