@@ -1,9 +1,10 @@
 Sliced Indexes
---------------
+==============
 
 A C++ implementation of [*sliced indexes*](https://arxiv.org/abs/1907.01032) [3,4],
 that can be used to compress bitmaps and inverted lists.
-Refer also to the [CSUR paper](https://arxiv.org/abs/1908.10598v2) [5] for further experiments and comparisons (Section 6).
+
+Also refer to the [CSUR paper](https://arxiv.org/abs/1908.10598v2) [5] for further experiments and comparisons (Section 6).
 
 This guide is meant to provide a brief overview of the library and to illustrate its functionalities through some examples.
 ##### Table of contents
@@ -25,29 +26,29 @@ To build the code, [`CMake`](https://cmake.org/) is required.
 
 The code has few external dependencies (for testing, serialization and memory-mapping facilities), so clone the repository with
 
-	$ git clone --recursive https://github.com/jermp/s_indexes.git
+	git clone --recursive https://github.com/jermp/s_indexes.git
 
 If you have cloned the repository without `--recursive`, you will need to perform the following commands before
 compiling:
 
-    $ git submodule init
-    $ git submodule update
+	git submodule init
+	git submodule update
 
 To compile the code for a release environment (see file `CMakeLists.txt` for the used compilation flags), it is sufficient to do the following:
 
-    $ mkdir build
-    $ cd build
-    $ cmake ..
-    $ make
+    mkdir build
+    cd build
+    cmake ..
+    make
 
 Hint: Use `make -j4` to compile the library in parallel using, e.g., 4 jobs.
 
 For a testing environment, use the following instead:
 
-    $ mkdir debug_build
-    $ cd debug_build
-    $ cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=On
-    $ make
+    mkdir debug_build
+    cd debug_build
+    cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=On
+    make
 
 Quick Start
 -------
@@ -55,7 +56,7 @@ Quick Start
 For a quick start, see the source file `src/example.cpp`.
 After compilation, run this example with
 
-	$ ./example < ../data/test_sequence
+	./example < ../data/test_sequence
 
 which will:
 
@@ -68,7 +69,7 @@ serialize the data structure on disk. To perform the
 operations, the data structure is then memory mapped
 from such file. To do so, type
 
-	$ ./example -o out.bin < ../data/test_sequence
+	./example -o out.bin < ../data/test_sequence
 
 ```C++
 #include <iostream>
@@ -180,11 +181,11 @@ For example, an test input collection with 100 sequences drawn
 from a universe of size 1,000,000 can be generated
 with
 
-	$ ./gen_clustered_data 100 1000000 test_collection --binary
+	./gen_clustered_data 100 1000000 test_collection --binary
 
 To build an index from such collection, then use
 
-	$ ./build test_collection --density 0.01 --out test_collection.out
+	./build test_collection --density 0.01 --out test_collection.out
 
 with a density threshold of 0.01 and an output file
 `test_collection.out` onto which the data structure is serialized.
@@ -261,7 +262,7 @@ The source `src` folder contains programs to benchmark such operations.
 #### Example 1.
 Use:
 
-	$ ./decode test_collection.out
+	./decode test_collection.out
 
 to decode all the sequences in the collection. You should get something
 like:
@@ -275,11 +276,11 @@ like:
 #### Example 2.
 To execute some intersection operations, first generate some queries with
 
-	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
+	./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
 and then run
 
-	$ ./intersect test_collection.out 1000 < test_pairwise_queries
+	./intersect test_collection.out 1000 < test_pairwise_queries
 
 You should get something like:
 
@@ -297,7 +298,7 @@ argument to see the required ones.
 
 For example, to test decoding correctness, use
 
-	$ ./test_decode test_collection.out ../data/test_collection 0.01
+	./test_decode test_collection.out ../data/test_collection 0.01
 
 which will check every decoded integer against the original input
 collection (note that you must provide the *correct* original input collection as well as the *density level* it was used during building).
@@ -309,15 +310,15 @@ synthetic data to test the code.
 
 For example, the sequence `data/test_sequence` was generated with
 
-	$ ./gen_clustered_data 1 1000000 test_sequence
+	./gen_clustered_data 1 1000000 test_sequence
 
 A test collection can be generated with
 
-	$ ./gen_clustered_data 100 1000000 test_collection --binary
+	./gen_clustered_data 100 1000000 test_collection --binary
 
 A test query log can be generated with
 
-	$ ./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
+	./gen_random_pairwise_queries 1000 100 > test_pairwise_queries
 
 An example microbenchmark
 -----
