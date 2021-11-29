@@ -21,9 +21,7 @@ void encode_block(std::vector<uint32_t>& block, uint32_t& id,
             write_bits(block.data(), block.size(), constants::block_size, 0,
                        data);
         } else {
-            for (auto pos : block) {
-                write_uint<uint8_t>(pos, data);
-            }
+            for (auto pos : block) write_uint<uint8_t>(pos, data);
         }
         block.clear();
     }

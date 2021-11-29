@@ -36,9 +36,7 @@ size_t union_many(std::vector<s_sequence>& sequences, uint32_t* out) {
         uint32_t next = 65536;
         for (size_t i = 0; i != iterators.size(); ++i) {
             if (iterators[i].id() == header) iterators[i].next();
-            if (iterators[i].id() < next) {
-                next = iterators[i].id();
-            }
+            if (iterators[i].id() < next) next = iterators[i].id();
         }
         header = next;
     }

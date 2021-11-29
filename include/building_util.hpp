@@ -50,9 +50,7 @@ uint32_t chunk_cardinality(uint32_t const* begin, uint32_t const* end,
     while (begin != end and *begin < s.right) {
         assert(*begin >= s.left);
         assert(*begin - s.left < constants::chunk_size);
-        if (*begin == prev) {
-            throw std::runtime_error("duplicate element");
-        }
+        if (*begin == prev) throw std::runtime_error("duplicate element");
         prev = *begin;
         ++begin;
         ++c;

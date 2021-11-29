@@ -99,15 +99,11 @@ struct next_geq_enumerator {
                     __builtin_unreachable();
             }
 
-            if (value != constants::not_found) {
-                return value + m_it.base();
-            }
+            if (value != constants::not_found) return value + m_it.base();
 
             // saturate
             m_it.next();
-            if (m_it.has_next()) {
-                CHUNK_MIN(m_it)
-            }
+            if (m_it.has_next()) CHUNK_MIN(m_it)
         }
 
         return constants::not_found;

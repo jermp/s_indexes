@@ -52,9 +52,7 @@ int main(int argc, char** argv) {
         query q;
         int x = scanf("%d", &q.i);
         int y = scanf("%d", &q.j);
-        if (x == EOF or y == EOF) {
-            break;
-        }
+        if (x == EOF or y == EOF) break;
         queries.push_back(q);
     }
     std::cout << "DONE" << std::endl;

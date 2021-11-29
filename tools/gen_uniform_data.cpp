@@ -22,9 +22,7 @@ void gen(uint32_t num_lists, uint32_t min_length, uint32_t max_length,
     for (uint32_t i = 0; i != num_lists; ++i) {
         list.clear();
         uint32_t n = length.gen();
-        for (uint32_t k = 0; k != n; ++k) {
-            list.push_back(element.gen());
-        }
+        for (uint32_t k = 0; k != n; ++k) list.push_back(element.gen());
         std::sort(list.begin(), list.end());
         auto it = std::unique(list.begin(), list.end());
         n = std::distance(list.begin(), it);

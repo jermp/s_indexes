@@ -3,9 +3,7 @@
 namespace sliced {
 
 #define BLOCK_MIN                                                            \
-    if (LIKELY(*(begin + 1) < 30)) {                                         \
-        return *data + base;                                                 \
-    }                                                                        \
+    if (LIKELY(*(begin + 1) < 30)) return *data + base;                      \
     return min_value_in_bitmap(data, constants::block_size_in_64bit_words) + \
            base;
 
@@ -39,9 +37,7 @@ namespace sliced {
 uint32_t next_geq_sparse_block(uint8_t const* begin, int cardinality,
                                uint32_t value) {
     for (int i = 0; i != cardinality; ++i) {
-        if (begin[i] >= value) {
-            return begin[i];
-        }
+        if (begin[i] >= value) return begin[i];
     }
     return constants::not_found;
 }
@@ -62,9 +58,7 @@ uint32_t min_value_in_bitmap(uint8_t const* data, size_t size_in_64bit_words) {
     uint64_t const* bitmap = reinterpret_cast<uint64_t const*>(data);
     for (uint32_t i = 0; i != size_in_64bit_words; ++i) {
         uint64_t w = bitmap[i];
-        if (w != 0) {
-            return i * 64 + __builtin_ctzll(w);
-        }
+        if (w != 0) return i * 64 + __builtin_ctzll(w);
     }
     return 0;
 }
@@ -78,9 +72,7 @@ uint32_t next_geq_bitmap(uint8_t const* data, uint32_t size_in_64bit_words,
     word = (word >> diff) << diff;
     while (word == 0) {
         k++;
-        if (k == size_in_64bit_words) {
-            return constants::not_found;
-        }
+        if (k == size_in_64bit_words) return constants::not_found;
         word = bitmap[k];
     }
     return k * 64 + __builtin_ctzll(word);
@@ -117,9 +109,7 @@ uint32_t next_geq_sparse_chunk(uint8_t const* begin, int blocks,
 
         value &= 0xFF;
         if (value > max_value_in_block(begin, data)) {  // saturate
-            if (begin + 2 == end) {
-                return constants::not_found;
-            }
+            if (begin + 2 == end) return constants::not_found;
             int c = *(begin + 1) + 1;
             data += BYTES_BY_CARDINALITY(c);
             begin += 2;
@@ -175,15 +165,11 @@ uint32_t s_sequence::next_geq(uint32_t value) const {
                 __builtin_unreachable();
         }
 
-        if (value != constants::not_found) {
-            return value + it.base();
-        }
+        if (value != constants::not_found) return value + it.base();
 
         // saturate
         it.next();
-        if (it.has_next()) {
-            CHUNK_MIN(it)
-        }
+        if (it.has_next()) CHUNK_MIN(it)
     }
 
     return constants::not_found;

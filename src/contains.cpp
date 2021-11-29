@@ -20,9 +20,7 @@ void perf_contains(char const* binary_filename,
     static const int runs = 3 + 1;
     for (int run = 0; run != runs; ++run) {
         t.start();
-        for (auto const& q : queries) {
-            total += index[q.i].contains(q.j);
-        }
+        for (auto const& q : queries) total += index[q.i].contains(q.j);
         t.stop();
     }
     std::cout << total << std::endl;
@@ -51,9 +49,7 @@ int main(int argc, char** argv) {
         query q;
         int x = scanf("%d", &q.i);
         int y = scanf("%d", &q.j);
-        if (x == EOF or y == EOF) {
-            break;
-        }
+        if (x == EOF or y == EOF) break;
         queries.push_back(q);
     }
     std::cout << "DONE" << std::endl;

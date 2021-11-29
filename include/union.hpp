@@ -35,22 +35,16 @@ size_t ss_union_block(uint8_t const* l, uint8_t const* r, int card_l,
         if (*l < *r) {
             out[size++] = *l + base;
             ++l;
-            if (l == end_l) {
-                break;
-            }
+            if (l == end_l) break;
         } else if (*r < *l) {
             out[size++] = *r + base;
             ++r;
-            if (r == end_r) {
-                break;
-            }
+            if (r == end_r) break;
         } else {
             out[size++] = *l + base;
             ++l;
             ++r;
-            if (l == end_l or r == end_r) {
-                break;
-            }
+            if (l == end_l or r == end_r) break;
         }
     }
 
@@ -97,14 +91,10 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
     while (true) {
         if (*l < *r) {
             DECODE(l)
-            if (l == end_l) {
-                break;
-            }
+            if (l == end_l) break;
         } else if (*l > *r) {
             DECODE(r)
-            if (r == end_r) {
-                break;
-            }
+            if (r == end_r) break;
         } else {
             uint8_t id = *l;
             ++l;
@@ -155,19 +145,12 @@ size_t ss_union_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
             ++l;
             ++r;
 
-            if (l == end_l or r == end_r) {
-                break;
-            }
+            if (l == end_l or r == end_r) { break; }
         }
     }
 
-    while (l != end_l) {
-        DECODE(l)
-    }
-
-    while (r != end_r) {
-        DECODE(r)
-    }
+    while (l != end_l) { DECODE(l) }
+    while (r != end_r) { DECODE(r) }
 
     return size_t(out - in);
 }
@@ -248,22 +231,16 @@ size_t pairwise_union(s_sequence const& l, s_sequence const& r, uint32_t* out) {
 
             it_l.next();
             it_r.next();
-            if (!it_l.has_next() or !it_r.has_next()) {
-                break;
-            }
+            if (!it_l.has_next() or !it_r.has_next()) break;
 
         } else if (id_l < id_r) {
             out += decode_chunk(it_l, out);
             it_l.next();
-            if (!it_l.has_next()) {
-                break;
-            }
+            if (!it_l.has_next()) break;
         } else {
             out += decode_chunk(it_r, out);
             it_r.next();
-            if (!it_r.has_next()) {
-                break;
-            }
+            if (!it_r.has_next()) break;
         }
     }
 

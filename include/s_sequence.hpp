@@ -107,9 +107,7 @@ struct s_sequence {
         }
 
         void advance(uint32_t lower_bound) {
-            while (id() < lower_bound and has_next()) {
-                next();
-            }
+            while (id() < lower_bound and has_next()) next();
         }
 
         void skip_to_value(uint32_t lower_bound) {
@@ -126,9 +124,7 @@ struct s_sequence {
             uint32_t elements = 0;
             while (skip_position() < end) {
                 uint32_t c = *pointers;
-                if (elements + c > rank) {
-                    break;
-                }
+                if (elements + c > rank) break;
                 elements += c;
                 data += *(pointers + 1);
                 pointers += 2;
@@ -138,9 +134,7 @@ struct s_sequence {
 
             while (has_next()) {
                 uint32_t c = cardinality();
-                if (elements + c > rank) {
-                    return elements;
-                }
+                if (elements + c > rank) return elements;
                 elements += c;
                 next();
             }

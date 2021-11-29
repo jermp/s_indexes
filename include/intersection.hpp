@@ -70,20 +70,14 @@ size_t ss_intersect_block(uint8_t const* l, uint8_t const* r, int card_l,
     uint8_t const* end_r = r + card_r;
     while (true) {
         while (*l < *r) {
-            if (++l == end_l) {
-                return size;
-            }
+            if (++l == end_l) return size;
         }
         while (*l > *r) {
-            if (++r == end_r) {
-                return size;
-            }
+            if (++r == end_r) return size;
         }
         if (*l == *r) {
             out[size++] = *l + base;
-            if (++l == end_l or ++r == end_r) {
-                return size;
-            }
+            if (++l == end_l or ++r == end_r) return size;
         }
     }
 
@@ -119,17 +113,13 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
 
     while (true) {
         while (*l < *r) {
-            if (l + 2 == end_l) {
-                return size_t(tmp - out);
-            }
+            if (l + 2 == end_l) return size_t(tmp - out);
             int c = *(l + 1) + 1;
             data_l += BYTES_BY_CARDINALITY(c);
             l += 2;
         }
         while (*l > *r) {
-            if (r + 2 == end_r) {
-                return size_t(tmp - out);
-            }
+            if (r + 2 == end_r) return size_t(tmp - out);
             int c = *(r + 1) + 1;
             data_r += BYTES_BY_CARDINALITY(c);
             r += 2;
@@ -180,9 +170,7 @@ size_t ss_intersect_chunk(uint8_t const* l, uint8_t const* r, int blocks_l,
 
             tmp += n;
 
-            if (l + 1 == end_l or r + 1 == end_r) {
-                return size_t(tmp - out);
-            }
+            if (l + 1 == end_l or r + 1 == end_r) return size_t(tmp - out);
 
             data_l += bl;
             data_r += br;

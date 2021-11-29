@@ -60,9 +60,7 @@ void test(char const* binary_filename, parameters const& params) {
         i += n + 1;
     }
     std::cout << "decoded " << k << " sequences" << std::endl;
-    if (good) {
-        std::cout << "everything good" << std::endl;
-    }
+    if (good) std::cout << "everything good" << std::endl;
 }
 
 int main(int argc, char** argv) {

@@ -35,9 +35,7 @@ uint32_t decode_sparse_block(uint8_t const* begin, int cardinality,
     _mm256_storeu_si256((__m256i*)(out + 0), converted);
 
     // most likely
-    if (cardinality <= 8) {
-        return cardinality;
-    }
+    if (cardinality <= 8) return cardinality;
 
     in_vec = _mm_lddqu_si128((__m128i const*)(begin + 8));
     converted = _mm256_cvtepu8_epi32(in_vec);
@@ -86,9 +84,7 @@ uint32_t decode_sparse_chunk(uint8_t const* begin, int blocks, uint32_t base,
 }
 
 inline uint32_t decode_full_chunk(uint32_t base, uint32_t* out) {
-    for (uint32_t i = 0; i != constants::chunk_size; ++i) {
-        out[i] = i + base;
-    }
+    for (uint32_t i = 0; i != constants::chunk_size; ++i) out[i] = i + base;
     return constants::chunk_size;
 }
 

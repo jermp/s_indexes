@@ -21,9 +21,7 @@ void perf_next_geq(char const* binary_filename,
     for (uint32_t i = 0; i != total_queries; ++i) {
         uint32_t q;
         int x = scanf("%d", &q);
-        if (x == EOF) {
-            break;
-        }
+        if (x == EOF) break;
         queries.push_back(q);
     }
     std::cout << "DONE" << std::endl;

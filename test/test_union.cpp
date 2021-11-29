@@ -42,9 +42,7 @@ void test(char const* binary_filename, std::vector<query> const& queries) {
         }
     }
     std::cout << "tested " << queries.size() << " queries" << std::endl;
-    if (good) {
-        std::cout << "everything good" << std::endl;
-    }
+    if (good) std::cout << "everything good" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -65,9 +63,7 @@ int main(int argc, char** argv) {
         query q;
         int x = scanf("%d", &q.i);
         int y = scanf("%d", &q.j);
-        if (x == EOF or y == EOF) {
-            break;
-        }
+        if (x == EOF or y == EOF) break;
         queries.push_back(q);
     }
 

@@ -25,9 +25,7 @@ void generate(char const* binary_filename, uint32_t num_queries_per_sequence) {
     }
 
     // std::random_shuffle(queries.begin(), queries.end());
-    for (auto q : queries) {
-        std::cout << q << "\n";
-    }
+    for (auto q : queries) std::cout << q << "\n";
 }
 
 int main(int argc, char** argv) {

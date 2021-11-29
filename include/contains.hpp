@@ -8,12 +8,8 @@ bool sparse_block_contains(uint8_t const* begin, int cardinality,
                            uint32_t value) {
     // scalar code as fast as SIMD approach
     for (int i = 0; i != cardinality; ++i) {
-        if (begin[i] > value) {
-            return false;
-        }
-        if (begin[i] == value) {
-            return true;
-        }
+        if (begin[i] > value) return false;
+        if (begin[i] == value) return true;
     }
     return false;
 
@@ -32,9 +28,7 @@ bool contains_sparse_chunk(uint8_t const* begin, int blocks, uint32_t value) {
 
     while (begin != end) {
         uint8_t id = *begin;
-        if (id > block_id) {
-            return false;
-        }
+        if (id > block_id) return false;
         int c = *(begin + 1) + 1;
         int bytes = 32;
         int type = type::dense;

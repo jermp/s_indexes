@@ -79,7 +79,8 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename,
                     }
                     break;
                 case event_code::include_some:
-                    element = new random_int(s.left, end);
+                    element = new random_int(s.left, end,
+                                             essentials::get_random_seed());
                     n = length.gen();
                     for (uint32_t k = 0; k != n; ++k) {
                         list.push_back(element->gen());
@@ -103,9 +104,7 @@ void gen(uint32_t num_lists, uint32_t universe, char const* output_filename,
             out.write(begin, n * sizeof(uint32_t));
         } else {
             out << n << "\n";
-            for (auto x : list) {
-                out << x << "\n";
-            }
+            for (auto x : list) out << x << "\n";
         }
     }
     out.close();
@@ -125,9 +124,7 @@ int main(int argc, char** argv) {
     bool binary = false;
 
     for (int i = mandatory; i != argc; ++i) {
-        if (std::string(argv[i]) == "--binary") {
-            binary = true;
-        }
+        if (std::string(argv[i]) == "--binary") binary = true;
     }
 
     gen(num_lists, universe, output_filename, binary);
