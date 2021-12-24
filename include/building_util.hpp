@@ -96,7 +96,6 @@ statistics sparse_chunk_bitsize(uint32_t const* begin, uint32_t const* end,
         }
     }
     block_bitsize(block_size, stats);
-
     return stats;
 }
 

@@ -103,6 +103,14 @@ void encode_sequence(uint32_t const* data, size_t n,
                     write_bits(begin, cardinality, constants::chunk_size,
                                s.left, tmp);
                 } else {
+                    /*
+                        We would like clusters of:
+                        - few blocks in chunk + blocks have sufficiently large
+                          cardinality for method 1;
+                        - many blocks in chunk + blocks have low cardinality for
+                          method 2.
+                    */
+
                     stats.sparse_chunks += 1;
                     stats.integers_in_sparse_chunks += cardinality;
 
@@ -110,7 +118,13 @@ void encode_sequence(uint32_t const* data, size_t n,
                         sparse_chunk_stats.dense_blocks +
                         sparse_chunk_stats.sparse_blocks;
                     assert(num_non_empty_blocks >= 1 and
-                           num_non_empty_blocks <= 256);
+                           num_non_empty_blocks <=
+                               constants::chunk_size / constants::block_size);
+
+                    // how many chunks that have :
+                    // 1 block, 2 blocks, 3 blocks...
+                    stats.num_blocks_in_chunks[num_non_empty_blocks] += 1;
+                    stats.num_integers[num_non_empty_blocks] += cardinality;
                     stats.blocks +=
                         num_non_empty_blocks + sparse_chunk_stats.empty_blocks;
 

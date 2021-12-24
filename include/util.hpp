@@ -120,6 +120,11 @@ struct statistics {
 
     uint64_t sparse_blocks_cardinalities[1 + 30];
 
+    // (non-empty blocks)
+    uint64_t
+        num_blocks_in_chunks[1 + constants::chunk_size / constants::block_size];
+    uint64_t num_integers[1 + constants::chunk_size / constants::block_size];
+
     void accumulate(statistics const& other) {
         dense_blocks += other.dense_blocks;
         sparse_blocks += other.sparse_blocks;
@@ -178,13 +183,31 @@ struct statistics {
         std::cout << "total bytes: " << bits / 8 << std::endl;
         std::cout << "total bpi: " << double(bits) / integers << std::endl;
 
-        std::cout << "== sparse blocks cardinalities ==" << std::endl;
+        std::cout << "== sparse blocks cardinalities (%) ==" << std::endl;
         double expected_value = 0.0;
         for (int i = 1; i != 30 + 1; ++i) {
             double p_i = static_cast<double>(sparse_blocks_cardinalities[i]) /
                          sparse_blocks;
             std::cout << "sparse blocks with card. " << i << ": " << p_i * 100.0
                       << std::endl;
+            expected_value += i * p_i;
+        }
+        std::cout << "expected_value " << expected_value << std::endl;
+
+        std::cout << "== distribution of blocks in sparse chunks =="
+                  << std::endl;
+        expected_value = 0.0;
+        for (uint64_t i = 1;
+             i != constants::chunk_size / constants::block_size + 1; ++i) {
+            uint64_t total_num_blocks = i * num_blocks_in_chunks[i];
+            double avg_num_integers_per_block =
+                static_cast<double>(num_integers[i]) / total_num_blocks;
+            double p_i =
+                static_cast<double>(num_blocks_in_chunks[i]) / sparse_chunks;
+            std::cout << "sparse chunks with " << i
+                      << " blocks: " << p_i * 100.0
+                      << "%; avg_num_integers_per_block = "
+                      << avg_num_integers_per_block << std::endl;
             expected_value += i * p_i;
         }
         std::cout << "expected_value " << expected_value << std::endl;
