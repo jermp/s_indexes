@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>  // for log2 and ceil
 #include <cstring>
 #include "constants.hpp"
 
@@ -84,6 +85,13 @@ struct query {
     uint32_t i;
     uint32_t j;
 };
+
+/* For a sorted list of size n whose universe is u. */
+uint64_t elias_fano_bitsize(uint64_t n, uint64_t u) {
+    return n *
+           ((u > n ? (std::ceil(std::log2(static_cast<double>(u) / n))) : 0) +
+            2);
+}
 
 struct statistics {
     statistics() {
@@ -194,11 +202,18 @@ struct statistics {
         }
         std::cout << "expected_value " << expected_value << std::endl;
 
-        std::cout << "== distribution of blocks in sparse chunks =="
-                  << std::endl;
+        std::cout << "== distribution of blocks in sparse chunks ("
+                  << integers_in_sparse_chunks * 100.0 / integers
+                  << "% of ints) ==" << std::endl;
+        uint64_t covered_integers_in_sparse_chunks = 0;
         expected_value = 0.0;
         for (uint64_t i = 1;
              i != constants::chunk_size / constants::block_size + 1; ++i) {
+            uint64_t avg_num_integers_per_chunk =
+                static_cast<double>(num_integers[i]) / num_blocks_in_chunks[i];
+            uint64_t elias_fano_bits = elias_fano_bitsize(
+                avg_num_integers_per_chunk, constants::chunk_size);
+
             uint64_t total_num_blocks = i * num_blocks_in_chunks[i];
             double avg_num_integers_per_block =
                 static_cast<double>(num_integers[i]) / total_num_blocks;
@@ -207,8 +222,21 @@ struct statistics {
             std::cout << "sparse chunks with " << i
                       << " blocks: " << p_i * 100.0
                       << "%; avg_num_integers_per_block = "
-                      << avg_num_integers_per_block << std::endl;
+                      << avg_num_integers_per_block
+                      << "; avg_num_integers_per_chunk = "
+                      << avg_num_integers_per_chunk << std::endl;
             expected_value += i * p_i;
+            covered_integers_in_sparse_chunks += num_integers[i];
+
+            std::cout << "Elias-Fano avg. bpi "
+                      << static_cast<double>(elias_fano_bits) /
+                             avg_num_integers_per_chunk
+                      << " vs. 8" << std::endl;
+
+            std::cout << " -- total integers covered "
+                      << (covered_integers_in_sparse_chunks * 100.0) /
+                             integers_in_sparse_chunks
+                      << "%" << std::endl;
         }
         std::cout << "expected_value " << expected_value << std::endl;
     }
